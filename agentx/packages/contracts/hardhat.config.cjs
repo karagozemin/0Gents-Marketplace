@@ -1,4 +1,8 @@
-require("dotenv").config();
+const path = require("path");
+// Load local .env (contracts package)
+require("dotenv").config({ path: path.join(__dirname, ".env") });
+// Fallback: also try repo root .env
+require("dotenv").config({ path: path.join(__dirname, "../../../.env") });
 require("@nomicfoundation/hardhat-toolbox");
 
 const OG_RPC_URL = process.env.OG_RPC_URL || "";
