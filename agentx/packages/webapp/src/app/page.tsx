@@ -1,6 +1,6 @@
 "use client";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useChainId, useReadContract, useWriteContract } from "wagmi";
 import { AGENT_REGISTRY_ABI, AGENT_REGISTRY_ADDRESS, INFT_ABI, INFT_ADDRESS, MARKETPLACE_ABI, MARKETPLACE_ADDRESS } from "@/lib/contracts";
 import type { ChatMessage } from "@/lib/compute";
@@ -15,6 +15,10 @@ export default function Home() {
   const [buyListingId, setBuyListingId] = useState("");
   const { writeContractAsync, isPending } = useWriteContract();
   const chainId = useChainId();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const totalAgents = useReadContract({
     address: (AGENT_REGISTRY_ADDRESS || undefined) as `0x${string}` | undefined,
     abi: AGENT_REGISTRY_ABI,
@@ -46,7 +50,7 @@ export default function Home() {
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">AgentX</h1>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">chain: {chainId ?? "-"}</span>
+          <span className="text-xs text-gray-500">chain: {mounted && chainId ? chainId : "-"}</span>
           <ConnectButton />
         </div>
       </header>
