@@ -1,0 +1,24 @@
+# Node
+node_modules/
+**/node_modules/
+
+# Next.js
+.agentx/
+.next/
+out/
+**/.next/
+
+# Env
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Builds
+dist/
+build/
+**/dist/
+**/build/
+
+# OS
+.DS_Store

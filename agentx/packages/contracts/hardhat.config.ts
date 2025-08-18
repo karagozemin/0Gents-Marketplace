@@ -1,0 +1,42 @@
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig();
+
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+
+const OG_RPC_URL = process.env.OG_RPC_URL || "";
+const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+
+const accounts = PRIVATE_KEY ? [PRIVATE_KEY] : [];
+
+const config: HardhatUserConfig = {
+  solidity: {
+    version: "0.8.24",
+    settings: {
+      optimizer: { enabled: true, runs: 200 },
+    },
+  },
+  networks: {
+    og_galileo: {
+      chainId: 16601,
+      url: OG_RPC_URL || "http://127.0.0.1:8545",
+      accounts,
+    },
+    sepolia: {
+      chainId: 11155111,
+      url: SEPOLIA_RPC_URL || "",
+      accounts,
+    },
+  },
+  etherscan: {
+    apiKey: {
+      // Fill when needed
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+    },
+  },
+};
+
+export default config;
+
+
