@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Upload, Zap, Eye, Info, Wallet } from "lucide-react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { INFT_ADDRESS, INFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/lib/contracts";
+import { INFT_ADDRESS, INFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
+import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
 import { parseEther } from "viem";
 
 export default function CreatePage() {
@@ -45,47 +46,56 @@ export default function CreatePage() {
     setIsCreating(true);
     
     try {
-      // Create metadata object
-      const metadata = {
+      // Step 1: Create metadata object for 0G Storage
+      const metadata: AgentMetadata = {
         name,
         description: desc,
         image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
         category: category || "General",
-        attributes: [
-          {
-            trait_type: "Category",
-            value: category || "General"
-          },
-          {
-            trait_type: "Creator",
-            value: address
+        creator: address || "",
+        price,
+        capabilities: [
+          "Natural Language Processing",
+          "Task Automation",
+          category || "General Purpose"
+        ],
+        model: {
+          type: "GPT-based",
+          version: "1.0",
+          parameters: {
+            temperature: 0.7,
+            max_tokens: 2048
           }
-        ]
+        },
+        skills: category ? [category.toLowerCase()] : ["general"],
+        created: new Date().toISOString(),
+        updated: new Date().toISOString()
       };
 
-      // For now, we'll use a mock metadata URI
-      // In production, you would upload this to IPFS
-      const metadataURI = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
+      console.log("Creating agent with 0G Storage integration:", metadata);
 
-      console.log("Creating agent with metadata:", metadata);
+      // Step 2: Upload metadata to 0G Storage
+      const storageResult = await uploadAgentMetadata(metadata);
+      
+      if (!storageResult.success) {
+        throw new Error(`0G Storage upload failed: ${storageResult.error}`);
+      }
 
-      // Mint the NFT
+      console.log("Metadata uploaded to 0G Storage:", storageResult.uri);
+
+      // Step 3: Mint the INFT with 0G Storage URI
       writeINFT({
         address: INFT_ADDRESS as `0x${string}`,
         abi: INFT_ABI,
         functionName: "mint",
-        args: [metadataURI],
+        args: [storageResult.uri!], // Use 0G Storage URI instead of base64
       });
 
-      // Note: In a real implementation, you would:
-      // 1. Upload metadata to IPFS
-      // 2. Mint the NFT with the IPFS URI
-      // 3. List it on the marketplace
-      // 4. Handle the transaction confirmations properly
+      console.log("INFT minting initiated with 0G Storage URI");
       
     } catch (error) {
       console.error("Error creating agent:", error);
-      alert("Failed to create agent. Please try again.");
+      alert(`Failed to create agent: ${error instanceof Error ? error.message : "Unknown error"}`);
       setIsCreating(false);
     }
   };
@@ -211,31 +221,76 @@ export default function CreatePage() {
               </CardContent>
             </Card>
 
-            {/* Creation Cost Info */}
+            {/* 0G Storage Integration Info */}
             <Card className="gradient-card border-white/10">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Info className="w-5 h-5 text-blue-400" />
+                  <h3 className="font-semibold text-white">0G Integration</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Storage Network</span>
+                    <Badge variant="outline" className="border-blue-400/50 text-blue-300">
+                      0G Galileo
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Chain ID</span>
+                    <Badge variant="outline" className="border-purple-400/50 text-purple-300">
+                      {ZERO_G_CHAIN_ID}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Storage Type</span>
+                    <Badge variant="outline" className="border-green-400/50 text-green-300">
+                      Decentralized
+                    </Badge>
+                  </div>
+                  <div className="border-t border-white/10 pt-3">
+                    <div className="text-xs text-gray-400">
+                      • Metadata stored on 0G Storage
+                      <br />
+                      • INFT minted on 0G Chain
+                      <br />
+                      • Verifiable & decentralized
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Creation Cost Info */}
+            <Card className="gradient-card border-white/10">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Info className="w-5 h-5 text-green-400" />
                   <h3 className="font-semibold text-white">Creation Cost</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
+                    <span className="text-gray-300">0G Storage Fee</span>
+                    <Badge variant="outline" className="border-blue-400/50 text-blue-300">
+                      Free (Testnet)
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-300">Minting Fee</span>
                     <Badge variant="outline" className="border-purple-400/50 text-purple-300">
-                      0.001 ETH
+                      0.001 OG
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300">Network Fee</span>
-                    <Badge variant="outline" className="border-blue-400/50 text-blue-300">
-                      ~0.0005 ETH
+                    <Badge variant="outline" className="border-green-400/50 text-green-300">
+                      ~0.0005 OG
                     </Badge>
                   </div>
                   <div className="border-t border-white/10 pt-3">
                     <div className="flex justify-between items-center font-semibold">
                       <span className="text-white">Total Estimated</span>
-                      <Badge variant="outline" className="border-green-400/50 text-green-300">
-                        ~0.0015 ETH
+                      <Badge variant="outline" className="border-yellow-400/50 text-yellow-300">
+                        ~0.0015 OG
                       </Badge>
                     </div>
                   </div>

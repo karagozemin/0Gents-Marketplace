@@ -1,6 +1,21 @@
+// 0G Galileo Testnet Configuration
+export const ZERO_G_CHAIN_ID = 16601;
+export const ZERO_G_RPC_URL = "https://evmrpc-testnet.0g.ai";
+export const ZERO_G_EXPLORER = "https://chainscan-galileo.0g.ai";
+
+// Contract Addresses
 export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS || "";
 export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS || "";
 export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "";
+
+// 0G Storage Contract Addresses
+export const ZERO_G_STORAGE_FLOW = "0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628";
+export const ZERO_G_STORAGE_MINE = "0x3A0d1d67497Ad770d6f72e7f4B8F0BAbaa2A649C";
+export const ZERO_G_STORAGE_MARKET = "0x53191725d260221bBa307D8EeD6e2Be8DD265e19";
+export const ZERO_G_STORAGE_REWARD = "0xd3D4D91125D76112AE256327410Dd0414Ee08Cb4";
+
+// 0G DA Contract Address
+export const ZERO_G_DA_ENTRANCE = "0xE75A073dA5bb7b0eC622170Fd268f35E675a957B";
 
 export const AGENT_REGISTRY_ABI = [
   {
