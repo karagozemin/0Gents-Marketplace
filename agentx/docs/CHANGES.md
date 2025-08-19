@@ -6,6 +6,11 @@
 - Storage adapter stub for chat logs (0G Storage)
 - Optional basic contract stub
 - 1–2 min demo video
+ 
+ Deployed (0G Galileo Testnet): stored securely in `agentx/.env`
+ - AgentRegistry: NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS
+ - INFT: NEXT_PUBLIC_INFT_ADDRESS
+ - Marketplace: NEXT_PUBLIC_MARKETPLACE_ADDRESS
 
 ## Wave 2 (Aug 26 – Sep 2)
 - Mint INFTs (ERC-7857)

@@ -6,5 +6,7 @@ This repository contains the documentation, smart contracts, web application, an
 - See `docs/ARCHITECTURE.md` for the system architecture and technical details.
 - See `docs/JUDGING.md` for the judging criteria alignment.
 - See `docs/CHANGES.md` for wave-by-wave change logs.
+ 
+Environment configuration is centralized under `agentx/.env` and loaded by both webapp and contracts.
 
 Project code will be added in phases according to the wave roadmap.
