@@ -83,37 +83,114 @@ html, body {
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  /* 0G-inspired modern dark palette with purple gradients */
+  --background: #0a0a0f;
+  --foreground: #ffffff;
+  --card: #0f0f16;
+  --card-foreground: #ffffff;
+  --popover: #0f0f16;
+  --popover-foreground: #ffffff;
+  --primary: #8b5cf6; /* vibrant purple */
+  --primary-foreground: #ffffff;
+  --secondary: #6366f1; /* indigo */
+  --secondary-foreground: #ffffff;
+  --muted: #1a1a24;
+  --muted-foreground: #a3a3a3;
+  --accent: #a855f7; /* purple accent */
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: rgba(255,255,255,0.1);
+  --input: rgba(255,255,255,0.05);
+  --ring: #8b5cf6;
+  /* charts */
+  --chart-1: #8b5cf6;
+  --chart-2: #6366f1;
+  --chart-3: #a855f7;
+  --chart-4: #22c55e;
+  --chart-5: #f59e0b;
+  /* sidebar */
+  --sidebar: #0a0a0f;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a1a24;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: #8b5cf6;
+}
+
+/* Custom 0G gradient styles */
+.gradient-0g {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 25%, #a855f7 50%, #3b82f6 75%, #8b5cf6 100%);
+}
+
+.gradient-0g-subtle {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 50%, rgba(168, 85, 247, 0.1) 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(15, 15, 22, 0.8) 50%, rgba(168, 85, 247, 0.05) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Additional utility classes */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
+}
+
+/* Advanced gradient animations */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.gradient-animated {
+  background: linear-gradient(-45deg, #8b5cf6, #6366f1, #a855f7, #3b82f6);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Enhanced glow effects */
+.glow-purple-lg {
+  box-shadow: 
+    0 0 30px rgba(139, 92, 246, 0.4),
+    0 0 60px rgba(139, 92, 246, 0.2),
+    0 0 90px rgba(139, 92, 246, 0.1);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* Backdrop blur utilities */
+.backdrop-blur-strong {
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Custom border gradients */
+.border-gradient {
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(15, 15, 22, 0.8), rgba(168, 85, 247, 0.1)) padding-box,
+              linear-gradient(135deg, rgba(139, 92, 246, 0.5), transparent, rgba(168, 85, 247, 0.5)) border-box;
 }
 
 @layer base {
@@ -122,5 +199,8 @@ html, body {
   }
   body {
     @apply bg-background text-foreground;
+    background-image: radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
   }
 }
