@@ -1,28 +1,322 @@
 "use client";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { AgentCard } from "@/components/AgentCard";
-import { mockAgents } from "@/lib/mock";
+import { mockAgents, type AgentItem } from "@/lib/mock";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Search, 
+  SlidersHorizontal, 
+  Grid3X3, 
+  List, 
+  TrendingUp, 
+  Filter,
+  ArrowUpDown,
+  Sparkles,
+  Users,
+  Activity
+} from "lucide-react";
+
+type SortOption = "price_low" | "price_high" | "newest" | "popular" | "trending";
+type ViewMode = "grid" | "list";
 
 export default function ExplorePage() {
-  const [q, setQ] = useState("");
-  const filtered = useMemo(
-    () => mockAgents.filter((a) => a.name.toLowerCase().includes(q.toLowerCase())),
-    [q]
-  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
+  const [sortBy, setSortBy] = useState<SortOption>("trending");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  // Get unique categories
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(mockAgents.map(agent => agent.category)));
+    return ["all", ...cats];
+  }, []);
+
+  // Filter and sort agents
+  const filteredAgents = useMemo(() => {
+    let filtered = mockAgents.filter(agent => {
+      const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          agent.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "all" || agent.category === selectedCategory;
+      const matchesPrice = agent.priceEth >= priceRange[0] && agent.priceEth <= priceRange[1];
+      
+      return matchesSearch && matchesCategory && matchesPrice;
+    });
+
+    // Sort agents
+    switch (sortBy) {
+      case "price_low":
+        filtered.sort((a, b) => a.priceEth - b.priceEth);
+        break;
+      case "price_high":
+        filtered.sort((a, b) => b.priceEth - a.priceEth);
+        break;
+      case "newest":
+        filtered.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+        break;
+      case "popular":
+        // Mock popularity based on ID (lower ID = more popular)
+        filtered.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+        break;
+      case "trending":
+      default:
+        // Mock trending based on random factor
+        filtered.sort(() => Math.random() - 0.5);
+        break;
+    }
+
+    return filtered;
+  }, [searchQuery, selectedCategory, priceRange, sortBy]);
+
+  const stats = useMemo(() => ({
+    totalAgents: mockAgents.length,
+    totalVolume: mockAgents.reduce((sum, agent) => sum + agent.priceEth, 0),
+    avgPrice: mockAgents.reduce((sum, agent) => sum + agent.priceEth, 0) / mockAgents.length,
+    activeTraders: 1247
+  }), []);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
-      <aside className="space-y-4">
-        <h2 className="text-sm font-medium">Filters</h2>
-        <Input placeholder="Search..." value={q} onChange={(e) => setQ(e.target.value)} />
-        <div className="text-xs text-gray-400">Price range, category, owner (mock)</div>
-      </aside>
-      <div className="space-y-4">
-        <h1 className="text-xl font-medium">Explore</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((a) => (
-            <AgentCard key={a.id} {...a} />
-          ))}
+    <div className="min-h-screen py-8">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <Sparkles className="w-8 h-8 text-purple-400" />
+            <h1 className="text-4xl font-bold text-gradient">Explore AI Agents</h1>
+          </div>
+          <p className="text-xl text-gray-300">
+            Discover and interact with intelligent NFT agents on the 0G Network
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="gradient-card border-white/10">
+            <CardContent className="p-4 text-center">
+              <Users className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{stats.totalAgents}</p>
+              <p className="text-gray-400 text-sm">Total Agents</p>
+            </CardContent>
+          </Card>
+          <Card className="gradient-card border-white/10">
+            <CardContent className="p-4 text-center">
+              <TrendingUp className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{stats.totalVolume.toFixed(1)} ETH</p>
+              <p className="text-gray-400 text-sm">Total Volume</p>
+            </CardContent>
+          </Card>
+          <Card className="gradient-card border-white/10">
+            <CardContent className="p-4 text-center">
+              <Activity className="w-6 h-6 text-green-400 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{stats.avgPrice.toFixed(3)} ETH</p>
+              <p className="text-gray-400 text-sm">Floor Price</p>
+            </CardContent>
+          </Card>
+          <Card className="gradient-card border-white/10">
+            <CardContent className="p-4 text-center">
+              <Users className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{stats.activeTraders}</p>
+              <p className="text-gray-400 text-sm">Active Traders</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+          {/* Filters Sidebar */}
+          <aside className="space-y-6">
+            <Card className="gradient-card border-white/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Filter className="w-5 h-5 text-purple-400" />
+                  Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Search */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Search agents..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-white/5 border-white/10 focus:border-purple-400/50 text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Category</label>
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <Button
+                        key={category}
+                        variant={selectedCategory === category ? "default" : "ghost"}
+                        size="sm"
+                        className={`w-full justify-start text-left ${
+                          selectedCategory === category 
+                            ? "gradient-0g text-white" 
+                            : "text-gray-300 hover:text-white hover:bg-white/10"
+                        }`}
+                        onClick={() => setSelectedCategory(category)}
+                      >
+                        {category === "all" ? "All Categories" : category}
+                        <Badge variant="secondary" className="ml-auto">
+                          {category === "all" 
+                            ? mockAgents.length 
+                            : mockAgents.filter(a => a.category === category).length
+                          }
+                        </Badge>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price Range */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Price Range (ETH)</label>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={priceRange[0]}
+                        onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                        className="bg-white/5 border-white/10 text-white text-sm"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={priceRange[1]}
+                        onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                        className="bg-white/5 border-white/10 text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Filters */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Quick Filters</label>
+                  <div className="space-y-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
+                      onClick={() => setPriceRange([0, 0.05])}
+                    >
+                      Under 0.05 ETH
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
+                      onClick={() => setSelectedCategory("Trading")}
+                    >
+                      Trading Agents
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
+                      onClick={() => setSortBy("newest")}
+                    >
+                      Recently Created
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+
+          {/* Main Content */}
+          <div className="space-y-6">
+            {/* Controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <p className="text-gray-300">
+                  <span className="font-semibold text-white">{filteredAgents.length}</span> agents found
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {/* Sort */}
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="w-4 h-4 text-gray-400" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="bg-white/5 border border-white/10 rounded-md px-3 py-1 text-white text-sm focus:border-purple-400/50"
+                  >
+                    <option value="trending">Trending</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="newest">Newest</option>
+                    <option value="popular">Most Popular</option>
+                  </select>
+                </div>
+
+                {/* View Mode */}
+                <div className="flex items-center bg-white/5 rounded-lg p-1">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="sm"
+                    className={viewMode === "grid" ? "gradient-0g" : "hover:bg-white/10"}
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    size="sm"
+                    className={viewMode === "list" ? "gradient-0g" : "hover:bg-white/10"}
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Results */}
+            {filteredAgents.length === 0 ? (
+              <Card className="gradient-card border-white/10">
+                <CardContent className="p-12 text-center">
+                  <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">No agents found</h3>
+                  <p className="text-gray-400 mb-4">
+                    Try adjusting your search criteria or filters
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                      setPriceRange([0, 1]);
+                    }}
+                    variant="outline"
+                    className="border-purple-400/50 text-purple-300 hover:bg-purple-400/10"
+                  >
+                    Clear Filters
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className={
+                viewMode === "grid" 
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  : "space-y-4"
+              }>
+                {filteredAgents.map((agent) => (
+                  <AgentCard key={agent.id} {...agent} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
