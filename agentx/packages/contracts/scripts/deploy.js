@@ -1,7 +1,7 @@
-import { ethers } from "hardhat";
+const { ethers } = require("hardhat");
 
 async function main() {
-  console.log("Start deploy script");
+  console.log("Start deploy (JS)");
   const [signer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
   const bal = await ethers.provider.getBalance(await signer.getAddress());
@@ -9,21 +9,24 @@ async function main() {
   console.log("Deployer:", await signer.getAddress());
   console.log("Balance:", ethers.formatEther(bal), "ETH");
 
-  const agentRegistry = await (await ethers.getContractFactory("AgentRegistry")).deploy();
+  const AgentRegistry = await ethers.getContractFactory("AgentRegistry");
+  const agentRegistry = await AgentRegistry.deploy();
   await agentRegistry.waitForDeployment();
   console.log("AgentRegistry deployed at:", await agentRegistry.getAddress());
 
-  const inft = await (await ethers.getContractFactory("INFT")).deploy();
+  const INFT = await ethers.getContractFactory("INFT");
+  const inft = await INFT.deploy();
   await inft.waitForDeployment();
   console.log("INFT deployed at:", await inft.getAddress());
 
-  const marketplace = await (await ethers.getContractFactory("Marketplace")).deploy();
+  const Marketplace = await ethers.getContractFactory("Marketplace");
+  const marketplace = await Marketplace.deploy();
   await marketplace.waitForDeployment();
   console.log("Marketplace deployed at:", await marketplace.getAddress());
 }
 
-main().catch((error) => {
-  console.error(error);
+main().catch((e) => {
+  console.error(e);
   process.exit(1);
 });
 
