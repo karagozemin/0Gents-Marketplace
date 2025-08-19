@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,14 @@ export default function CreatePage() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   const { address, isConnected } = useAccount();
+
+  // Fix hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const { writeContract: writeINFT, data: mintHash, error: mintError } = useWriteContract();
   const { writeContract: writeMarketplace, data: listHash, error: listError } = useWriteContract();
@@ -196,7 +202,7 @@ export default function CreatePage() {
 
                 {/* Price */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Price (ETH) *</label>
+                  <label className="text-sm font-medium text-gray-300">Price (0G) *</label>
                   <Input 
                     type="number" 
                     step="0.001"
@@ -300,7 +306,12 @@ export default function CreatePage() {
 
             {/* Create Button */}
             <div className="space-y-4">
-              {!isConnected ? (
+              {!mounted ? (
+                <div className="text-center p-6 rounded-xl bg-gray-500/10 border border-gray-400/20">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto mb-2"></div>
+                  <p className="text-gray-300 font-medium">Loading...</p>
+                </div>
+              ) : !isConnected ? (
                 <div className="text-center p-6 rounded-xl bg-yellow-500/10 border border-yellow-400/20">
                   <Wallet className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                   <p className="text-yellow-300 font-medium">Connect your wallet to create an agent</p>
@@ -368,11 +379,11 @@ export default function CreatePage() {
                           {name || "Agent Name"}
                         </h3>
                         <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10">
-                          {price ? `${price} ETH` : "0.00 ETH"}
+                          {price ? `${price} 0G` : "0.00 0G"}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-400">
-                        by {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "0x0000...0000"}
+                        by {mounted && address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "0x0000...0000"}
                       </p>
                       {category && (
                         <Badge variant="secondary" className="bg-purple-500/80 text-white text-xs">

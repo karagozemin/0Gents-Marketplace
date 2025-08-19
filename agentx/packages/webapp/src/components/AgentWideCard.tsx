@@ -32,7 +32,7 @@ export function AgentWideCard({ id, name, owner, image, priceEth, tag }: {
             <Button
               size="sm"
               variant="ghost"
-              className="w-10 h-10 p-0 bg-black/60 backdrop-blur-md hover:bg-purple-500/60"
+              className="w-10 h-10 p-0 bg-black/60 backdrop-blur-md hover:bg-purple-500/60 cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
                 setIsLiked(!isLiked);
@@ -43,7 +43,7 @@ export function AgentWideCard({ id, name, owner, image, priceEth, tag }: {
             <Button
               size="sm"
               variant="ghost"
-              className="w-10 h-10 p-0 bg-black/60 backdrop-blur-md hover:bg-purple-500/60"
+              className="w-10 h-10 p-0 bg-black/60 backdrop-blur-md hover:bg-purple-500/60 cursor-pointer"
             >
               <Eye className="w-5 h-5 text-white" />
             </Button>
@@ -66,20 +66,20 @@ export function AgentWideCard({ id, name, owner, image, priceEth, tag }: {
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-white truncate group-hover:text-gradient transition-all duration-300">{name}</h3>
             <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10 font-semibold">
-              {priceEth} ETH
+              {priceEth} 0G
             </Badge>
           </div>
           <p className="text-sm text-gray-400 truncate">by {owner}</p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button size="sm" className="flex-1 gradient-0g hover:opacity-90 text-white font-semibold" asChild>
+          <Button size="sm" className="flex-1 gradient-0g hover:opacity-90 text-white font-semibold cursor-pointer" asChild>
             <Link href={`/agent/${id}`}>
               <Zap className="w-4 h-4 mr-2" />
               Buy Now
             </Link>
           </Button>
-          <Button size="sm" variant="outline" className="border-purple-400/50 text-purple-300 hover:bg-purple-400/10">
+          <Button size="sm" variant="outline" className="border-purple-400/50 text-purple-300 hover:bg-purple-400/10 cursor-pointer">
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>

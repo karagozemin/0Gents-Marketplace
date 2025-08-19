@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { AgentCard } from "@/components/AgentCard";
 import { mockAgents, type AgentItem } from "@/lib/mock";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,15 @@ export default function ExplorePage() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
   const [sortBy, setSortBy] = useState<SortOption>("trending");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  // Handle URL search parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, []);
 
   // Get unique categories
   const categories = useMemo(() => {
@@ -104,14 +113,14 @@ export default function ExplorePage() {
           <Card className="gradient-card border-white/10">
             <CardContent className="p-4 text-center">
               <TrendingUp className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white">{stats.totalVolume.toFixed(1)} ETH</p>
+              <p className="text-2xl font-bold text-white">{stats.totalVolume.toFixed(1)} 0G</p>
               <p className="text-gray-400 text-sm">Total Volume</p>
             </CardContent>
           </Card>
           <Card className="gradient-card border-white/10">
             <CardContent className="p-4 text-center">
               <Activity className="w-6 h-6 text-green-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white">{stats.avgPrice.toFixed(3)} ETH</p>
+              <p className="text-2xl font-bold text-white">{stats.avgPrice.toFixed(3)} 0G</p>
               <p className="text-gray-400 text-sm">Floor Price</p>
             </CardContent>
           </Card>
@@ -179,7 +188,7 @@ export default function ExplorePage() {
 
                 {/* Price Range */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Price Range (ETH)</label>
+                  <label className="text-sm font-medium text-gray-300">Price Range (0G)</label>
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input
@@ -210,7 +219,7 @@ export default function ExplorePage() {
                       className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
                       onClick={() => setPriceRange([0, 0.05])}
                     >
-                      Under 0.05 ETH
+                      Under 0.05 0G
                     </Button>
                     <Button
                       variant="ghost"

@@ -32,6 +32,11 @@ export default function AgentDetail() {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [computeStats, setComputeStats] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || !agent) return;
@@ -114,15 +119,15 @@ export default function AgentDetail() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => setIsLiked(!isLiked)}
-                      className="text-gray-400 hover:text-red-400"
+                      className="border-red-400/50 text-red-300 hover:text-red-200 hover:bg-red-400/10 cursor-pointer"
                     >
-                      <Heart className={`w-5 h-5 mr-2 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                      {isLiked ? 'Liked' : 'Like'}
+                      <Heart className={`w-5 h-5 mr-2 ${mounted && isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                      {mounted && isLiked ? 'Liked' : 'Like'}
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-blue-400">
+                    <Button variant="outline" size="sm" className="border-blue-400/50 text-blue-300 hover:text-blue-200 hover:bg-blue-400/10 cursor-pointer">
                       <Share2 className="w-5 h-5 mr-2" />
                       Share
                     </Button>
@@ -132,7 +137,7 @@ export default function AgentDetail() {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300">Price</span>
                       <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10">
-                        {agent.priceEth} ETH
+                        {agent.priceEth} 0G
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
@@ -144,11 +149,11 @@ export default function AgentDetail() {
                   </div>
 
                   <div className="mt-6 space-y-3">
-                    <Button size="lg" className="w-full gradient-0g hover:opacity-90 text-white font-semibold">
+                    <Button size="lg" className="w-full gradient-0g hover:opacity-90 text-white font-semibold cursor-pointer">
                       <Zap className="w-5 h-5 mr-2" />
                       Buy Now
                     </Button>
-                    <Button size="lg" variant="outline" className="w-full border-purple-400/50 text-purple-300 hover:bg-purple-400/10">
+                    <Button size="lg" variant="outline" className="w-full border-purple-400/70 text-purple-200 hover:text-white hover:bg-purple-400/20 hover:border-purple-300 transition-all cursor-pointer">
                       <Eye className="w-5 h-5 mr-2" />
                       Try Agent
                     </Button>
@@ -179,11 +184,31 @@ export default function AgentDetail() {
 
               {/* Tabs */}
               <Tabs defaultValue="chat" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-white/5">
-                  <TabsTrigger value="chat">Chat</TabsTrigger>
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="activity">Activity</TabsTrigger>
-                  <TabsTrigger value="stats">Stats</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80 border border-white/20 p-1">
+                  <TabsTrigger 
+                    value="chat" 
+                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Chat
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="details"
+                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Details
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="activity"
+                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Activity
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="stats"
+                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Stats
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* Chat Tab */}
@@ -251,7 +276,7 @@ export default function AgentDetail() {
                         <Button 
                           onClick={handleSendMessage}
                           disabled={isLoading || !inputMessage.trim() || !isConnected}
-                          className="gradient-0g"
+                          className="gradient-0g cursor-pointer"
                         >
                           <Send className="w-4 h-4" />
                         </Button>
@@ -294,7 +319,7 @@ export default function AgentDetail() {
                         </div>
                         <div>
                           <label className="text-sm text-gray-400">Price</label>
-                          <p className="text-white">{agent.priceEth} ETH</p>
+                          <p className="text-white">{agent.priceEth} 0G</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-400">Storage</label>
@@ -328,7 +353,7 @@ export default function AgentDetail() {
                             </div>
                             {item.priceEth && (
                               <Badge variant="outline" className="border-green-400/50 text-green-300">
-                                {item.priceEth} ETH
+                                {item.priceEth} 0G
                               </Badge>
                             )}
                           </div>

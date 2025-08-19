@@ -35,7 +35,7 @@ export function AgentCard({ id, name, owner, image, priceEth, category }: {
               <Button
                 size="sm"
                 variant="ghost"
-                className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50"
+                className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50 cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
                   setIsLiked(!isLiked);
@@ -46,7 +46,7 @@ export function AgentCard({ id, name, owner, image, priceEth, category }: {
               <Button
                 size="sm"
                 variant="ghost"
-                className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50"
+                className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50 cursor-pointer"
               >
                 <Eye className="w-4 h-4 text-white" />
               </Button>
@@ -66,7 +66,7 @@ export function AgentCard({ id, name, owner, image, priceEth, category }: {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-white truncate group-hover:text-purple-300 transition-colors">{name}</h3>
                 <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10">
-                  {priceEth} ETH
+                  {priceEth} 0G
                 </Badge>
               </div>
               <p className="text-sm text-gray-400 truncate">by {owner}</p>
@@ -74,7 +74,7 @@ export function AgentCard({ id, name, owner, image, priceEth, category }: {
 
             {/* Action Button */}
             <Link href={`/agent/${id}`}>
-              <Button size="sm" className="w-full gradient-0g hover:opacity-90 text-white font-medium">
+              <Button size="sm" className="w-full gradient-0g hover:opacity-90 text-white font-medium cursor-pointer">
                 <Zap className="w-4 h-4 mr-2" />
                 Buy Now
               </Button>

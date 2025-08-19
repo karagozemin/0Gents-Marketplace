@@ -28,18 +28,18 @@ export default function HomePage() {
           <div className="flex items-center justify-center gap-4">
             <Button 
               size="lg" 
-              className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3"
+              className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3 cursor-pointer"
               onClick={() => {
                 document.getElementById('trending-section')?.scrollIntoView({ 
                   behavior: 'smooth',
-                  block: 'start'
+                  block: 'start' 
                 });
               }}
             >
               <Zap className="w-5 h-5 mr-2" />
               Explore Agents
             </Button>
-            <Button size="lg" variant="outline" className="border-purple-400/50 text-purple-300 hover:bg-purple-400/10 px-8 py-3" asChild>
+            <Button size="lg" variant="outline" className="border-purple-400/50 text-purple-300 hover:bg-purple-400/10 px-8 py-3 cursor-pointer" asChild>
               <a href="/create">Create Agent</a>
             </Button>
           </div>
@@ -50,9 +50,9 @@ export default function HomePage() {
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
           { label: "Total Agents", value: "1,247", icon: Users, color: "text-purple-400" },
-          { label: "Total Volume", value: "142.7 ETH", icon: TrendingUp, color: "text-blue-400" },
+          { label: "Total Volume", value: "142.7 0G", icon: TrendingUp, color: "text-blue-400" },
           { label: "Active Traders", value: "8,329", icon: Star, color: "text-pink-400" },
-          { label: "Floor Price", value: "0.012 ETH", icon: Zap, color: "text-green-400" }
+          { label: "Floor Price", value: "0.012 0G", icon: Zap, color: "text-green-400" }
         ].map((stat, index) => (
           <div key={index} className="gradient-card rounded-2xl p-6 text-center group hover:glow-purple transition-all duration-300">
             <stat.icon className={`w-8 h-8 mx-auto mb-3 ${stat.color}`} />
@@ -72,9 +72,6 @@ export default function HomePage() {
               Hot
             </Badge>
           </div>
-          <Button variant="ghost" className="text-purple-300 hover:text-purple-200">
-            View All
-          </Button>
         </div>
         <div className="flex gap-6 overflow-x-auto pb-4 snap-x scrollbar-hide">
           {mockAgents.map((agent) => (
@@ -119,9 +116,11 @@ export default function HomePage() {
           <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
             Join thousands of creators building the next generation of intelligent digital assets on 0G Network.
           </p>
-          <Button size="lg" className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3">
-            <Zap className="w-5 h-5 mr-2" />
-            Start Creating
+          <Button size="lg" className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3" asChild>
+            <a href="/create">
+              <Zap className="w-5 h-5 mr-2" />
+              Start Creating
+            </a>
           </Button>
         </div>
       </section>
