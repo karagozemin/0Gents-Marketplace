@@ -3,7 +3,6 @@
 import { PropsWithChildren, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, http } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
 import { defineChain } from "viem";
 import { RainbowKitProvider, getDefaultConfig, darkTheme } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -29,26 +28,21 @@ const ogGalileo = defineChain({
   testnet: true,
 });
 
-const wagmiConfig = ogRpcUrl
-  ? getDefaultConfig({
-      appName: "AgentX",
-      projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || "demo-project-id",
-      chains: [ogGalileo] as const,
-      transports: { [ogGalileo.id]: http(ogRpcUrl) },
-    })
-  : getDefaultConfig({
-      appName: "AgentX",
-      projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || "demo-project-id",
-      chains: [sepolia, mainnet] as const,
-      transports: { [sepolia.id]: http(), [mainnet.id]: http() },
-    });
+const wagmiConfig = getDefaultConfig({
+  appName: "AgentX",
+  projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || "demo-project-id",
+  chains: [ogGalileo] as const,
+  transports: {
+    [ogGalileo.id]: http(ogRpcUrl || "https://evmrpc-testnet.0g.ai"),
+  },
+});
 
 export default function Providers({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => new QueryClient());
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme()}>
+        <RainbowKitProvider theme={darkTheme()} initialChain={ogGalileo}>
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>

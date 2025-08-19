@@ -45,17 +45,28 @@ export default function Home() {
     }
   };
 
+  const wrongNetwork = mounted && chainId !== 16601;
+
   return (
-    <div className="min-h-screen max-w-3xl mx-auto p-6 flex flex-col gap-6">
+    <div className="min-h-screen max-w-6xl mx-auto p-6 flex flex-col gap-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">AgentX</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">AgentX</h1>
+          <p className="text-xs text-gray-500">Onchain AI Agent INFT Marketplace (0G-Galileo-Testnet)</p>
+        </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">chain: {mounted && chainId ? chainId : "-"}</span>
+          <span className="text-xs rounded-full border px-2 py-1 text-gray-600">chain: {mounted && chainId ? chainId : "-"}</span>
           <ConnectButton />
         </div>
       </header>
 
-      <section className="border rounded-lg p-4 space-y-3">
+      {wrongNetwork && (
+        <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-700 px-3 py-2 text-sm">
+          Please switch to 0G-Galileo-Testnet (chainId 16601) from your wallet.
+        </div>
+      )}
+
+      <section className="border rounded-lg p-4 space-y-3 shadow-sm">
         <h2 className="font-medium">Register Agent (on 0G)</h2>
         {AGENT_REGISTRY_ADDRESS && (
           <p className="text-xs text-gray-500 break-all">Registry: {AGENT_REGISTRY_ADDRESS}</p>
@@ -71,7 +82,7 @@ export default function Home() {
             className="flex-1 border rounded-md px-3 py-2"
           />
           <button
-            disabled={!AGENT_REGISTRY_ADDRESS || isPending}
+            disabled={!AGENT_REGISTRY_ADDRESS || isPending || wrongNetwork}
             onClick={async () => {
               try {
                 await writeContractAsync({
@@ -96,7 +107,7 @@ export default function Home() {
         )}
       </section>
 
-      <section className="border rounded-lg p-4 space-y-3">
+      <section className="border rounded-lg p-4 space-y-3 shadow-sm">
         <h2 className="font-medium">Mint INFT</h2>
         {INFT_ADDRESS && (
           <p className="text-xs text-gray-500 break-all">INFT: {INFT_ADDRESS}</p>
@@ -109,7 +120,7 @@ export default function Home() {
             className="flex-1 border rounded-md px-3 py-2"
           />
           <button
-            disabled={!INFT_ADDRESS || isPending}
+            disabled={!INFT_ADDRESS || isPending || wrongNetwork}
             onClick={async () => {
               try {
                 await writeContractAsync({
@@ -131,7 +142,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border rounded-lg p-4 space-y-3">
+      <section className="border rounded-lg p-4 space-y-3 shadow-sm">
         <h2 className="font-medium">List INFT</h2>
         {MARKETPLACE_ADDRESS && (
           <p className="text-xs text-gray-500 break-all">Marketplace: {MARKETPLACE_ADDRESS}</p>
@@ -150,7 +161,7 @@ export default function Home() {
             className="flex-1 border rounded-md px-3 py-2"
           />
           <button
-            disabled={!INFT_ADDRESS || !MARKETPLACE_ADDRESS || isPending}
+            disabled={!INFT_ADDRESS || !MARKETPLACE_ADDRESS || isPending || wrongNetwork}
             onClick={async () => {
               try {
                 // approve marketplace to transfer token
@@ -179,7 +190,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border rounded-lg p-4 space-y-3">
+      <section className="border rounded-lg p-4 space-y-3 shadow-sm">
         <h2 className="font-medium">Buy Listing</h2>
         <div className="flex gap-2">
           <input
@@ -195,7 +206,7 @@ export default function Home() {
             className="flex-1 border rounded-md px-3 py-2"
           />
           <button
-            disabled={!MARKETPLACE_ADDRESS || isPending}
+            disabled={!MARKETPLACE_ADDRESS || isPending || wrongNetwork}
             onClick={async () => {
               try {
                 await writeContractAsync({
