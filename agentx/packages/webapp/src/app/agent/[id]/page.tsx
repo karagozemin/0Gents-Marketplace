@@ -51,17 +51,22 @@ export default function AgentDetail() {
     
     // Find agent from mock agents, created agents, and global agents
     const findAgent = () => {
-      console.log("🔍 Looking for agent ID:", id);
+      // Decode URL-encoded ID
+      const decodedId = decodeURIComponent(id);
+      console.log("🔍 Looking for agent ID:", id, "→ decoded:", decodedId);
+      const searchId = decodedId;
       console.log("📋 Available mock agents:", mockAgents.map(a => a.id));
       
       // First check mock agents
-      let foundAgent = mockAgents.find(a => a.id === id);
+      let foundAgent = mockAgents.find(a => a.id === searchId);
       console.log("🎯 Found in mock agents:", !!foundAgent);
       
       if (!foundAgent) {
-        // Then check created agents
+        console.log("🔍 Checking created agents...");
         const createdAgents = getCreatedAgents();
-        const createdAgent = createdAgents.find(a => a.id === id);
+        console.log("📋 Created agents:", createdAgents.map(a => a.id));
+        const createdAgent = createdAgents.find(a => a.id === searchId);
+        console.log("🎯 Found in created agents:", !!createdAgent);
         if (createdAgent) {
           foundAgent = transformToMockAgent(createdAgent);
         }
@@ -69,24 +74,32 @@ export default function AgentDetail() {
       
       if (!foundAgent) {
         // Finally check global blockchain agents
+        console.log("🔍 Checking global agents...");
         const globalAgents = getGlobalAgents();
+        console.log("📋 Global agents:", globalAgents.map(a => ({ id: a.tokenId, name: (a as any).name || 'unnamed' })));
         
         // Try to find by blockchain ID format
-        let globalAgent = globalAgents.find(a => `blockchain-${a.tokenId}` === id);
+        let globalAgent = globalAgents.find(a => `blockchain-${a.tokenId}` === searchId);
+        console.log("🎯 Found by blockchain ID format:", !!globalAgent);
         
         // Also try to find by direct timestamp ID (for cross-browser compatibility)
         if (!globalAgent) {
-          globalAgent = globalAgents.find(a => a.tokenId === id);
+          globalAgent = globalAgents.find(a => a.tokenId === searchId);
+          console.log("🎯 Found by direct timestamp ID:", !!globalAgent);
         }
         
         // Also try to find by created ID format (legacy)
-        if (!globalAgent && id.startsWith('created-')) {
-          const createdId = id.replace('created-', '');
+        if (!globalAgent && searchId.startsWith('created-')) {
+          const createdId = searchId.replace('created-', '');
           globalAgent = globalAgents.find(a => a.tokenId === createdId);
+          console.log("🎯 Found by created ID format:", !!globalAgent);
         }
         
         if (globalAgent) {
           foundAgent = transformBlockchainAgent(globalAgent);
+          console.log("✅ Final agent found:", foundAgent?.name);
+        } else {
+          console.log("❌ No agent found anywhere");
         }
       }
       

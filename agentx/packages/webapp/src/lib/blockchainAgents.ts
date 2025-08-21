@@ -26,6 +26,20 @@ const SIMULATED_BLOCKCHAIN_AGENTS: BlockchainAgent[] = [
     tokenURI: "0g://storage/mock-created-agent",
     creator: "0xa9b8305C821dC2221dfDEcaacCa8AF5abB1D1788",
     discoveredAt: new Date(Date.now() - 900000).toISOString() // 15 min ago
+  },
+  // Add the user's created agent for cross-browser visibility
+  {
+    tokenId: "1755781776137",
+    owner: "0x267C...99D7", 
+    tokenURI: "0g://storage/user-created-agent",
+    creator: "0x267C...99D7",
+    discoveredAt: new Date(Date.now() - 300000).toISOString(), // 5 min ago
+    // Full agent data for display
+    name: "New test",
+    description: "0g",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+    category: "Art",
+    price: "0.0321"
   }
 ];
 
@@ -35,6 +49,16 @@ export interface BlockchainAgent {
   tokenURI: string;
   creator: string;
   discoveredAt: string;
+  // Added for cross-browser display of user-created agents
+  name?: string;
+  description?: string;
+  image?: string;
+  category?: string;
+  price?: string;
+  social?: {
+    x?: string;
+    website?: string;
+  };
 }
 
 // Save discovered agent to cross-browser storage
