@@ -5,7 +5,7 @@ export const ZERO_G_EXPLORER = process.env.NEXT_PUBLIC_0G_EXPLORER;
 
 // Contract Addresses
 export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
-export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS;
+export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS || "0xaB2a0701645Bfeef5ecA28598386f8dF699cF051";
 export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
 
 // 0G Storage Contract Addresses

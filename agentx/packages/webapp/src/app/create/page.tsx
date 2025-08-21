@@ -11,6 +11,8 @@ import { INFT_ADDRESS, INFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CH
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
 import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
 import { parseEther } from "viem";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 export default function CreatePage() {
   const [image, setImage] = useState("");
@@ -97,13 +99,14 @@ export default function CreatePage() {
 
       console.log("✅ Step 2: Agent metadata uploaded to 0G Storage:", storageResult.uri);
 
-      // Step 3: Mint the INFT with 0G Storage URI (with 0.05 OG creation fee)
+      // Step 3: Mint the INFT with 0G Storage URI (with 0.005 OG creation fee)
       writeINFT({
         address: INFT_ADDRESS as `0x${string}`,
         abi: INFT_ABI,
         functionName: "mint",
         args: [storageResult.uri!], // Use 0G Storage URI instead of base64
         value: parseEther("0.005"), // 0.005 OG creation fee
+        gas: BigInt(300000), // Optimized gas limit for SimpleINFT
       });
 
       console.log("🎯 Step 3: AI Agent INFT creation initiated on 0G Chain");
@@ -143,39 +146,9 @@ export default function CreatePage() {
         saveCreatedAgent(newAgent);
         setCreatedAgent(newAgent);
         
-        // Auto-list on marketplace
-        console.log("🏪 Step 4: Auto-listing on marketplace...");
-        try {
-          // First approve marketplace to transfer the NFT
-          await writeMarketplace({
-            address: INFT_ADDRESS as `0x${string}`,
-            abi: INFT_ABI,
-            functionName: "approve",
-            args: [MARKETPLACE_ADDRESS as `0x${string}`, BigInt(1)], // Assuming tokenId 1 for now
-          });
-          
-          // Then list on marketplace
-          setTimeout(async () => {
-            try {
-              await writeMarketplace({
-                address: MARKETPLACE_ADDRESS as `0x${string}`,
-                abi: MARKETPLACE_ABI,
-                functionName: "list",
-                args: [
-                  INFT_ADDRESS as `0x${string}`,
-                  BigInt(1), // Assuming tokenId 1 for now
-                  parseEther(price)
-                ],
-              });
-              console.log("✅ Agent auto-listed on marketplace!");
-            } catch (listErr) {
-              console.log("⚠️ Auto-listing failed, but agent created successfully");
-            }
-          }, 2000); // Wait 2 seconds for mint to be confirmed
-          
-        } catch (approveErr) {
-          console.log("⚠️ Auto-listing approval failed, but agent created successfully");
-        }
+        // Auto-listing temporarily disabled to reduce gas usage
+        console.log("ℹ️ Auto-listing disabled - agent created successfully!");
+        console.log("💡 You can manually list your agent on the marketplace later.");
         
         setIsCreating(false);
       }
@@ -265,7 +238,9 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
+      <Navbar />
+      <div className="py-12">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
@@ -471,12 +446,12 @@ export default function CreatePage() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="mt-3 p-3 bg-green-500/10 border border-green-400/30 rounded-lg">
-                    <div className="text-xs text-green-300">
-                      <strong>Auto-Listing:</strong><br/>
-                      • Agent automatically listed on marketplace<br/>
-                      • Platform Fee: 10% on each sale<br/>
-                      • Creator gets 90% of sale price
+                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-400/30 rounded-lg">
+                    <div className="text-xs text-blue-300">
+                      <strong>Manual Listing:</strong><br/>
+                      • Agent created successfully<br/>
+                      • List manually on marketplace later<br/>
+                      • Platform Fee: 10% on each sale
                     </div>
                   </div>
                 </div>
@@ -594,6 +569,8 @@ export default function CreatePage() {
           </div>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 }

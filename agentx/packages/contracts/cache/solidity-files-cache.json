@@ -838,6 +838,46 @@
       "artifacts": [
         "Marketplace"
       ]
+    },
+    "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/SimpleINFT.sol": {
+      "lastModificationDate": 1755777877329,
+      "contentHash": "390ae9d80679c8306ed06c5b221fb944",
+      "sourceName": "contracts/SimpleINFT.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
+        "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol",
+        "@openzeppelin/contracts/access/Ownable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SimpleINFT"
+      ]
     }
   }
 }

@@ -4,3 +4,4 @@
 export { AgentRegistry__factory } from "./AgentRegistry__factory";
 export { INFT__factory } from "./INFT__factory";
 export { Marketplace__factory } from "./Marketplace__factory";
+export { SimpleINFT__factory } from "./SimpleINFT__factory";

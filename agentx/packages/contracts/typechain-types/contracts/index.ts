@@ -4,3 +4,4 @@
 export type { AgentRegistry } from "./AgentRegistry";
 export type { INFT } from "./INFT";
 export type { Marketplace } from "./Marketplace";
+export type { SimpleINFT } from "./SimpleINFT";
