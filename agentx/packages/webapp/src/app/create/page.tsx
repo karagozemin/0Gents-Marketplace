@@ -173,13 +173,56 @@ export default function CreatePage() {
       
       saveGlobalAgent(blockchainAgent);
       
-      // Auto-listing temporarily disabled to reduce gas usage
-      console.log("ℹ️ Auto-listing disabled - agent created successfully!");
-      console.log("💡 You can manually list your agent on the marketplace later.");
+      // Auto-listing: Approve and list NFT on marketplace
+      console.log("🔄 Step 4: Auto-listing on marketplace...");
       
-      setIsCreating(false);
+      try {
+        // First approve marketplace to transfer NFT
+        console.log("📝 Approving marketplace for NFT transfer...");
+        writeMarketplace({
+          address: INFT_ADDRESS as `0x${string}`,
+          abi: INFT_ABI,
+          functionName: "approve",
+          args: [MARKETPLACE_ADDRESS as `0x${string}`, BigInt(timestamp)], // Use timestamp as tokenId
+          gas: BigInt(100000),
+        });
+      } catch (error) {
+        console.error("❌ Auto-listing failed:", error);
+        console.log("ℹ️ Agent created but not listed - you can list manually later");
+        setIsCreating(false);
+      }
     }
   }, [isMintSuccess]);
+
+  // Handle marketplace approval success (step 2 of auto-listing)
+  React.useEffect(() => {
+    if (isListSuccess && listHash && !createdAgent) {
+      console.log("✅ Marketplace approved! Now listing NFT...");
+      
+      try {
+        // List NFT on marketplace
+        const timestamp = Date.now();
+        const listingPrice = parseEther(price || "0.075");
+        
+        console.log("🏪 Listing NFT on marketplace...");
+        writeMarketplace({
+          address: MARKETPLACE_ADDRESS as `0x${string}`,
+          abi: MARKETPLACE_ABI,
+          functionName: "list",
+          args: [
+            INFT_ADDRESS as `0x${string}`, // NFT contract
+            BigInt(timestamp), // tokenId
+            listingPrice // price in wei
+          ],
+          gas: BigInt(200000),
+        });
+      } catch (error) {
+        console.error("❌ Listing failed:", error);
+        console.log("ℹ️ Agent approved but listing failed - you can list manually");
+        setIsCreating(false);
+      }
+    }
+  }, [isListSuccess, listHash]);
 
   // Handle errors
   React.useEffect(() => {
@@ -188,7 +231,13 @@ export default function CreatePage() {
       alert("Failed to mint NFT: " + mintError.message);
       setIsCreating(false);
     }
-  }, [mintError]);
+    
+    if (listError) {
+      console.error("Marketplace error:", listError);
+      console.log("ℹ️ Agent created but marketplace interaction failed");
+      setIsCreating(false);
+    }
+  }, [mintError, listError]);
 
   // Success State
   if (isMintSuccess && mintHash) {
@@ -470,14 +519,14 @@ export default function CreatePage() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-400/30 rounded-lg">
-                    <div className="text-xs text-blue-300">
-                      <strong>Manual Listing:</strong><br/>
-                      • Agent created successfully<br/>
-                      • List manually on marketplace later<br/>
-                      • Platform Fee: 10% on each sale
-                    </div>
-                  </div>
+                                <div className="mt-3 p-3 bg-green-500/10 border border-green-400/30 rounded-lg">
+                <div className="text-xs text-green-300">
+                  <strong>Auto-Listing Enabled:</strong><br/>
+                  • Agent created & auto-listed<br/>
+                  • Available for purchase immediately<br/>
+                  • Platform Fee: 10% on each sale
+                </div>
+              </div>
                 </div>
               </CardContent>
             </Card>
