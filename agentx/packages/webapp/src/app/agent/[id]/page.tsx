@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { parseEther } from "viem";
+import { MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/lib/contracts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +25,7 @@ import {
 } from "lucide-react";
 import { mockAgents } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
+import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
 import { callCompute, type ChatMessage, type ComputeRequest } from "@/lib/compute";
 
 export default function AgentDetail() {
@@ -35,11 +38,18 @@ export default function AgentDetail() {
   const [isLoading, setIsLoading] = useState(false);
   const [computeStats, setComputeStats] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
+  const [isBuying, setIsBuying] = useState(false);
+
+  // Buy functionality
+  const { writeContract, data: buyHash, error: buyError } = useWriteContract();
+  const { isLoading: isBuyLoading, isSuccess: isBuySuccess } = useWaitForTransactionReceipt({
+    hash: buyHash,
+  });
 
   useEffect(() => {
     setMounted(true);
     
-    // Find agent from both mock agents and created agents
+    // Find agent from mock agents, created agents, and global agents
     const findAgent = () => {
       // First check mock agents
       let foundAgent = mockAgents.find(a => a.id === id);
@@ -53,11 +63,84 @@ export default function AgentDetail() {
         }
       }
       
+      if (!foundAgent) {
+        // Finally check global blockchain agents
+        const globalAgents = getGlobalAgents();
+        
+        // Try to find by blockchain ID format
+        let globalAgent = globalAgents.find(a => `blockchain-${a.tokenId}` === id);
+        
+        // Also try to find by created ID format (for cross-browser compatibility)
+        if (!globalAgent && id.startsWith('created-')) {
+          const createdId = id.replace('created-', '');
+          globalAgent = globalAgents.find(a => a.tokenId === createdId || a.tokenId.includes(createdId));
+        }
+        
+        if (globalAgent) {
+          foundAgent = transformBlockchainAgent(globalAgent);
+        }
+      }
+      
       setAgent(foundAgent);
     };
     
     findAgent();
   }, [id]);
+
+  const handleBuyNow = async () => {
+    if (!isConnected) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    if (!agent || !MARKETPLACE_ADDRESS) {
+      alert("Agent or marketplace not found");
+      return;
+    }
+
+    setIsBuying(true);
+    try {
+      console.log("💰 Purchasing NFT from marketplace...");
+      
+      // For demo, we'll use listingId 1 (in real app, this would come from agent data)
+      const listingId = 1;
+      const price = parseEther(agent.priceEth.toString());
+      
+      await writeContract({
+        address: MARKETPLACE_ADDRESS as `0x${string}`,
+        abi: MARKETPLACE_ABI,
+        functionName: "buy",
+        args: [BigInt(listingId)],
+        value: price, // Full price
+        gas: BigInt(300000),
+      });
+
+      console.log("✅ Purchase transaction submitted");
+      
+    } catch (error) {
+      console.error("❌ Purchase failed:", error);
+      alert(`Purchase failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setIsBuying(false);
+    }
+  };
+
+  // Handle successful purchase
+  React.useEffect(() => {
+    if (isBuySuccess && buyHash) {
+      console.log("🎉 NFT purchased successfully!");
+      alert("🎉 NFT purchased successfully! Check your wallet.");
+      setIsBuying(false);
+    }
+  }, [isBuySuccess, buyHash]);
+
+  // Handle purchase errors
+  React.useEffect(() => {
+    if (buyError) {
+      console.error("Buy error:", buyError);
+      alert("Purchase failed: " + buyError.message);
+      setIsBuying(false);
+    }
+  }, [buyError]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || !agent) return;
@@ -180,9 +263,14 @@ export default function AgentDetail() {
                   </div>
 
                   <div className="mt-6 space-y-3">
-                    <Button size="lg" className="w-full gradient-0g hover:opacity-90 text-white font-semibold cursor-pointer">
+                    <Button 
+                      size="lg" 
+                      className="w-full gradient-0g hover:opacity-90 text-white font-semibold cursor-pointer"
+                      onClick={handleBuyNow}
+                      disabled={isBuying || isBuyLoading || !isConnected}
+                    >
                       <Zap className="w-5 h-5 mr-2" />
-                      Buy Now
+                      {isBuying || isBuyLoading ? "Purchasing..." : "Buy Now"}
                     </Button>
                     <Button size="lg" className="w-full bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 transition-all cursor-pointer backdrop-blur-sm">
                       <Eye className="w-5 h-5 mr-2" />
@@ -418,7 +506,7 @@ export default function AgentDetail() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {agent.history.map((item, index) => (
+                        {agent.history.map((item: any, index: number) => (
                           <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <div>
                               <p className="text-white font-medium">{item.activity}</p>

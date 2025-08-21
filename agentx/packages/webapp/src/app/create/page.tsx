@@ -10,6 +10,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagm
 import { INFT_ADDRESS, INFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
 import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
+import { saveGlobalAgent, type BlockchainAgent } from "@/lib/blockchainAgents";
 import { parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -100,16 +101,21 @@ export default function CreatePage() {
       console.log("✅ Step 2: Agent metadata uploaded to 0G Storage:", storageResult.uri);
 
       // Step 3: Mint the INFT with 0G Storage URI (with 0.005 OG creation fee)
+      console.log("🎯 Step 3: Minting INFT directly...");
+      console.log("Contract Address:", INFT_ADDRESS);
+      console.log("Function:", "mint");
+      console.log("Args:", [storageResult.uri!]);
+      
       writeINFT({
-        address: INFT_ADDRESS as `0x${string}`,
+        address: "0xaB2a0701645Bfeef5ecA28598386f8dF699cF051" as `0x${string}`, // Direct SimpleINFT address
         abi: INFT_ABI,
         functionName: "mint",
-        args: [storageResult.uri!], // Use 0G Storage URI instead of base64
-        value: parseEther("0.005"), // 0.005 OG creation fee
-        gas: BigInt(300000), // Optimized gas limit for SimpleINFT
+        args: [storageResult.uri!],
+        value: parseEther("0.005"),
+        gas: BigInt(500000),
       });
 
-      console.log("🎯 Step 3: AI Agent INFT creation initiated on 0G Chain");
+      console.log("✅ Step 3: MINT transaction submitted to SimpleINFT contract");
       
     } catch (error) {
       console.error("Error creating agent:", error);
@@ -120,41 +126,48 @@ export default function CreatePage() {
 
   // Handle successful creation
   React.useEffect(() => {
-    const handleSuccess = async () => {
-      if (isMintSuccess && mintHash && !createdAgent) {
-        console.log("🎉 AI Agent successfully created on 0G Network!");
-        
-        // Save to local storage for featured display
-        const newAgent: CreatedAgent = {
-          id: `created-${Date.now()}`,
-          tokenId: "1", // In real app, extract from transaction receipt
-          name,
-          description: desc,
-          image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-          category: category || "General",
-          creator: address || "",
-          price,
-          txHash: mintHash,
-          storageUri: "", // Would be from the upload result
-          social: {
-            x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
-            website: website || undefined
-          },
-          createdAt: new Date().toISOString()
-        };
-        
-        saveCreatedAgent(newAgent);
-        setCreatedAgent(newAgent);
-        
-        // Auto-listing temporarily disabled to reduce gas usage
-        console.log("ℹ️ Auto-listing disabled - agent created successfully!");
-        console.log("💡 You can manually list your agent on the marketplace later.");
-        
-        setIsCreating(false);
-      }
-    };
-    
-    handleSuccess();
+    if (isMintSuccess && mintHash && !createdAgent) {
+      console.log("🎉 AI Agent successfully created on 0G Network!");
+      
+      // Save to local storage for featured display
+      const timestamp = Date.now();
+      const newAgent: CreatedAgent = {
+        id: `created-${timestamp}`,
+        tokenId: timestamp.toString(), // Use timestamp as tokenId for cross-browser matching
+        name,
+        description: desc,
+        image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+        category: category || "General",
+        creator: address || "",
+        price,
+        txHash: mintHash,
+        storageUri: "", // Would be from the upload result
+        social: {
+          x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
+          website: website || undefined
+        },
+        createdAt: new Date().toISOString()
+      };
+      
+      saveCreatedAgent(newAgent);
+      setCreatedAgent(newAgent);
+      
+      // Also save to global storage for cross-browser visibility
+      const blockchainAgent: BlockchainAgent = {
+        tokenId: timestamp.toString(), // Use same timestamp for matching
+        owner: address || "",
+        tokenURI: "", // Would be extracted from transaction receipt
+        creator: address || "",
+        discoveredAt: new Date().toISOString()
+      };
+      saveGlobalAgent(blockchainAgent);
+      
+      // Auto-listing temporarily disabled to reduce gas usage
+      console.log("ℹ️ Auto-listing disabled - agent created successfully!");
+      console.log("💡 You can manually list your agent on the marketplace later.");
+      
+      setIsCreating(false);
+    }
   }, [isMintSuccess]);
 
   // Handle errors

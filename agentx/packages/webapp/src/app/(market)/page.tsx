@@ -3,14 +3,19 @@ import { AgentCard } from "@/components/AgentCard";
 import { AgentWideCard } from "@/components/AgentWideCard";
 import { mockAgents } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
+import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Star, Zap, Users } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useReadContract } from "wagmi";
+import { INFT_ADDRESS, INFT_ABI } from "@/lib/contracts";
 
 export default function HomePage() {
   const [allAgents, setAllAgents] = useState(mockAgents);
   const [mounted, setMounted] = useState(false);
+
+  // Note: SimpleINFT doesn't have totalSupply, using global agents count instead
 
   useEffect(() => {
     setMounted(true);
@@ -18,8 +23,19 @@ export default function HomePage() {
     const createdAgents = getCreatedAgents();
     const transformedCreated = createdAgents.map(transformToMockAgent);
     
-    // Put created agents first (featured)
-    setAllAgents([...transformedCreated, ...mockAgents]);
+    // Load global blockchain agents
+    const globalAgents = getGlobalAgents();
+    const transformedGlobal = globalAgents.map(transformBlockchainAgent);
+    
+    // Combine all agents (created first, then global, then mock)
+    // Remove duplicates based on ID
+    const combined = [...transformedCreated, ...transformedGlobal, ...mockAgents];
+    const unique = combined.filter((agent, index, self) => 
+      index === self.findIndex(a => a.id === agent.id)
+    );
+    
+    setAllAgents(unique);
+    console.log(`🌐 Loaded ${globalAgents.length} global agents, ${createdAgents.length} local agents`);
   }, []);
 
   if (!mounted) {

@@ -235,6 +235,7 @@ export function BuyNFT() {
         functionName: "buy",
         args: [BigInt(listingId)],
         value: parseEther(price),
+        gas: BigInt(300000), // Gas limit for buy operation
       });
 
       setTxHash(hash);
