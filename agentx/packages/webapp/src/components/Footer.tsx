@@ -54,7 +54,7 @@ export function Footer() {
             <h3 className="font-semibold text-white">Community</h3>
             <div className="flex gap-3">
               <a 
-                href="https://x.com/0G_labs" 
+                href="https://x.com/kaptan_web3" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-purple-500/20 hover:border-purple-400/30 transition-all"
@@ -62,7 +62,7 @@ export function Footer() {
                 <Twitter className="w-4 h-4 text-gray-400 hover:text-purple-300" />
               </a>
               <a 
-                href="https://github.com/0glabs" 
+                href="https://github.com/karagozemin" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-purple-500/20 hover:border-purple-400/30 transition-all"

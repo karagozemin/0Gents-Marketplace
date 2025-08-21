@@ -202,8 +202,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Live Demo**: https://0-gents-marketplace.vercel.app
 - **0G Network**: https://0g.ai
 - **Documentation**: [/docs](./docs)
-- **Discord**: [Join our community](https://discord.gg/0gnetwork)
-- **Twitter**: [@0GNetwork](https://twitter.com/0gnetwork)
+- **GitHub**: https://github.com/karagozemin/0Gents-Marketplace
+- **Twitter**: [@kaptan_web3](https://x.com/kaptan_web3)
 
 ## 🏆 Acknowledgments
 
