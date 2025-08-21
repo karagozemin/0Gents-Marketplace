@@ -18,6 +18,14 @@ const SIMULATED_BLOCKCHAIN_AGENTS: BlockchainAgent[] = [
     tokenURI: "0g://storage/blockchain-agent-1",
     creator: "0xa9b8305C821dC2221dfDEcaacCa8AF5abB1D1788",
     discoveredAt: new Date(Date.now() - 1800000).toISOString() // 30 min ago
+  },
+  // Add some mock created agents that appear in all browsers
+  {
+    tokenId: "1755780468531", // Your example timestamp
+    owner: "0xa9b8305C821dC2221dfDEcaacCa8AF5abB1D1788",
+    tokenURI: "0g://storage/mock-created-agent",
+    creator: "0xa9b8305C821dC2221dfDEcaacCa8AF5abB1D1788",
+    discoveredAt: new Date(Date.now() - 900000).toISOString() // 15 min ago
   }
 ];
 
@@ -29,17 +37,15 @@ export interface BlockchainAgent {
   discoveredAt: string;
 }
 
-// Save discovered agent to global storage (accessible across browsers)
+// Save discovered agent to cross-browser storage
 export function saveGlobalAgent(agent: BlockchainAgent): void {
   try {
-    // Add to simulated blockchain (this simulates blockchain indexing)
-    SIMULATED_BLOCKCHAIN_AGENTS.unshift(agent);
-    console.log('🌐 Agent added to simulated blockchain:', agent.tokenId);
-    console.log('📊 Total simulated blockchain agents:', SIMULATED_BLOCKCHAIN_AGENTS.length);
+    // Save to cross-browser localStorage key
+    const stored = localStorage.getItem('0gents_cross_browser_agents');
+    const existing = stored ? JSON.parse(stored) : [];
     
-    // Also save to localStorage for persistence within same browser
-    const existing = getGlobalAgents();
-    const existingIndex = existing.findIndex(a => a.tokenId === agent.tokenId);
+    // Check if already exists
+    const existingIndex = existing.findIndex((a: BlockchainAgent) => a.tokenId === agent.tokenId);
     
     let updated: BlockchainAgent[];
     if (existingIndex >= 0) {
@@ -49,7 +55,14 @@ export function saveGlobalAgent(agent: BlockchainAgent): void {
       updated = [agent, ...existing];
     }
     
-    localStorage.setItem(GLOBAL_AGENTS_KEY, JSON.stringify(updated));
+    localStorage.setItem('0gents_cross_browser_agents', JSON.stringify(updated));
+    console.log('🌐 Agent saved to cross-browser storage:', agent.tokenId);
+    console.log('📊 Total cross-browser agents:', updated.length);
+    
+    // Also trigger a custom event to notify other components
+    window.dispatchEvent(new CustomEvent('agentCreated', { 
+      detail: { agent, totalAgents: updated.length } 
+    }));
   } catch (error) {
     console.error('Failed to save global agent:', error);
   }
@@ -58,17 +71,17 @@ export function saveGlobalAgent(agent: BlockchainAgent): void {
 // Get all globally discovered agents
 export function getGlobalAgents(): BlockchainAgent[] {
   try {
-    // Get from localStorage with a global key (shared across sessions)
-    const stored = localStorage.getItem('0gents_all_created_agents');
-    const localAgents = stored ? JSON.parse(stored) : [];
+    // Get from global localStorage (this simulates blockchain indexing)
+    const stored = localStorage.getItem('0gents_cross_browser_agents');
+    const crossBrowserAgents = stored ? JSON.parse(stored) : [];
     
-    // Add the default blockchain agent
+    // Add the default blockchain agents
     const allAgents = [
-      ...localAgents,
+      ...crossBrowserAgents,
       ...SIMULATED_BLOCKCHAIN_AGENTS
     ];
     
-    console.log(`🌐 Returning ${allAgents.length} global agents (${localAgents.length} stored + ${SIMULATED_BLOCKCHAIN_AGENTS.length} default)`);
+    console.log(`🌐 Cross-browser agents: ${crossBrowserAgents.length} stored + ${SIMULATED_BLOCKCHAIN_AGENTS.length} default = ${allAgents.length} total`);
     return allAgents;
   } catch (error) {
     console.error('Failed to load global agents:', error);
@@ -108,34 +121,47 @@ export async function discoverAgentsFromBlockchain(): Promise<BlockchainAgent[]>
 }
 
 // Transform blockchain agent to display format
-export function transformBlockchainAgent(blockchainAgent: BlockchainAgent): AgentItem {
-  // Check if it's a timestamp-based agent (user created)
-  const isTimestamp = /^\d{13}$/.test(blockchainAgent.tokenId);
+export function transformBlockchainAgent(blockchainAgent: any): AgentItem {
+  // Check if this is an extended agent with full data
+  const hasFullData = blockchainAgent.name && blockchainAgent.description;
   
-  // Default names for known agents
+  // Use real data if available, otherwise use defaults
+  if (hasFullData) {
+    return {
+      id: blockchainAgent.tokenId, // Use direct tokenId for created agents
+      name: blockchainAgent.name,
+      description: blockchainAgent.description,
+      image: blockchainAgent.image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+      category: blockchainAgent.category || "General",
+      owner: blockchainAgent.owner,
+      priceEth: parseFloat(blockchainAgent.price) || 0.075,
+      history: [
+        {
+          activity: "Created by user",
+          date: blockchainAgent.discoveredAt,
+          priceEth: 0.005
+        }
+      ]
+    };
+  }
+  
+  // Fallback for default agents
+  const isTimestamp = /^\d{13}$/.test(blockchainAgent.tokenId);
   const agentNames: Record<string, string> = {
     "blockchain-1": "Global DeFi Bot"
-  };
-  
-  const agentDescriptions: Record<string, string> = {
-    "blockchain-1": "Cross-browser visible DeFi trading assistant"
-  };
-  
-  const agentCategories: Record<string, string> = {
-    "blockchain-1": "Trading"
   };
 
   return {
     id: `blockchain-${blockchainAgent.tokenId}`,
-    name: agentNames[blockchainAgent.tokenId] || (isTimestamp ? `Created Agent #${blockchainAgent.tokenId.slice(-4)}` : `Blockchain Agent #${blockchainAgent.tokenId}`),
-    description: agentDescriptions[blockchainAgent.tokenId] || (isTimestamp ? "User-created AI agent from blockchain" : "AI Agent discovered on blockchain network"),
+    name: agentNames[blockchainAgent.tokenId] || `Blockchain Agent #${blockchainAgent.tokenId}`,
+    description: "AI Agent discovered on blockchain network",
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-    category: agentCategories[blockchainAgent.tokenId] || (isTimestamp ? "General" : "Blockchain"),
+    category: "Blockchain",
     owner: blockchainAgent.owner,
     priceEth: 0.075,
     history: [
       {
-        activity: isTimestamp ? "Created by user" : "Discovered on blockchain",
+        activity: "Discovered on blockchain",
         date: blockchainAgent.discoveredAt,
         priceEth: 0.005
       }

@@ -132,7 +132,7 @@ export default function CreatePage() {
       // Save to local storage for featured display
       const timestamp = Date.now();
       const newAgent: CreatedAgent = {
-        id: `created-${timestamp}`,
+        id: `${timestamp}`, // Remove 'created-' prefix for simpler URLs
         tokenId: timestamp.toString(), // Use timestamp as tokenId for cross-browser matching
         name,
         description: desc,
@@ -152,14 +152,25 @@ export default function CreatePage() {
       saveCreatedAgent(newAgent);
       setCreatedAgent(newAgent);
       
-      // Also save to global storage for cross-browser visibility
+      // Also save to cross-browser storage with full agent data
       const blockchainAgent: BlockchainAgent = {
-        tokenId: timestamp.toString(), // Use same timestamp for matching
+        tokenId: timestamp.toString(),
         owner: address || "",
         tokenURI: "", // Would be extracted from transaction receipt
         creator: address || "",
-        discoveredAt: new Date().toISOString()
-      };
+        discoveredAt: new Date().toISOString(),
+        // Add extra fields for cross-browser display
+        name,
+        description: desc,
+        image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+        category: category || "General",
+        price,
+        social: {
+          x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
+          website: website || undefined
+        }
+      } as any; // Extend the type temporarily
+      
       saveGlobalAgent(blockchainAgent);
       
       // Auto-listing temporarily disabled to reduce gas usage

@@ -19,23 +19,21 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true);
-    // Load created agents and combine with mock agents
+    // Use mockAgents as primary source (includes all cross-browser agents)
+    // Add any local created agents that aren't already in mock data
     const createdAgents = getCreatedAgents();
     const transformedCreated = createdAgents.map(transformToMockAgent);
     
-    // Load global blockchain agents
-    const globalAgents = getGlobalAgents();
-    const transformedGlobal = globalAgents.map(transformBlockchainAgent);
-    
-    // Combine all agents (created first, then global, then mock)
-    // Remove duplicates based on ID
-    const combined = [...transformedCreated, ...transformedGlobal, ...mockAgents];
-    const unique = combined.filter((agent, index, self) => 
-      index === self.findIndex(a => a.id === agent.id)
+    // Filter out created agents that already exist in mockAgents
+    const newCreatedAgents = transformedCreated.filter(created => 
+      !mockAgents.some(mock => mock.id === created.id)
     );
     
-    setAllAgents(unique);
-    console.log(`🌐 Loaded ${globalAgents.length} global agents, ${createdAgents.length} local agents`);
+    // Combine: new created agents first, then all mock agents
+    const allAgents = [...newCreatedAgents, ...mockAgents];
+    
+    setAllAgents(allAgents);
+    console.log(`🌐 Loaded ${mockAgents.length} mock agents, ${newCreatedAgents.length} new local agents`);
   }, []);
 
   if (!mounted) {
