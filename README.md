@@ -2,7 +2,7 @@
 
 > **Decentralized marketplace for AI-powered Intelligent NFTs built on 0G Network**
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://0gents-marketplace.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://0-gents-marketplace.vercel.app)
 [![0G Network](https://img.shields.io/badge/Built_on-0G_Network-purple?style=for-the-badge)](https://0g.ai)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
@@ -199,7 +199,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- **Live Demo**: https://0gents-marketplace.vercel.app
+- **Live Demo**: https://0-gents-marketplace.vercel.app
 - **0G Network**: https://0g.ai
 - **Documentation**: [/docs](./docs)
 - **Discord**: [Join our community](https://discord.gg/0gnetwork)
