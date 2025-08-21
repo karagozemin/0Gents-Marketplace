@@ -1,21 +1,21 @@
 // 0G Galileo Testnet Configuration
-export const ZERO_G_CHAIN_ID = 16601;
-export const ZERO_G_RPC_URL = "https://evmrpc-testnet.0g.ai";
-export const ZERO_G_EXPLORER = "https://chainscan-galileo.0g.ai";
+export const ZERO_G_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 16601;
+export const ZERO_G_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL;
+export const ZERO_G_EXPLORER = process.env.NEXT_PUBLIC_0G_EXPLORER;
 
-// Contract Addresses - Updated with newly deployed contracts (Dec 2024)
-export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS || "0x13C90a9c0Fc662DE1Bc0035e8E1040A8170615c2";
-export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS || "0xE272083c61965B70892CcF1A664D7c2C219A5ee3";
-export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0x0a3874E432F8Ab6B2b8f595b921E1C5ea32C5060";
+// Contract Addresses
+export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
+export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS;
+export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
 
 // 0G Storage Contract Addresses
-export const ZERO_G_STORAGE_FLOW = "0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628";
-export const ZERO_G_STORAGE_MINE = "0x3A0d1d67497Ad770d6f72e7f4B8F0BAbaa2A649C";
-export const ZERO_G_STORAGE_MARKET = "0x53191725d260221bBa307D8EeD6e2Be8DD265e19";
-export const ZERO_G_STORAGE_REWARD = "0xd3D4D91125D76112AE256327410Dd0414Ee08Cb4";
+export const ZERO_G_STORAGE_FLOW = process.env.NEXT_PUBLIC_0G_STORAGE_FLOW;
+export const ZERO_G_STORAGE_MINE = process.env.NEXT_PUBLIC_0G_STORAGE_MINE;
+export const ZERO_G_STORAGE_MARKET = process.env.NEXT_PUBLIC_0G_STORAGE_MARKET;
+export const ZERO_G_STORAGE_REWARD = process.env.NEXT_PUBLIC_0G_STORAGE_REWARD;
 
 // 0G DA Contract Address
-export const ZERO_G_DA_ENTRANCE = "0xE75A073dA5bb7b0eC622170Fd268f35E675a957B";
+export const ZERO_G_DA_ENTRANCE = process.env.NEXT_PUBLIC_0G_DA_ENTRANCE;
 
 export const AGENT_REGISTRY_ABI = [
   {
