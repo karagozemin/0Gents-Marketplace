@@ -4,7 +4,6 @@
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://0-gents-marketplace.vercel.app)
 [![0G Network](https://img.shields.io/badge/Built_on-0G_Network-purple?style=for-the-badge)](https://0g.ai)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 ## 🌟 Overview
 
@@ -192,10 +191,6 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 3. Commit changes: `git commit -m 'Add amazing feature'`
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 
