@@ -2,11 +2,30 @@
 import { AgentCard } from "@/components/AgentCard";
 import { AgentWideCard } from "@/components/AgentWideCard";
 import { mockAgents } from "@/lib/mock";
+import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Star, Zap, Users } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function HomePage() {
+  const [allAgents, setAllAgents] = useState(mockAgents);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Load created agents and combine with mock agents
+    const createdAgents = getCreatedAgents();
+    const transformedCreated = createdAgents.map(transformToMockAgent);
+    
+    // Put created agents first (featured)
+    setAllAgents([...transformedCreated, ...mockAgents]);
+  }, []);
+
+  if (!mounted) {
+    return null; // Prevent hydration mismatch
+  }
+
   return (
     <div className="space-y-12">
       {/* Hero Section */}
@@ -39,7 +58,7 @@ export default function HomePage() {
               <Zap className="w-5 h-5 mr-2" />
               Explore Agents
             </Button>
-            <Button size="lg" variant="outline" className="border-purple-400/50 text-purple-300 hover:bg-purple-400/10 px-8 py-3 cursor-pointer" asChild>
+            <Button size="lg" className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 px-8 py-3 cursor-pointer backdrop-blur-sm" asChild>
               <a href="/create">Create Agent</a>
             </Button>
           </div>
@@ -63,7 +82,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Section */}
-      <section className="space-y-6">
+      <section id="featured-section" className="space-y-6 scroll-mt-24">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Star className="w-6 h-6 text-yellow-400" />
@@ -74,9 +93,9 @@ export default function HomePage() {
           </div>
         </div>
         <div className="flex gap-6 overflow-x-auto pb-4 snap-x scrollbar-hide">
-          {mockAgents.map((agent) => (
+          {allAgents.slice(0, 6).map((agent) => (
             <div key={agent.id} className="snap-start">
-              <AgentWideCard {...agent} tag="Featured" />
+              <AgentWideCard {...agent} tag={allAgents.indexOf(agent) < getCreatedAgents().length ? "New" : "Featured"} />
             </div>
           ))}
         </div>
@@ -102,7 +121,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {mockAgents.concat(mockAgents).map((agent, index) => (
+          {allAgents.concat(allAgents).map((agent, index) => (
             <AgentCard key={`${agent.id}-${index}`} {...agent} />
           ))}
         </div>

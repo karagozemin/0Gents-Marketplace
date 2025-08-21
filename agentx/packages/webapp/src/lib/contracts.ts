@@ -3,10 +3,10 @@ export const ZERO_G_CHAIN_ID = 16601;
 export const ZERO_G_RPC_URL = "https://evmrpc-testnet.0g.ai";
 export const ZERO_G_EXPLORER = "https://chainscan-galileo.0g.ai";
 
-// Contract Addresses
-export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS || "";
-export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS || "";
-export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "";
+// Contract Addresses - Updated with newly deployed contracts (Dec 2024)
+export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS || "0x13C90a9c0Fc662DE1Bc0035e8E1040A8170615c2";
+export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS || "0xE272083c61965B70892CcF1A664D7c2C219A5ee3";
+export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0x0a3874E432F8Ab6B2b8f595b921E1C5ea32C5060";
 
 // 0G Storage Contract Addresses
 export const ZERO_G_STORAGE_FLOW = "0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628";
@@ -84,13 +84,17 @@ export const INFT_ABI = [
     name: "mint",
     inputs: [{ name: "tokenURI_", type: "string" }],
     outputs: [{ name: "tokenId", type: "uint256" }],
-    stateMutability: "nonpayable",
+    stateMutability: "payable", // Changed to payable for creation fee
   },
+  { type: "function", name: "balanceOf", inputs: [{ name: "owner", type: "address" }], outputs: [{ name: "balance", type: "uint256" }], stateMutability: "view" },
   { type: "function", name: "ownerOf", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ name: "owner", type: "address" }], stateMutability: "view" },
   { type: "function", name: "tokenURI", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ name: "uri", type: "string" }], stateMutability: "view" },
   { type: "function", name: "approve", inputs: [{ name: "to", type: "address" }, { name: "tokenId", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
   { type: "function", name: "getApproved", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ name: "operator", type: "address" }], stateMutability: "view" },
   { type: "function", name: "setApprovalForAll", inputs: [{ name: "operator", type: "address" }, { name: "approved", type: "bool" }], outputs: [], stateMutability: "nonpayable" },
+  { type: "function", name: "creationFee", inputs: [], outputs: [{ name: "", type: "uint256" }], stateMutability: "view" },
+  { type: "function", name: "feeRecipient", inputs: [], outputs: [{ name: "", type: "address" }], stateMutability: "view" },
+  { type: "event", name: "AgentCreated", inputs: [{ name: "tokenId", type: "uint256", indexed: true }, { name: "creator", type: "address", indexed: true }, { name: "tokenURI", type: "string" }], anonymous: false },
 ] as const;
 
 export const MARKETPLACE_ABI = [
@@ -103,7 +107,7 @@ export const MARKETPLACE_ABI = [
       { name: "price", type: "uint256" },
     ],
     outputs: [{ name: "listingId", type: "uint256" }],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable", // No listing fee needed
   },
   {
     type: "function",
@@ -111,6 +115,73 @@ export const MARKETPLACE_ABI = [
     inputs: [{ name: "listingId", type: "uint256" }],
     outputs: [],
     stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "cancel",
+    inputs: [{ name: "listingId", type: "uint256" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "listings",
+    inputs: [{ name: "listingId", type: "uint256" }],
+    outputs: [
+      { name: "nft", type: "address" },
+      { name: "tokenId", type: "uint256" },
+      { name: "seller", type: "address" },
+      { name: "price", type: "uint256" },
+      { name: "active", type: "bool" }
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "platformFeePercent",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+
+  {
+    type: "function",
+    name: "feeRecipient",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "calculateFees",
+    inputs: [{ name: "price", type: "uint256" }],
+    outputs: [
+      { name: "platformFee", type: "uint256" },
+      { name: "sellerAmount", type: "uint256" }
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "Listed",
+    inputs: [
+      { name: "listingId", type: "uint256", indexed: true },
+      { name: "nft", type: "address", indexed: true },
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "seller", type: "address" },
+      { name: "price", type: "uint256" }
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Purchased",
+    inputs: [
+      { name: "listingId", type: "uint256", indexed: true },
+      { name: "buyer", type: "address" },
+      { name: "platformFee", type: "uint256" }
+    ],
+    anonymous: false,
   },
 ] as const;
 

@@ -79,7 +79,7 @@ export function AgentWideCard({ id, name, owner, image, priceEth, tag }: {
               Buy Now
             </Link>
           </Button>
-          <Button size="sm" variant="outline" className="border-purple-400/50 text-purple-300 hover:bg-purple-400/10 cursor-pointer">
+          <Button size="sm" className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 cursor-pointer backdrop-blur-sm">
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>

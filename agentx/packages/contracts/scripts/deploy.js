@@ -15,14 +15,20 @@ async function main() {
   console.log("AgentRegistry deployed at:", await agentRegistry.getAddress());
 
   const INFT = await ethers.getContractFactory("INFT");
-  const inft = await INFT.deploy();
+  // Use deployer address as fee recipient for INFT as well
+  const inftFeeRecipient = await signer.getAddress();
+  const inft = await INFT.deploy(inftFeeRecipient);
   await inft.waitForDeployment();
   console.log("INFT deployed at:", await inft.getAddress());
+  console.log("INFT fee recipient set to:", inftFeeRecipient);
 
   const Marketplace = await ethers.getContractFactory("Marketplace");
-  const marketplace = await Marketplace.deploy();
+  // Use deployer address as fee recipient (you can change this to any address)
+  const feeRecipient = await signer.getAddress();
+  const marketplace = await Marketplace.deploy(feeRecipient);
   await marketplace.waitForDeployment();
   console.log("Marketplace deployed at:", await marketplace.getAddress());
+  console.log("Fee recipient set to:", feeRecipient);
 }
 
 main().catch((e) => {

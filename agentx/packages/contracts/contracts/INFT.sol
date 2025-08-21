@@ -7,13 +7,33 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract INFT is ERC721, ERC721URIStorage, Ownable {
     uint256 private _nextTokenId = 1;
+    
+    // Fee system
+    uint256 public creationFee = 0.005 ether; // 0.005 OG creation fee
+    address public feeRecipient;
 
-    constructor() ERC721("AgentX INFT", "AINFT") Ownable(msg.sender) {}
+    event AgentCreated(uint256 indexed tokenId, address indexed creator, string tokenURI);
+    event CreationFeeUpdated(uint256 newFee);
+    event FeeRecipientUpdated(address newRecipient);
 
-    function mint(string calldata tokenURI_) external returns (uint256 tokenId) {
+    constructor(address _feeRecipient) ERC721("AgentX INFT", "AINFT") Ownable(msg.sender) {
+        feeRecipient = _feeRecipient;
+    }
+
+    function mint(string calldata tokenURI_) external payable returns (uint256 tokenId) {
+        require(msg.value >= creationFee, "INSUFFICIENT_CREATION_FEE");
+        
         tokenId = _nextTokenId++;
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, tokenURI_);
+        
+        // Send creation fee to fee recipient
+        if (msg.value > 0) {
+            (bool success, ) = payable(feeRecipient).call{value: msg.value}("");
+            require(success, "FEE_TRANSFER_FAILED");
+        }
+        
+        emit AgentCreated(tokenId, msg.sender, tokenURI_);
     }
 
     // Overrides required by Solidity
@@ -33,6 +53,24 @@ contract INFT is ERC721, ERC721URIStorage, Ownable {
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+    
+    // Admin functions
+    function updateCreationFee(uint256 _newFee) external onlyOwner {
+        creationFee = _newFee;
+        emit CreationFeeUpdated(_newFee);
+    }
+    
+    function updateFeeRecipient(address _newRecipient) external onlyOwner {
+        require(_newRecipient != address(0), "ZERO_ADDRESS");
+        feeRecipient = _newRecipient;
+        emit FeeRecipientUpdated(_newRecipient);
+    }
+    
+    // Emergency withdraw function
+    function emergencyWithdraw() external onlyOwner {
+        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
+        require(success, "WITHDRAW_FAILED");
     }
 }
 

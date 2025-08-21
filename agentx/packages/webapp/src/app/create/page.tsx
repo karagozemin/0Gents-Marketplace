@@ -5,10 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Upload, Zap, Eye, Info, Wallet } from "lucide-react";
+import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2 } from "lucide-react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { INFT_ADDRESS, INFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
+import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
 import { parseEther } from "viem";
 
 export default function CreatePage() {
@@ -17,8 +18,11 @@ export default function CreatePage() {
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
+  const [xHandle, setXHandle] = useState("");
+  const [website, setWebsite] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [createdAgent, setCreatedAgent] = useState<CreatedAgent | null>(null);
   
   const { address, isConnected } = useAccount();
 
@@ -74,11 +78,15 @@ export default function CreatePage() {
           }
         },
         skills: category ? [category.toLowerCase()] : ["general"],
+        social: {
+          x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
+          website: website || undefined
+        },
         created: new Date().toISOString(),
         updated: new Date().toISOString()
       };
 
-      console.log("Creating agent with 0G Storage integration:", metadata);
+      console.log("🔥 Step 1: Creating AI Agent with 0G Storage integration:", metadata);
 
       // Step 2: Upload metadata to 0G Storage
       const storageResult = await uploadAgentMetadata(metadata);
@@ -87,17 +95,18 @@ export default function CreatePage() {
         throw new Error(`0G Storage upload failed: ${storageResult.error}`);
       }
 
-      console.log("Metadata uploaded to 0G Storage:", storageResult.uri);
+      console.log("✅ Step 2: Agent metadata uploaded to 0G Storage:", storageResult.uri);
 
-      // Step 3: Mint the INFT with 0G Storage URI
+      // Step 3: Mint the INFT with 0G Storage URI (with 0.05 OG creation fee)
       writeINFT({
         address: INFT_ADDRESS as `0x${string}`,
         abi: INFT_ABI,
         functionName: "mint",
         args: [storageResult.uri!], // Use 0G Storage URI instead of base64
+        value: parseEther("0.005"), // 0.005 OG creation fee
       });
 
-      console.log("INFT minting initiated with 0G Storage URI");
+      console.log("🎯 Step 3: AI Agent INFT creation initiated on 0G Chain");
       
     } catch (error) {
       console.error("Error creating agent:", error);
@@ -106,18 +115,73 @@ export default function CreatePage() {
     }
   };
 
-  // Handle successful mint
+  // Handle successful creation
   React.useEffect(() => {
-    if (isMintSuccess) {
-      alert("Agent NFT minted successfully!");
-      // Reset form
-      setName("");
-      setDesc("");
-      setPrice("");
-      setImage("");
-      setCategory("");
-      setIsCreating(false);
-    }
+    const handleSuccess = async () => {
+      if (isMintSuccess && mintHash && !createdAgent) {
+        console.log("🎉 AI Agent successfully created on 0G Network!");
+        
+        // Save to local storage for featured display
+        const newAgent: CreatedAgent = {
+          id: `created-${Date.now()}`,
+          tokenId: "1", // In real app, extract from transaction receipt
+          name,
+          description: desc,
+          image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+          category: category || "General",
+          creator: address || "",
+          price,
+          txHash: mintHash,
+          storageUri: "", // Would be from the upload result
+          social: {
+            x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
+            website: website || undefined
+          },
+          createdAt: new Date().toISOString()
+        };
+        
+        saveCreatedAgent(newAgent);
+        setCreatedAgent(newAgent);
+        
+        // Auto-list on marketplace
+        console.log("🏪 Step 4: Auto-listing on marketplace...");
+        try {
+          // First approve marketplace to transfer the NFT
+          await writeMarketplace({
+            address: INFT_ADDRESS as `0x${string}`,
+            abi: INFT_ABI,
+            functionName: "approve",
+            args: [MARKETPLACE_ADDRESS as `0x${string}`, BigInt(1)], // Assuming tokenId 1 for now
+          });
+          
+          // Then list on marketplace
+          setTimeout(async () => {
+            try {
+              await writeMarketplace({
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                abi: MARKETPLACE_ABI,
+                functionName: "list",
+                args: [
+                  INFT_ADDRESS as `0x${string}`,
+                  BigInt(1), // Assuming tokenId 1 for now
+                  parseEther(price)
+                ],
+              });
+              console.log("✅ Agent auto-listed on marketplace!");
+            } catch (listErr) {
+              console.log("⚠️ Auto-listing failed, but agent created successfully");
+            }
+          }, 2000); // Wait 2 seconds for mint to be confirmed
+          
+        } catch (approveErr) {
+          console.log("⚠️ Auto-listing approval failed, but agent created successfully");
+        }
+        
+        setIsCreating(false);
+      }
+    };
+    
+    handleSuccess();
   }, [isMintSuccess]);
 
   // Handle errors
@@ -128,6 +192,77 @@ export default function CreatePage() {
       setIsCreating(false);
     }
   }, [mintError]);
+
+  // Success State
+  if (isMintSuccess && mintHash) {
+    return (
+      <div className="min-h-screen py-12">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="gradient-card rounded-3xl p-12 border border-green-400/30">
+            <div className="w-20 h-20 mx-auto mb-6 bg-green-500/20 rounded-full flex items-center justify-center">
+              <Sparkles className="w-10 h-10 text-green-400" />
+            </div>
+            
+            <h1 className="text-4xl font-bold text-white mb-4">
+              🎉 Successfully Created!
+            </h1>
+            
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Your AI Agent NFT has been successfully created on the 0G Network. 
+              It's now live and ready to be discovered by the community!
+            </p>
+            
+            <div className="bg-black/20 rounded-lg p-6 mb-8">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Transaction Hash:</span>
+                <span className="font-mono text-green-400">
+                  {mintHash.slice(0, 10)}...{mintHash.slice(-8)}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-center gap-4">
+              <Button 
+                size="lg" 
+                className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3 cursor-pointer"
+                onClick={() => window.location.href = '/my-collections'}
+              >
+                <Eye className="w-5 h-5 mr-2" />
+                View My Collections
+              </Button>
+              
+              <Button 
+                size="lg" 
+                className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 backdrop-blur-sm px-8 py-3 cursor-pointer"
+                onClick={() => window.location.href = '/#featured-section'}
+              >
+                <Eye className="w-5 h-5 mr-2" />
+                Explore Marketplace
+              </Button>
+              
+              <Button 
+                size="lg" 
+                className="bg-gray-800/80 text-white border border-gray-400/50 hover:bg-gray-800/90 hover:border-gray-400/70 backdrop-blur-sm px-8 py-3 cursor-pointer"
+                onClick={() => {
+                  // Reset form for new creation
+                  setName("");
+                  setDesc("");
+                  setPrice("");
+                  setImage("");
+                  setCategory("");
+                  setXHandle("");
+                  setWebsite("");
+                  window.location.reload();
+                }}
+              >
+                Create Another
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-12">
@@ -224,6 +359,42 @@ export default function CreatePage() {
                   />
                   <p className="text-xs text-gray-500">Optional: Provide an image URL for your agent</p>
                 </div>
+
+                {/* Social Links */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Share2 className="w-4 h-4 text-purple-400" />
+                    <h3 className="font-medium text-white">Social Links</h3>
+                    <span className="text-xs text-gray-500">(Optional)</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* X Handle */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300">X (Twitter) Handle</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">@</span>
+                        <Input 
+                          placeholder="username" 
+                          value={xHandle.replace('@', '')} 
+                          onChange={(e) => setXHandle(e.target.value.replace('@', ''))}
+                          className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500 pl-8"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Website */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300">Website</label>
+                      <Input 
+                        placeholder="https://yourwebsite.com" 
+                        value={website} 
+                        onChange={(e) => setWebsite(e.target.value)}
+                        className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500"
+                      />
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -281,23 +452,31 @@ export default function CreatePage() {
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Minting Fee</span>
+                    <span className="text-gray-300">Creation Fee</span>
                     <Badge variant="outline" className="border-purple-400/50 text-purple-300">
-                      0.001 OG
+                      0.005 OG
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300">Network Fee</span>
                     <Badge variant="outline" className="border-green-400/50 text-green-300">
-                      ~0.0005 OG
+                      ~0.001 OG
                     </Badge>
                   </div>
                   <div className="border-t border-white/10 pt-3">
                     <div className="flex justify-between items-center font-semibold">
                       <span className="text-white">Total Estimated</span>
                       <Badge variant="outline" className="border-yellow-400/50 text-yellow-300">
-                        ~0.0015 OG
+                        ~0.006 OG
                       </Badge>
+                    </div>
+                  </div>
+                  <div className="mt-3 p-3 bg-green-500/10 border border-green-400/30 rounded-lg">
+                    <div className="text-xs text-green-300">
+                      <strong>Auto-Listing:</strong><br/>
+                      • Agent automatically listed on marketplace<br/>
+                      • Platform Fee: 10% on each sale<br/>
+                      • Creator gets 90% of sale price
                     </div>
                   </div>
                 </div>

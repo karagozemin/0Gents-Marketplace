@@ -38,8 +38,8 @@
       ]
     },
     "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/INFT.sol": {
-      "lastModificationDate": 1755522342613,
-      "contentHash": "827a856d317af5e1aa3ff19f078859c5",
+      "lastModificationDate": 1755773651713,
+      "contentHash": "5ee2fae74e7ba17efdb8b9640311ed3b",
       "sourceName": "contracts/INFT.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -801,8 +801,8 @@
       "artifacts": []
     },
     "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/Marketplace.sol": {
-      "lastModificationDate": 1755522364977,
-      "contentHash": "11bc922fb3b6a6757ba37bfd3893332e",
+      "lastModificationDate": 1755773534867,
+      "contentHash": "e1a47d345366a42cc2b6e5ad92f5707c",
       "sourceName": "contracts/Marketplace.sol",
       "solcConfig": {
         "version": "0.8.24",

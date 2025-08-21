@@ -28,6 +28,9 @@ export interface INFTInterface extends Interface {
     nameOrSignature:
       | "approve"
       | "balanceOf"
+      | "creationFee"
+      | "emergencyWithdraw"
+      | "feeRecipient"
       | "getApproved"
       | "isApprovedForAll"
       | "mint"
@@ -43,13 +46,18 @@ export interface INFTInterface extends Interface {
       | "tokenURI"
       | "transferFrom"
       | "transferOwnership"
+      | "updateCreationFee"
+      | "updateFeeRecipient"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
+      | "AgentCreated"
       | "Approval"
       | "ApprovalForAll"
       | "BatchMetadataUpdate"
+      | "CreationFeeUpdated"
+      | "FeeRecipientUpdated"
       | "MetadataUpdate"
       | "OwnershipTransferred"
       | "Transfer"
@@ -62,6 +70,18 @@ export interface INFTInterface extends Interface {
   encodeFunctionData(
     functionFragment: "balanceOf",
     values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "creationFee",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "emergencyWithdraw",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "feeRecipient",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getApproved",
@@ -111,9 +131,29 @@ export interface INFTInterface extends Interface {
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "updateCreationFee",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "updateFeeRecipient",
+    values: [AddressLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "creationFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "emergencyWithdraw",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "feeRecipient",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
     data: BytesLike
@@ -156,6 +196,36 @@ export interface INFTInterface extends Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateCreationFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateFeeRecipient",
+    data: BytesLike
+  ): Result;
+}
+
+export namespace AgentCreatedEvent {
+  export type InputTuple = [
+    tokenId: BigNumberish,
+    creator: AddressLike,
+    tokenURI: string
+  ];
+  export type OutputTuple = [
+    tokenId: bigint,
+    creator: string,
+    tokenURI: string
+  ];
+  export interface OutputObject {
+    tokenId: bigint;
+    creator: string;
+    tokenURI: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace ApprovalEvent {
@@ -207,6 +277,30 @@ export namespace BatchMetadataUpdateEvent {
   export interface OutputObject {
     _fromTokenId: bigint;
     _toTokenId: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CreationFeeUpdatedEvent {
+  export type InputTuple = [newFee: BigNumberish];
+  export type OutputTuple = [newFee: bigint];
+  export interface OutputObject {
+    newFee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace FeeRecipientUpdatedEvent {
+  export type InputTuple = [newRecipient: AddressLike];
+  export type OutputTuple = [newRecipient: string];
+  export interface OutputObject {
+    newRecipient: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -308,6 +402,12 @@ export interface INFT extends BaseContract {
 
   balanceOf: TypedContractMethod<[owner: AddressLike], [bigint], "view">;
 
+  creationFee: TypedContractMethod<[], [bigint], "view">;
+
+  emergencyWithdraw: TypedContractMethod<[], [void], "nonpayable">;
+
+  feeRecipient: TypedContractMethod<[], [string], "view">;
+
   getApproved: TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
 
   isApprovedForAll: TypedContractMethod<
@@ -316,7 +416,7 @@ export interface INFT extends BaseContract {
     "view"
   >;
 
-  mint: TypedContractMethod<[tokenURI_: string], [bigint], "nonpayable">;
+  mint: TypedContractMethod<[tokenURI_: string], [bigint], "payable">;
 
   name: TypedContractMethod<[], [string], "view">;
 
@@ -371,6 +471,18 @@ export interface INFT extends BaseContract {
     "nonpayable"
   >;
 
+  updateCreationFee: TypedContractMethod<
+    [_newFee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  updateFeeRecipient: TypedContractMethod<
+    [_newRecipient: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -386,6 +498,15 @@ export interface INFT extends BaseContract {
     nameOrSignature: "balanceOf"
   ): TypedContractMethod<[owner: AddressLike], [bigint], "view">;
   getFunction(
+    nameOrSignature: "creationFee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "emergencyWithdraw"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "feeRecipient"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "getApproved"
   ): TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
   getFunction(
@@ -397,7 +518,7 @@ export interface INFT extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "mint"
-  ): TypedContractMethod<[tokenURI_: string], [bigint], "nonpayable">;
+  ): TypedContractMethod<[tokenURI_: string], [bigint], "payable">;
   getFunction(
     nameOrSignature: "name"
   ): TypedContractMethod<[], [string], "view">;
@@ -455,7 +576,20 @@ export interface INFT extends BaseContract {
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "updateCreationFee"
+  ): TypedContractMethod<[_newFee: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "updateFeeRecipient"
+  ): TypedContractMethod<[_newRecipient: AddressLike], [void], "nonpayable">;
 
+  getEvent(
+    key: "AgentCreated"
+  ): TypedContractEvent<
+    AgentCreatedEvent.InputTuple,
+    AgentCreatedEvent.OutputTuple,
+    AgentCreatedEvent.OutputObject
+  >;
   getEvent(
     key: "Approval"
   ): TypedContractEvent<
@@ -476,6 +610,20 @@ export interface INFT extends BaseContract {
     BatchMetadataUpdateEvent.InputTuple,
     BatchMetadataUpdateEvent.OutputTuple,
     BatchMetadataUpdateEvent.OutputObject
+  >;
+  getEvent(
+    key: "CreationFeeUpdated"
+  ): TypedContractEvent<
+    CreationFeeUpdatedEvent.InputTuple,
+    CreationFeeUpdatedEvent.OutputTuple,
+    CreationFeeUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "FeeRecipientUpdated"
+  ): TypedContractEvent<
+    FeeRecipientUpdatedEvent.InputTuple,
+    FeeRecipientUpdatedEvent.OutputTuple,
+    FeeRecipientUpdatedEvent.OutputObject
   >;
   getEvent(
     key: "MetadataUpdate"
@@ -500,6 +648,17 @@ export interface INFT extends BaseContract {
   >;
 
   filters: {
+    "AgentCreated(uint256,address,string)": TypedContractEvent<
+      AgentCreatedEvent.InputTuple,
+      AgentCreatedEvent.OutputTuple,
+      AgentCreatedEvent.OutputObject
+    >;
+    AgentCreated: TypedContractEvent<
+      AgentCreatedEvent.InputTuple,
+      AgentCreatedEvent.OutputTuple,
+      AgentCreatedEvent.OutputObject
+    >;
+
     "Approval(address,address,uint256)": TypedContractEvent<
       ApprovalEvent.InputTuple,
       ApprovalEvent.OutputTuple,
@@ -531,6 +690,28 @@ export interface INFT extends BaseContract {
       BatchMetadataUpdateEvent.InputTuple,
       BatchMetadataUpdateEvent.OutputTuple,
       BatchMetadataUpdateEvent.OutputObject
+    >;
+
+    "CreationFeeUpdated(uint256)": TypedContractEvent<
+      CreationFeeUpdatedEvent.InputTuple,
+      CreationFeeUpdatedEvent.OutputTuple,
+      CreationFeeUpdatedEvent.OutputObject
+    >;
+    CreationFeeUpdated: TypedContractEvent<
+      CreationFeeUpdatedEvent.InputTuple,
+      CreationFeeUpdatedEvent.OutputTuple,
+      CreationFeeUpdatedEvent.OutputObject
+    >;
+
+    "FeeRecipientUpdated(address)": TypedContractEvent<
+      FeeRecipientUpdatedEvent.InputTuple,
+      FeeRecipientUpdatedEvent.OutputTuple,
+      FeeRecipientUpdatedEvent.OutputObject
+    >;
+    FeeRecipientUpdated: TypedContractEvent<
+      FeeRecipientUpdatedEvent.InputTuple,
+      FeeRecipientUpdatedEvent.OutputTuple,
+      FeeRecipientUpdatedEvent.OutputObject
     >;
 
     "MetadataUpdate(uint256)": TypedContractEvent<

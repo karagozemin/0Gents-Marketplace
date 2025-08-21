@@ -27,18 +27,26 @@ export interface MarketplaceInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "buy"
+      | "calculateFees"
       | "cancel"
+      | "emergencyWithdraw"
+      | "feeRecipient"
       | "list"
       | "listings"
       | "nextListingId"
       | "owner"
+      | "platformFeePercent"
       | "renounceOwnership"
       | "transferOwnership"
+      | "updateFeeRecipient"
+      | "updatePlatformFee"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
       | "Cancelled"
+      | "FeeRecipientUpdated"
+      | "FeeUpdated"
       | "Listed"
       | "OwnershipTransferred"
       | "Purchased"
@@ -46,8 +54,20 @@ export interface MarketplaceInterface extends Interface {
 
   encodeFunctionData(functionFragment: "buy", values: [BigNumberish]): string;
   encodeFunctionData(
+    functionFragment: "calculateFees",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "cancel",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "emergencyWithdraw",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "feeRecipient",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "list",
@@ -63,6 +83,10 @@ export interface MarketplaceInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "platformFeePercent",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
   ): string;
@@ -70,9 +94,29 @@ export interface MarketplaceInterface extends Interface {
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "updateFeeRecipient",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "updatePlatformFee",
+    values: [BigNumberish]
+  ): string;
 
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "calculateFees",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "cancel", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "emergencyWithdraw",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "feeRecipient",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "list", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "listings", data: BytesLike): Result;
   decodeFunctionResult(
@@ -81,11 +125,23 @@ export interface MarketplaceInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "platformFeePercent",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateFeeRecipient",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "updatePlatformFee",
     data: BytesLike
   ): Result;
 }
@@ -95,6 +151,34 @@ export namespace CancelledEvent {
   export type OutputTuple = [listingId: bigint];
   export interface OutputObject {
     listingId: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace FeeRecipientUpdatedEvent {
+  export type InputTuple = [newRecipient: AddressLike];
+  export type OutputTuple = [newRecipient: string];
+  export interface OutputObject {
+    newRecipient: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace FeeUpdatedEvent {
+  export type InputTuple = [
+    newFeePercent: BigNumberish,
+    newListingFee: BigNumberish
+  ];
+  export type OutputTuple = [newFeePercent: bigint, newListingFee: bigint];
+  export interface OutputObject {
+    newFeePercent: bigint;
+    newListingFee: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -144,11 +228,20 @@ export namespace OwnershipTransferredEvent {
 }
 
 export namespace PurchasedEvent {
-  export type InputTuple = [listingId: BigNumberish, buyer: AddressLike];
-  export type OutputTuple = [listingId: bigint, buyer: string];
+  export type InputTuple = [
+    listingId: BigNumberish,
+    buyer: AddressLike,
+    platformFee: BigNumberish
+  ];
+  export type OutputTuple = [
+    listingId: bigint,
+    buyer: string,
+    platformFee: bigint
+  ];
   export interface OutputObject {
     listingId: bigint;
     buyer: string;
+    platformFee: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -201,7 +294,17 @@ export interface Marketplace extends BaseContract {
 
   buy: TypedContractMethod<[listingId: BigNumberish], [void], "payable">;
 
+  calculateFees: TypedContractMethod<
+    [price: BigNumberish],
+    [[bigint, bigint] & { platformFee: bigint; sellerAmount: bigint }],
+    "view"
+  >;
+
   cancel: TypedContractMethod<[listingId: BigNumberish], [void], "nonpayable">;
+
+  emergencyWithdraw: TypedContractMethod<[], [void], "nonpayable">;
+
+  feeRecipient: TypedContractMethod<[], [string], "view">;
 
   list: TypedContractMethod<
     [nft: AddressLike, tokenId: BigNumberish, price: BigNumberish],
@@ -227,10 +330,24 @@ export interface Marketplace extends BaseContract {
 
   owner: TypedContractMethod<[], [string], "view">;
 
+  platformFeePercent: TypedContractMethod<[], [bigint], "view">;
+
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  updateFeeRecipient: TypedContractMethod<
+    [_newRecipient: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  updatePlatformFee: TypedContractMethod<
+    [_platformFeePercent: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -243,8 +360,21 @@ export interface Marketplace extends BaseContract {
     nameOrSignature: "buy"
   ): TypedContractMethod<[listingId: BigNumberish], [void], "payable">;
   getFunction(
+    nameOrSignature: "calculateFees"
+  ): TypedContractMethod<
+    [price: BigNumberish],
+    [[bigint, bigint] & { platformFee: bigint; sellerAmount: bigint }],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "cancel"
   ): TypedContractMethod<[listingId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "emergencyWithdraw"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "feeRecipient"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "list"
   ): TypedContractMethod<
@@ -274,11 +404,24 @@ export interface Marketplace extends BaseContract {
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "platformFeePercent"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "updateFeeRecipient"
+  ): TypedContractMethod<[_newRecipient: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "updatePlatformFee"
+  ): TypedContractMethod<
+    [_platformFeePercent: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
   getEvent(
     key: "Cancelled"
@@ -286,6 +429,20 @@ export interface Marketplace extends BaseContract {
     CancelledEvent.InputTuple,
     CancelledEvent.OutputTuple,
     CancelledEvent.OutputObject
+  >;
+  getEvent(
+    key: "FeeRecipientUpdated"
+  ): TypedContractEvent<
+    FeeRecipientUpdatedEvent.InputTuple,
+    FeeRecipientUpdatedEvent.OutputTuple,
+    FeeRecipientUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "FeeUpdated"
+  ): TypedContractEvent<
+    FeeUpdatedEvent.InputTuple,
+    FeeUpdatedEvent.OutputTuple,
+    FeeUpdatedEvent.OutputObject
   >;
   getEvent(
     key: "Listed"
@@ -321,6 +478,28 @@ export interface Marketplace extends BaseContract {
       CancelledEvent.OutputObject
     >;
 
+    "FeeRecipientUpdated(address)": TypedContractEvent<
+      FeeRecipientUpdatedEvent.InputTuple,
+      FeeRecipientUpdatedEvent.OutputTuple,
+      FeeRecipientUpdatedEvent.OutputObject
+    >;
+    FeeRecipientUpdated: TypedContractEvent<
+      FeeRecipientUpdatedEvent.InputTuple,
+      FeeRecipientUpdatedEvent.OutputTuple,
+      FeeRecipientUpdatedEvent.OutputObject
+    >;
+
+    "FeeUpdated(uint256,uint256)": TypedContractEvent<
+      FeeUpdatedEvent.InputTuple,
+      FeeUpdatedEvent.OutputTuple,
+      FeeUpdatedEvent.OutputObject
+    >;
+    FeeUpdated: TypedContractEvent<
+      FeeUpdatedEvent.InputTuple,
+      FeeUpdatedEvent.OutputTuple,
+      FeeUpdatedEvent.OutputObject
+    >;
+
     "Listed(uint256,address,uint256,address,uint256)": TypedContractEvent<
       ListedEvent.InputTuple,
       ListedEvent.OutputTuple,
@@ -343,7 +522,7 @@ export interface Marketplace extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "Purchased(uint256,address)": TypedContractEvent<
+    "Purchased(uint256,address,uint256)": TypedContractEvent<
       PurchasedEvent.InputTuple,
       PurchasedEvent.OutputTuple,
       PurchasedEvent.OutputObject

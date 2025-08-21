@@ -18,15 +18,17 @@ import {
   Send,
   Bot,
   TrendingUp,
-  Eye
+  Eye,
+  ExternalLink
 } from "lucide-react";
 import { mockAgents } from "@/lib/mock";
+import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { callCompute, type ChatMessage, type ComputeRequest } from "@/lib/compute";
 
 export default function AgentDetail() {
   const { id } = useParams<{ id: string }>();
   const { address, isConnected } = useAccount();
-  const [agent, setAgent] = useState(mockAgents.find(a => a.id === id));
+  const [agent, setAgent] = useState<any>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -36,7 +38,26 @@ export default function AgentDetail() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    // Find agent from both mock agents and created agents
+    const findAgent = () => {
+      // First check mock agents
+      let foundAgent = mockAgents.find(a => a.id === id);
+      
+      if (!foundAgent) {
+        // Then check created agents
+        const createdAgents = getCreatedAgents();
+        const createdAgent = createdAgents.find(a => a.id === id);
+        if (createdAgent) {
+          foundAgent = transformToMockAgent(createdAgent);
+        }
+      }
+      
+      setAgent(foundAgent);
+    };
+    
+    findAgent();
+  }, [id]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || !agent) return;
@@ -88,12 +109,23 @@ export default function AgentDetail() {
     }
   };
 
+  if (!mounted) {
+    return null; // Prevent hydration mismatch
+  }
+
   if (!agent) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
-          <p className="text-gray-300">Loading agent from 0G Storage...</p>
+          <p className="text-gray-300">Agent not found</p>
+          <p className="text-sm text-gray-500 mt-2">This agent may not exist or has been removed.</p>
+          <Button 
+            className="mt-4 gradient-0g" 
+            onClick={() => window.location.href = '/'}
+          >
+            Back to Marketplace
+          </Button>
         </div>
       </div>
     );
@@ -119,15 +151,14 @@ export default function AgentDetail() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <Button
-                      variant="outline"
                       size="sm"
                       onClick={() => setIsLiked(!isLiked)}
-                      className="border-red-400/50 text-red-300 hover:text-red-200 hover:bg-red-400/10 cursor-pointer"
+                      className="bg-red-500/20 text-red-300 border border-red-400/50 hover:bg-red-500/30 hover:text-red-200 cursor-pointer backdrop-blur-sm"
                     >
                       <Heart className={`w-5 h-5 mr-2 ${mounted && isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                       {mounted && isLiked ? 'Liked' : 'Like'}
                     </Button>
-                    <Button variant="outline" size="sm" className="border-blue-400/50 text-blue-300 hover:text-blue-200 hover:bg-blue-400/10 cursor-pointer">
+                    <Button size="sm" className="bg-blue-500/20 text-blue-300 border border-blue-400/50 hover:bg-blue-500/30 hover:text-blue-200 cursor-pointer backdrop-blur-sm">
                       <Share2 className="w-5 h-5 mr-2" />
                       Share
                     </Button>
@@ -153,11 +184,49 @@ export default function AgentDetail() {
                       <Zap className="w-5 h-5 mr-2" />
                       Buy Now
                     </Button>
-                    <Button size="lg" variant="outline" className="w-full border-purple-400/70 text-purple-200 hover:text-white hover:bg-purple-400/20 hover:border-purple-300 transition-all cursor-pointer">
+                    <Button size="lg" className="w-full bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 transition-all cursor-pointer backdrop-blur-sm">
                       <Eye className="w-5 h-5 mr-2" />
                       Try Agent
                     </Button>
                   </div>
+                  
+                  {/* Social Links - Show for created agents */}
+                  {(() => {
+                    const createdAgents = typeof window !== 'undefined' ? getCreatedAgents() : [];
+                    const createdAgent = createdAgents.find(a => a.id === id);
+                    if (createdAgent?.social && (createdAgent.social.x || createdAgent.social.website)) {
+                      return (
+                        <div className="pt-4 border-t border-white/10">
+                          <p className="text-sm font-medium text-gray-300 mb-3">Social Links</p>
+                          <div className="flex gap-2">
+                            {createdAgent.social.x && (
+                              <Button 
+                                size="sm" 
+                                className="bg-blue-500/20 text-blue-300 border border-blue-400/50 hover:bg-blue-500/30 cursor-pointer backdrop-blur-sm"
+                                onClick={() => window.open(createdAgent.social!.x!, '_blank')}
+                              >
+                                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                </svg>
+                                X
+                              </Button>
+                            )}
+                            {createdAgent.social.website && (
+                              <Button 
+                                size="sm" 
+                                className="bg-green-500/20 text-green-300 border border-green-400/50 hover:bg-green-500/30 cursor-pointer backdrop-blur-sm"
+                                onClick={() => window.open(createdAgent.social!.website!, '_blank')}
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Website
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </CardContent>
               </Card>
             </div>
@@ -184,29 +253,33 @@ export default function AgentDetail() {
 
               {/* Tabs */}
               <Tabs defaultValue="chat" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80 border border-white/20 p-1">
+                <TabsList className="grid w-full grid-cols-4 bg-black/40 backdrop-blur-xl border border-purple-500/30 p-1 rounded-2xl">
                   <TabsTrigger 
                     value="chat" 
-                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-gray-300 hover:text-white transition-all duration-300 cursor-pointer rounded-xl font-medium"
                   >
+                    <MessageCircle className="w-4 h-4 mr-2" />
                     Chat
                   </TabsTrigger>
                   <TabsTrigger 
                     value="details"
-                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-gray-300 hover:text-white transition-all duration-300 cursor-pointer rounded-xl font-medium"
                   >
+                    <Activity className="w-4 h-4 mr-2" />
                     Details
                   </TabsTrigger>
                   <TabsTrigger 
                     value="activity"
-                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-gray-300 hover:text-white transition-all duration-300 cursor-pointer rounded-xl font-medium"
                   >
+                    <TrendingUp className="w-4 h-4 mr-2" />
                     Activity
                   </TabsTrigger>
                   <TabsTrigger 
                     value="stats"
-                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-gray-300 hover:text-white transition-all duration-300 cursor-pointer rounded-xl font-medium"
                   >
+                    <Bot className="w-4 h-4 mr-2" />
                     Stats
                   </TabsTrigger>
                 </TabsList>

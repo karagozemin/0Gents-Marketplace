@@ -77,6 +77,10 @@ export function Navbar() {
             Create
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-0g group-hover:w-full transition-all duration-300"></span>
           </Link>
+          <Link href="/my-collections" className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group">
+            My Collections
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-0g group-hover:w-full transition-all duration-300"></span>
+          </Link>
         </div>
         
         <div className="ml-auto flex items-center gap-4">
