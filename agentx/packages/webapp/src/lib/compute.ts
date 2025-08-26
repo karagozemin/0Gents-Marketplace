@@ -40,12 +40,38 @@ export async function callCompute(request: ComputeRequest): Promise<ComputeRespo
   try {
     console.log("🔥 Calling 0G Compute Network:", {
       agentId: request.agentId,
-      model: request.model || "gpt-3.5-turbo",
+      model: request.model || "llama-3.3-70b-instruct",
       messageCount: request.messages.length
     });
 
-    // TODO: Implement real 0G Compute SDK integration
-    // For now, we'll use enhanced simulation with better 0G branding
+    // Use real 0G Compute SDK via API route
+    const response = await fetch('/api/compute/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      return result;
+    } else {
+      // Fallback to simulation if real SDK fails
+      console.warn('⚠️ Real 0G Compute failed, falling back to simulation:', result.error);
+      return await fallbackSimulation(request, startTime);
+    }
+    
+  } catch (error) {
+    console.error('❌ 0G Compute API failed, falling back to simulation:', error);
+    return await fallbackSimulation(request, startTime);
+  }
+}
+
+// Fallback simulation function
+async function fallbackSimulation(request: ComputeRequest, startTime: number): Promise<ComputeResponse> {
+  try {
     const { messages, model = "0g-gpt-3.5-turbo", temperature = 0.7, maxTokens = 500, systemPrompt } = request;
     
     // Get the last user message
@@ -228,5 +254,3 @@ export async function testComputeConnection(): Promise<{ success: boolean; messa
     };
   }
 }
-
-

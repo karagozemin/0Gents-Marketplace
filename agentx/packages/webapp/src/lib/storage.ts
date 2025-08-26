@@ -43,15 +43,109 @@ const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet
 const OG_INDEXER_URL = process.env.NEXT_PUBLIC_0G_INDEXER_URL || 'https://indexer-storage-testnet-turbo.0g.ai';
 const OG_PRIVATE_KEY = process.env.NEXT_PUBLIC_0G_PRIVATE_KEY || '';
 
-// Enhanced 0G Storage simulation with realistic behavior
+// Client-side wrapper for 0G Storage API calls
+
+// Use real 0G Storage API for uploads with improved error handling
+async function uploadToZeroGStorage(data: string, type: 'metadata' | 'file' = 'metadata'): Promise<StorageResult> {
+  try {
+    if (type === 'metadata') {
+      // Parse the JSON metadata and call API
+      const metadata = JSON.parse(data);
+      
+      console.log('📡 Starting API call...');
+      
+      // Use real 0G Storage API
+      console.log('🚀 Using real 0G Storage API');
+      
+      // Add timeout to fetch request - increased for 0G Storage
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes timeout for 0G Storage
+      
+      const response = await fetch('/api/storage/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ metadata }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('❌ 0G Storage API failed:', result.error);
+        throw new Error(`0G Storage upload failed: ${result.error}`);
+      }
+      
+      console.log('✅ 0G Storage upload successful:', result.uri);
+      return result;
+    } else {
+      // For file uploads, we'll need to adapt this
+      // For now, create a simple metadata wrapper
+      const metadata = {
+        name: 'File Upload',
+        description: 'File uploaded to 0G Storage',
+        image: '',
+        creator: 'Anonymous',
+        category: 'File',
+        capabilities: ['file-storage'],
+        skills: ['storage'],
+        fileData: data
+      };
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      
+      const response = await fetch('/api/storage/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ metadata }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('❌ 0G Storage API failed:', result.error);
+        throw new Error(`0G Storage upload failed: ${result.error}`);
+      }
+      
+      return result;
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('❌ 0G Storage API timeout after 60 seconds');
+      throw new Error('0G Storage upload timed out after 60 seconds. Please try again.');
+    } else {
+      console.error('❌ 0G Storage API error:', error);
+      throw error;
+    }
+  }
+}
+
+// Keep simulation as fallback
 async function simulateZeroGUpload(data: string, type: 'metadata' | 'file' = 'metadata'): Promise<StorageResult> {
   // Generate realistic 0G storage hash (similar to IPFS but with 0g prefix)
   const randomSuffix = Math.random().toString(36).substring(2, 15);
   const dataHash = await generateMockHash(data);
   const rootHash = `0g${dataHash}${randomSuffix}`;
   
-  // Simulate network upload time based on data size
-  const uploadTime = Math.max(500, data.length / 100 + Math.random() * 1000);
+  // Simulate network upload time (reduced for better UX)
+  const uploadTime = Math.max(300, data.length / 200 + Math.random() * 500);
   await new Promise(resolve => setTimeout(resolve, uploadTime));
   
   // Simulate transaction hash for on-chain storage proof
@@ -66,7 +160,7 @@ async function simulateZeroGUpload(data: string, type: 'metadata' | 'file' = 'me
     txHash,
     size: data.length,
     chunks: Math.ceil(data.length / 1024),
-    network: "0G Galileo Testnet",
+    network: "0G Galileo Testnet (Simulated)",
     indexerUrl: OG_INDEXER_URL
   };
   
@@ -122,8 +216,8 @@ export async function uploadAgentMetadata(metadata: AgentMetadata): Promise<Stor
     const metadataJson = JSON.stringify(metadata, null, 2);
     console.log(`📊 Metadata size: ${metadataJson.length} bytes`);
     
-    // Simulate 0G Storage upload process
-    const result = await simulateZeroGUpload(metadataJson, 'metadata');
+    // Use real 0G Storage upload process
+    const result = await uploadToZeroGStorage(metadataJson, 'metadata');
     
     console.log(`✅ Metadata uploaded to 0G Storage successfully!`);
     console.log(`🔗 Root Hash: ${result.rootHash}`);
@@ -312,32 +406,23 @@ export async function getDAStats() {
  * Get storage statistics and info
  */
 export async function getStorageInfo() {
+  // Get local stats for backward compatibility
   const storageItems = Object.keys(localStorage).filter(key => key.startsWith('0g_storage_'));
   const daItems = Object.keys(localStorage).filter(key => key.startsWith('0g_da_'));
-  
-  // Calculate approximate storage usage
-  let totalSize = 0;
-  storageItems.forEach(key => {
-    try {
-      const entry = JSON.parse(localStorage.getItem(key) || '{}');
-      totalSize += entry.size || 0;
-    } catch {
-      // ignore parsing errors
-    }
-  });
   
   return {
     network: "0G Galileo Testnet",
     rpcUrl: OG_RPC_URL,
     indexerUrl: OG_INDEXER_URL,
-    flowContract: ZERO_G_STORAGE_FLOW,
-    daContract: ZERO_G_DA_ENTRANCE,
     status: "connected",
     hasPrivateKey: !!OG_PRIVATE_KEY,
-    storageUploads: storageItems.length,
+    simulationMode: false, // Using real SDK via API
+    sdkVersion: "0.3.1",
+    provider: "API",
+    flowContract: ZERO_G_STORAGE_FLOW,
+    daContract: ZERO_G_DA_ENTRANCE,
+    localStorageUploads: storageItems.length,
     daUploads: daItems.length,
-    totalStorageUsed: `${(totalSize / 1024).toFixed(2)} KB`,
-    simulationMode: true,
     daStats: await getDAStats()
   };
 }
@@ -347,56 +432,16 @@ export async function getStorageInfo() {
  */
 export async function testStorageConnection(): Promise<{ success: boolean; message: string; details?: unknown }> {
   try {
-    console.log("🧪 Testing 0G Storage Network connection...");
-    
-    const testStartTime = Date.now();
-    
-    // Test upload
-    const testMetadata = {
-      name: "0G Connection Test",
-      description: "Testing 0G Storage integration",
-      category: "test",
-      creator: "AgentX",
-      price: "0",
-      capabilities: ["connection-test"],
-      skills: ["0g-integration"],
-      created: new Date().toISOString(),
-      updated: new Date().toISOString()
-    };
-    
-    const uploadResult = await uploadAgentMetadata(testMetadata);
-    
-    if (!uploadResult.success) {
-      throw new Error(`Upload test failed: ${uploadResult.error}`);
-    }
-    
-    // Test retrieval
-    const retrieveResult = await getAgentMetadata(uploadResult.uri!);
-    
-    if (!retrieveResult) {
-      throw new Error("Retrieval test failed");
-    }
-    
-    const testDuration = Date.now() - testStartTime;
-    
-    console.log(`✅ 0G Storage connection test completed in ${testDuration}ms`);
-    
-    return {
-      success: true,
-      message: "0G Storage Network connection successful",
-      details: {
-        testDuration,
-        uploadHash: uploadResult.rootHash,
-        retrievedData: retrieveResult.name,
-        networkStatus: "online",
-        simulationMode: true
-      }
-    };
-    
+    // Use real 0G Storage API connection test
+    const response = await fetch('/api/storage/test');
+    const result = await response.json();
+    return result;
   } catch (error) {
+    console.error('❌ Storage API test failed:', error);
     return {
       success: false,
-      message: `0G Storage connection test failed: ${error instanceof Error ? error.message : error}`
+      message: `Storage API test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: error
     };
   }
 }

@@ -70,9 +70,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Strings__factory>;
     getContractFactory(
+      name: "AgentNFT",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AgentNFT__factory>;
+    getContractFactory(
+      name: "AgentNFTFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AgentNFTFactory__factory>;
+    getContractFactory(
       name: "AgentRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AgentRegistry__factory>;
+    getContractFactory(
+      name: "EnhancedINFT",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.EnhancedINFT__factory>;
     getContractFactory(
       name: "INFT",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -157,10 +169,25 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Strings>;
     getContractAt(
+      name: "AgentNFT",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AgentNFT>;
+    getContractAt(
+      name: "AgentNFTFactory",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AgentNFTFactory>;
+    getContractAt(
       name: "AgentRegistry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.AgentRegistry>;
+    getContractAt(
+      name: "EnhancedINFT",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.EnhancedINFT>;
     getContractAt(
       name: "INFT",
       address: string | ethers.Addressable,
@@ -234,9 +261,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Strings>;
     deployContract(
+      name: "AgentNFT",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AgentNFT>;
+    deployContract(
+      name: "AgentNFTFactory",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AgentNFTFactory>;
+    deployContract(
       name: "AgentRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AgentRegistry>;
+    deployContract(
+      name: "EnhancedINFT",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EnhancedINFT>;
     deployContract(
       name: "INFT",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -321,10 +360,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Strings>;
     deployContract(
+      name: "AgentNFT",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AgentNFT>;
+    deployContract(
+      name: "AgentNFTFactory",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AgentNFTFactory>;
+    deployContract(
       name: "AgentRegistry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AgentRegistry>;
+    deployContract(
+      name: "EnhancedINFT",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EnhancedINFT>;
     deployContract(
       name: "INFT",
       args: any[],

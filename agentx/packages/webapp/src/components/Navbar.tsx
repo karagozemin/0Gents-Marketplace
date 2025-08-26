@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Search, Sparkles, X } from "lucide-react";
+import { Search, Sparkles, X, Menu } from "lucide-react";
 import { Input } from "./ui/input";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -13,6 +13,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<typeof mockAgents>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -82,6 +83,14 @@ export function Navbar() {
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-0g group-hover:w-full transition-all duration-300"></span>
           </Link>
         </div>
+        
+        {/* Mobile menu button */}
+        <button
+          className="md:hidden text-gray-300 hover:text-white transition-colors"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <Menu className="w-6 h-6" />
+        </button>
         
         <div className="ml-auto flex items-center gap-4">
           <div className="relative hidden lg:block" ref={searchRef}>
@@ -183,6 +192,35 @@ export function Navbar() {
           </div>
         </div>
       </div>
+      
+      {/* Mobile menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-black/95 backdrop-blur-xl border-b border-white/10">
+          <div className="px-6 py-4 space-y-4">
+            <Link 
+              href="/explore" 
+              className="block text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Explore
+            </Link>
+            <Link 
+              href="/create" 
+              className="block text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Create
+            </Link>
+            <Link 
+              href="/my-collections" 
+              className="block text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              My Collections
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

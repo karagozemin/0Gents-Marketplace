@@ -878,6 +878,88 @@
       "artifacts": [
         "SimpleINFT"
       ]
+    },
+    "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/EnhancedINFT.sol": {
+      "lastModificationDate": 1756244166264,
+      "contentHash": "71a7382e08c6107b1578fe5bedbc43c7",
+      "sourceName": "contracts/EnhancedINFT.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
+        "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol",
+        "@openzeppelin/contracts/access/Ownable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "EnhancedINFT"
+      ]
+    },
+    "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/AgentNFTFactory.sol": {
+      "lastModificationDate": 1756246396367,
+      "contentHash": "9bb549103fbab2d850f4d79743d6beb7",
+      "sourceName": "contracts/AgentNFTFactory.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
+        "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol",
+        "@openzeppelin/contracts/token/ERC721/IERC721.sol",
+        "@openzeppelin/contracts/access/Ownable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "AgentNFT",
+        "AgentNFTFactory"
+      ]
     }
   }
 }

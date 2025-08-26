@@ -1,6 +1,8 @@
 "use client";
 import React, { useMemo, useState, useEffect } from "react";
 import { AgentCard } from "@/components/AgentCard";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { mockAgents, type AgentItem } from "@/lib/mock";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -88,8 +90,9 @@ export default function ExplorePage() {
   }), []);
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
@@ -328,6 +331,7 @@ export default function ExplorePage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

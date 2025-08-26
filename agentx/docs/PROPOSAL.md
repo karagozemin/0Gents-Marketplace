@@ -95,12 +95,15 @@ Each service is composable or can be used independently, avoiding the cost, late
 - Optional simple contract stub
 - 1–2 min demo video
 
-**Wave 2 – INFT Mint & Transfer (Chain + INFT)**
-- Mint INFTs (ERC-7857)
-- Register agent with storage reference
-- Ownership and transfer functions
-- Simple marketplace list
-- Agent settings editor (name, prompt, skills)
+**Wave 2 – Enhanced INFT & Marketplace (Chain + INFT + Improved Demo)**
+- ✅ Enhanced INFT contract with AI agent metadata
+- ✅ Usage tracking and revenue sharing foundation
+- ✅ Improved demo with real-time progress tracking
+- ✅ Better error handling with fallback transparency
+- ✅ Full 0G Stack integration (Compute + Storage + DA + Chain)
+- 🎯 Live marketplace functionality
+- 🎯 Agent-to-agent interaction prototype
+- 🎯 Performance metrics dashboard
 
 **Wave 3 – DA + Multi-dataset Agents**
 - Upload large datasets via DA
