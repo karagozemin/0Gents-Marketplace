@@ -1,80 +1,44 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  console.log("🔍 Testing Factory contract...");
-  const [signer] = await ethers.getSigners();
-  console.log("Deployer:", await signer.getAddress());
+  console.log("🧪 Testing Factory Contract...");
   
-  const factoryAddress = "0x7FC62946f03f42c721ae0237998c45b64872aD26";
+  const factoryAddress = "0x0c7E1717656d204dE5f168a6b615664Ab5518316";
+  
+  // Get the Factory contract
+  const Factory = await ethers.getContractFactory("AgentNFTFactory");
+  const factory = Factory.attach(factoryAddress);
   
   try {
-    const AgentNFTFactory = await ethers.getContractFactory("AgentNFTFactory");
-    const factory = AgentNFTFactory.attach(factoryAddress);
-    
-    console.log("\n📋 Factory Contract State:");
-    const creationFee = await factory.creationFee();
-    const marketplace = await factory.marketplace();
+    // Test getTotalAgents
+    console.log("📊 Calling getTotalAgents()...");
     const totalAgents = await factory.getTotalAgents();
-    
-    console.log("Creation Fee:", ethers.formatEther(creationFee), "OG");
-    console.log("Marketplace:", marketplace);
     console.log("Total Agents:", totalAgents.toString());
     
-    // Test createAgent function call (simulate)
-    console.log("\n🧪 Testing createAgent function...");
+    // Test creation fee
+    console.log("💰 Calling creationFee()...");
+    const creationFee = await factory.creationFee();
+    console.log("Creation Fee:", ethers.formatEther(creationFee), "ETH");
     
-    const testArgs = [
-      "Test Agent",           // agentName_
-      "Test Description",     // agentDescription_
-      "General",             // agentCategory_
-      "gpt-4",              // computeModel_
-      "test-hash",          // storageHash_
-      ["AI", "Test"],       // capabilities_
-      ethers.parseEther("0.075") // price_
-    ];
+    // Test marketplace
+    console.log("🏪 Calling marketplace()...");
+    const marketplace = await factory.marketplace();
+    console.log("Marketplace:", marketplace);
     
-    console.log("Test args:", testArgs);
-    
-    // Try to estimate gas
-    try {
-      const gasEstimate = await factory.createAgent.estimateGas(
-        ...testArgs,
-        { value: ethers.parseEther("0.01") }
-      );
-      console.log("Gas estimate:", gasEstimate.toString());
-    } catch (gasError) {
-      console.error("❌ Gas estimation failed:", gasError.message);
-      
-      // Try with different args
-      console.log("\n🔄 Trying with minimal args...");
-      const minimalArgs = [
-        "A",                   // agentName_
-        "B",                   // agentDescription_
-        "C",                   // agentCategory_
-        "D",                   // computeModel_
-        "E",                   // storageHash_
-        ["F"],                 // capabilities_
-        ethers.parseEther("0.01") // price_
-      ];
-      
-      try {
-        const minimalGas = await factory.createAgent.estimateGas(
-          ...minimalArgs,
-          { value: ethers.parseEther("0.01") }
-        );
-        console.log("Minimal gas estimate:", minimalGas.toString());
-      } catch (minimalError) {
-        console.error("❌ Even minimal args failed:", minimalError.message);
-      }
+    if (totalAgents > 0) {
+      console.log("📝 Getting first agent...");
+      const firstAgent = await factory.getAgentAt(0);
+      console.log("First Agent:", firstAgent);
     }
     
-    console.log("✅ Factory is accessible");
   } catch (error) {
-    console.error("❌ Factory test failed:", error.message);
+    console.error("❌ Error:", error.message);
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

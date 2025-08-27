@@ -1,1 +1,2 @@
-cd /Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts3bedc56c56595f5f1053c6b159043c837ca6a/ && export PRIVATE_KEY=cba71467c8547b46ecabc2f81bbb500e29f1aa250b68639db7221ef032ac6b1a && npx hardhat run scripts/check-contract.js --network og_galileo
+npm run deploy-factory
+cd /Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts3bedc56c56595f5f1053c6b159043c837ca6a/ && export PRIVATE_KEY=cba71467c8547b46ecabc2f81bbb500e29f1aa250b68639db7221ef032ac6b1a && npx hardhat run scripts/check-contract.js --network og_galileo032ac6b1a && npx hardhat run scripts/check-contract.js --network og_galileo

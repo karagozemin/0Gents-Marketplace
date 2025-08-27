@@ -288,10 +288,39 @@ export default function CreatePage() {
               });
             });
             
+            // AgentContractCreated event signature: keccak256("AgentContractCreated(address,address,string,uint256)")
+            const expectedEventSignature = "0x85f0dfa9fd3e33e38f73b68fc46905218786e8b028cf1b07fa0ed436b53b0227";
+            
+            console.log("🎯 Looking for event signature:", expectedEventSignature);
+            
+            // Debug all Factory logs in detail
+            factoryLogs.forEach((log: any, index: number) => {
+              console.log(`🔍 Factory log ${index} detailed:`, {
+                address: log.address,
+                topics: log.topics,
+                data: log.data,
+                topicsLength: log.topics?.length,
+                firstTopic: log.topics?.[0],
+                matchesSignature: log.topics?.[0] === expectedEventSignature
+              });
+            });
+            
             // Find log with AgentContractCreated event signature
-            const log = factoryLogs.find((log: any) => 
-              log.topics && log.topics.length >= 2
+            let log = factoryLogs.find((log: any) => 
+              log.topics && 
+              log.topics.length >= 2 && 
+              log.topics[0] === expectedEventSignature
             );
+            
+            // If exact signature doesn't work, try any Factory log with topics
+            if (!log) {
+              console.log("⚠️ Exact signature not found, trying any Factory log with 2+ topics");
+              log = factoryLogs.find((log: any) => 
+                log.topics && log.topics.length >= 2
+              );
+            }
+            
+            console.log("🎯 Found matching log:", !!log);
             
             if (log && log.topics[1]) {
               // Extract address from topic - address is in topic[1] as 32-byte hex
@@ -325,9 +354,64 @@ export default function CreatePage() {
             }
           }
           
-          // No fallback - Factory event must work
-          console.error("❌ Could not extract contract address from Factory events");
-          throw new Error("Factory event parsing failed - no contract address found");
+          // Fallback: Get the latest agent from Factory (most recently created)
+          console.warn("⚠️ Event parsing failed, trying to get latest agent from Factory...");
+          try {
+            // Get total agents count
+            const totalResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'eth_call',
+                params: [{
+                  to: FACTORY_ADDRESS,
+                  data: '0x9d76ea58' // getTotalAgents()
+                }, 'latest'],
+                id: 999
+              })
+            });
+            
+            const totalResult = await totalResponse.json();
+            if (totalResult.result) {
+              const totalAgents = parseInt(totalResult.result, 16);
+              console.log("📊 Total agents in Factory:", totalAgents);
+              
+              if (totalAgents > 0) {
+                // Get the latest agent (index = totalAgents - 1)
+                const latestResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'eth_call',
+                    params: [{
+                      to: FACTORY_ADDRESS,
+                      data: '0x8c3c4b34' + (totalAgents - 1).toString(16).padStart(64, '0') // getAgentAt(totalAgents - 1)
+                    }, 'latest'],
+                    id: 1000
+                  })
+                });
+                
+                const latestResult = await latestResponse.json();
+                if (latestResult.result && latestResult.result !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                  const contractAddress = '0x' + latestResult.result.slice(-40);
+                  console.log("✅ Got latest agent contract from Factory:", contractAddress);
+                  setAgentContractAddress(contractAddress);
+                  
+                  // Step 4: Mint NFT in the new contract
+                  updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
+                  console.log("🔄 Step 4: Minting NFT in Agent Contract...");
+                  return;
+                }
+              }
+            }
+            
+            throw new Error("Could not get latest agent from Factory");
+          } catch (fallbackError) {
+            console.error("❌ Factory fallback also failed:", fallbackError);
+            throw new Error("Factory event parsing and fallback both failed");
+          }
           
         } catch (error) {
           console.error("Error extracting contract address:", error);

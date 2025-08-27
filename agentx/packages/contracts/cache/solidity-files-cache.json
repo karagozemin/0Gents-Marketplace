@@ -920,8 +920,8 @@
       ]
     },
     "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/AgentNFTFactory.sol": {
-      "lastModificationDate": 1756246396367,
-      "contentHash": "9bb549103fbab2d850f4d79743d6beb7",
+      "lastModificationDate": 1756307335794,
+      "contentHash": "30ade0fe44096c6116753d59f8eee801",
       "sourceName": "contracts/AgentNFTFactory.sol",
       "solcConfig": {
         "version": "0.8.24",

@@ -9,32 +9,165 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Star, Zap, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useReadContract } from "wagmi";
-import { INFT_ADDRESS, INFT_ABI } from "@/lib/contracts";
+import { INFT_ADDRESS, INFT_ABI, FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI } from "@/lib/contracts";
+
+// Helper function to get agent details from individual contract
+async function getAgentDetails(agentAddress: string) {
+  try {
+    const calls = [
+      { data: '0x06fdde03', name: 'name' }, // name()
+      { data: '0x7284e416', name: 'description' }, // agentDescription()  
+      { data: '0x2d06177a', name: 'category' }, // agentCategory()
+      { data: '0xa035b1fe', name: 'price' }, // price()
+      { data: '0x02d05d3f', name: 'creator' }, // creator()
+    ];
+    
+    const results = await Promise.all(calls.map(async (call) => {
+      const response = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_call',
+          params: [{ to: agentAddress, data: call.data }, 'latest'],
+          id: 1
+        })
+      });
+      const result = await response.json();
+      return { name: call.name, result: result.result };
+    }));
+    
+    // Parse results
+    const details: any = {};
+    results.forEach(({ name, result }) => {
+      if (result && result !== '0x') {
+        if (name === 'price') {
+          details[name] = (parseInt(result, 16) / 1e18).toString(); // Convert wei to ETH
+        } else if (name === 'creator') {
+          details[name] = '0x' + result.slice(-40); // Extract address
+        } else {
+          // Decode string (skip first 64 chars for offset, then length, then data)
+          try {
+            const hex = result.slice(130); // Skip 0x + offset + length
+            details[name] = Buffer.from(hex, 'hex').toString('utf8').replace(/\0/g, '');
+          } catch {
+            details[name] = '';
+          }
+        }
+      }
+    });
+    
+    return details;
+  } catch (error) {
+    console.error(`Failed to get details for agent ${agentAddress}:`, error);
+    return null;
+  }
+}
 
 export default function HomePage() {
   const [allAgents, setAllAgents] = useState(mockAgents);
   const [mounted, setMounted] = useState(false);
+  const [blockchainAgents, setBlockchainAgents] = useState<any[]>([]);
 
-  // Note: SimpleINFT doesn't have totalSupply, using global agents count instead
+  // Get total agents from Factory contract
+  const { data: totalAgents } = useReadContract({
+    address: FACTORY_ADDRESS,
+    abi: FACTORY_ABI,
+    functionName: 'getTotalAgents',
+  });
 
+  // Load agents from both localStorage and blockchain
+  useEffect(() => {
+    async function loadAllAgents() {
+      console.log('🔄 Loading agents from all sources...');
+      const agents = [];
+      
+      // 1. Load from localStorage (fast, own creations)
+      try {
+        const createdAgents = getCreatedAgents();
+        const localAgents = createdAgents.map(transformToMockAgent);
+        agents.push(...localAgents);
+        console.log(`📱 Loaded ${localAgents.length} agents from localStorage`);
+      } catch (error) {
+        console.error('❌ Failed to load local agents:', error);
+      }
+      
+      // 2. Load from Factory contract (slow, all creations)
+      try {
+        if (totalAgents && totalAgents > 0n) {
+          console.log(`🔗 Loading ${totalAgents.toString()} agents from Factory contract...`);
+          
+          for (let i = 0; i < Number(totalAgents); i++) {
+            const agentResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'eth_call',
+                params: [{
+                  to: FACTORY_ADDRESS,
+                  data: '0x8c3c4b34' + i.toString(16).padStart(64, '0') // getAgentAt(uint256)
+                }, 'latest'],
+                id: i + 1
+              })
+            });
+            
+            const result = await agentResponse.json();
+            if (result.result && result.result !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+              const agentAddress = '0x' + result.result.slice(-40);
+              console.log(`📝 Found agent contract ${i}: ${agentAddress}`);
+              
+              // Get agent details from the individual contract
+              const agentDetails = await getAgentDetails(agentAddress);
+              if (agentDetails) {
+                // Check if this agent already exists in localStorage (avoid duplicates)
+                const isDuplicate = agents.some(agent => 
+                  agent.name === agentDetails.name && 
+                  agent.owner.toLowerCase().includes(agentDetails.creator?.toLowerCase().slice(2, 8))
+                );
+                
+                if (!isDuplicate) {
+                  agents.push({
+                    id: `blockchain-${i}`,
+                    name: agentDetails.name || `Agent #${i}`,
+                    owner: `${agentDetails.creator?.slice(0, 6)}...${agentDetails.creator?.slice(-4)}` || '0x...',
+                    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+                    priceEth: parseFloat(agentDetails.price || '0.01'),
+                    description: agentDetails.description || 'Blockchain AI Agent',
+                    category: agentDetails.category || 'General',
+                    history: [
+                      { activity: "Created", date: new Date().toISOString().split('T')[0] }
+                    ],
+                  });
+                }
+              }
+            }
+          }
+          console.log(`🔗 Loaded ${Number(totalAgents)} blockchain agents`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load blockchain agents:', error);
+      }
+      
+      setBlockchainAgents(agents);
+      console.log(`✅ Total loaded: ${agents.length} unique agents`);
+    }
+    
+    if (mounted) {
+      loadAllAgents();
+    }
+  }, [totalAgents, mounted]);
+
+  // Combine all agents
   useEffect(() => {
     setMounted(true);
-    // Use mockAgents as primary source (includes all cross-browser agents)
-    // Add any local created agents that aren't already in mock data
-    const createdAgents = getCreatedAgents();
-    const transformedCreated = createdAgents.map(transformToMockAgent);
     
-    // Filter out created agents that already exist in mockAgents
-    const newCreatedAgents = transformedCreated.filter(created => 
-      !mockAgents.some(mock => mock.id === created.id)
-    );
-    
-    // Combine: new created agents first, then all mock agents
-    const allAgents = [...newCreatedAgents, ...mockAgents];
+    // Combine: blockchain agents first, then mock agents
+    const allAgents = [...blockchainAgents, ...mockAgents];
     
     setAllAgents(allAgents);
-    console.log(`🌐 Loaded ${mockAgents.length} mock agents, ${newCreatedAgents.length} new local agents`);
-  }, []);
+    console.log(`🌐 Total agents: ${blockchainAgents.length} blockchain + ${mockAgents.length} mock = ${allAgents.length}`);
+  }, [blockchainAgents]);
 
   if (!mounted) {
     return null; // Prevent hydration mismatch

@@ -55,14 +55,13 @@ contract AgentNFT is ERC721, ERC721URIStorage, Ownable {
     }
     
     /**
-     * @notice Mint the AI Agent NFT (only creator can mint)
+     * @notice Mint the AI Agent NFT (anyone can mint to creator)
      */
     function mint(string calldata tokenURI_) external returns (uint256 tokenId) {
-        require(msg.sender == creator, "ONLY_CREATOR");
         require(_nextTokenId == 1, "ALREADY_MINTED"); // Only one NFT per contract
         
         tokenId = _nextTokenId++;
-        _safeMint(creator, tokenId);
+        _safeMint(creator, tokenId); // Always mint to creator
         _setTokenURI(tokenId, tokenURI_);
         
         emit AgentMinted(tokenId, creator, tokenURI_);
@@ -235,50 +234,8 @@ contract AgentNFTFactory {
         string tokenURI;
     }
 
-    /**
-     * @notice Create agent contract and mint NFT in one transaction
-     */
-    function createAndMintAgent(CreateAndMintParams calldata params) external payable returns (address agentContract) {
-        require(bytes(params.agentName).length > 0, "NAME_REQUIRED");
-        require(bytes(params.agentDescription).length > 0, "DESCRIPTION_REQUIRED");
-        require(bytes(params.storageHash).length > 0, "STORAGE_HASH_REQUIRED");
-        require(bytes(params.tokenURI).length > 0, "TOKEN_URI_REQUIRED");
-        require(params.price > 0, "PRICE_REQUIRED");
-        require(msg.value >= creationFee, "INSUFFICIENT_FEE");
-        
-        // Generate contract name and symbol
-        string memory name = string(abi.encodePacked("Agent: ", params.agentName));
-        string memory symbol = string(abi.encodePacked("AGT", _toString(allAgents.length + 1)));
-        
-        // Deploy new AgentNFT contract
-        agentContract = address(new AgentNFT(
-            name,
-            symbol,
-            params.agentName,
-            params.agentDescription,
-            params.agentCategory,
-            params.computeModel,
-            params.storageHash,
-            params.capabilities,
-            msg.sender,
-            marketplace,
-            params.price
-        ));
-        
-        // Mint the NFT immediately
-        AgentNFT(agentContract).mint(params.tokenURI);
-        
-        // Track the agent
-        creatorAgents[msg.sender].push(agentContract);
-        allAgents.push(agentContract);
-        
-        // Send creation fee to owner
-        if (msg.value > 0) {
-            payable(owner).transfer(msg.value);
-        }
-        
-        emit AgentContractCreated(agentContract, msg.sender, params.agentName, params.price);
-    }
+    // createAndMintAgent function removed due to "stack too deep" compilation error
+    // Use createAgent() followed by separate mint() call instead
     
     /**
      * @notice Get all agents created by a creator
