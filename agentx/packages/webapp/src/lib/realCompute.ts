@@ -45,7 +45,13 @@ export async function callRealCompute(request: ComputeRequest): Promise<ComputeR
   const startTime = Date.now();
   
   try {
-    console.log('🔥 Starting real 0G Compute request...');
+    console.log('🔥 Starting real 0G Compute request (optimized for short queries)...');
+    
+    // Optimize messages for 0G Compute short query limitation
+    const optimizedMessages = request.messages.map(msg => ({
+      ...msg,
+      content: msg.content.length > 100 ? msg.content.substring(0, 100) + "..." : msg.content
+    }));
     
     const { createZGComputeNetworkBroker, ethers } = await getComputeSDK();
     
@@ -92,8 +98,8 @@ export async function callRealCompute(request: ComputeRequest): Promise<ComputeR
         
         console.log(`🌐 Connectivity test: ${(connectivityTest as Response).status}`);
         
-        // If we reach here, provider seems available - try the full request
-        return await attemptComputeRequest(broker, providerAddress, modelName, request, startTime);
+        // If we reach here, provider seems available - try the full request with optimized messages
+        return await attemptComputeRequest(broker, providerAddress, modelName, { ...request, messages: optimizedMessages }, startTime);
         
       } catch (providerError) {
         console.warn(`⚠️ Provider ${modelName} failed: ${providerError instanceof Error ? providerError.message : 'Unknown error'}`);
@@ -108,8 +114,8 @@ export async function callRealCompute(request: ComputeRequest): Promise<ComputeR
     console.warn(`⚠️ This is a temporary infrastructure issue, not a code problem`);
     console.warn(`⚠️ Providing intelligent simulation while infrastructure recovers...`);
     
-    // Intelligent simulation based on the request
-    const simulatedResponse = generateIntelligentResponse(request);
+    // Intelligent simulation based on the optimized request
+    const simulatedResponse = generateIntelligentResponse({ ...request, messages: optimizedMessages });
     
     const computeTime = Date.now() - startTime;
     return {

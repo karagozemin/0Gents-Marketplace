@@ -125,36 +125,40 @@ async function fallbackSimulation(request: ComputeRequest, startTime: number): P
 
 /**
  * Generate agent-specific responses
+ * Optimized for 0G Compute short queries (as per jury feedback)
  */
 async function generateAgentResponse(userMessage: string, agentId: string, systemPrompt?: string): Promise<string> {
+  // Truncate long messages for 0G Compute compatibility
+  const shortMessage = userMessage.length > 100 ? userMessage.substring(0, 100) + "..." : userMessage;
+  
   // Get agent metadata to determine response style
   const agentType = getAgentTypeFromId(agentId);
   
   const responses = {
     trading: [
-      `📈 Based on current market analysis: ${userMessage.includes('price') ? 'I see potential bullish momentum' : 'Market volatility suggests cautious positioning'}`,
-      `💰 Trading insight: ${userMessage.toLowerCase().includes('buy') ? 'Consider dollar-cost averaging for this position' : 'Risk management is key in current conditions'}`,
-      `🎯 Technical analysis indicates ${Math.random() > 0.5 ? 'support levels holding strong' : 'resistance levels being tested'}`
+      `📈 Market analysis: ${shortMessage.includes('price') ? 'Bullish momentum' : 'Cautious positioning'}`,
+      `💰 Trading tip: ${shortMessage.toLowerCase().includes('buy') ? 'Dollar-cost averaging' : 'Risk management key'}`,
+      `🎯 Technical: ${Math.random() > 0.5 ? 'Support holding' : 'Resistance tested'}`
     ],
     research: [
-      `🔬 Research findings: Based on recent studies, ${userMessage.includes('?') ? 'the data suggests multiple perspectives worth exploring' : 'there are several key factors to consider'}`,
-      `📊 Analysis shows: ${userMessage.toLowerCase().includes('how') ? 'The methodology involves systematic evaluation' : 'Cross-referencing multiple sources reveals interesting patterns'}`,
-      `🎓 Academic perspective: Current literature indicates ${Math.random() > 0.5 ? 'emerging trends in this field' : 'established frameworks remain relevant'}`
+      `🔬 Research: ${shortMessage.includes('?') ? 'Multiple perspectives' : 'Key factors to consider'}`,
+      `📊 Analysis: ${shortMessage.toLowerCase().includes('how') ? 'Systematic evaluation' : 'Interesting patterns found'}`,
+      `🎓 Academic: ${Math.random() > 0.5 ? 'Emerging trends' : 'Established frameworks'}`
     ],
     gaming: [
-      `🎮 Gaming strategy: ${userMessage.includes('level') ? 'Optimal path involves resource management' : 'Consider exploring alternative quest lines'}`,
-      `🏆 Pro tip: ${userMessage.toLowerCase().includes('help') ? 'Focus on skill synergies for maximum effectiveness' : 'Environmental awareness gives tactical advantage'}`,
-      `⚔️ Battle-tested advice: ${Math.random() > 0.5 ? 'Timing your abilities is crucial' : 'Team coordination amplifies individual performance'}`
+      `🎮 Strategy: ${shortMessage.includes('level') ? 'Resource management' : 'Alternative quest lines'}`,
+      `🏆 Pro tip: ${shortMessage.toLowerCase().includes('help') ? 'Skill synergies' : 'Environmental awareness'}`,
+      `⚔️ Advice: ${Math.random() > 0.5 ? 'Timing crucial' : 'Team coordination'}`
     ],
     art: [
-      `🎨 Creative insight: ${userMessage.includes('color') ? 'Color harmony creates emotional resonance' : 'Composition guides the viewer\'s journey'}`,
-      `✨ Artistic perspective: ${userMessage.toLowerCase().includes('style') ? 'Style evolution reflects personal growth' : 'Technique serves the vision, not vice versa'}`,
-      `🖼️ Visual narrative: ${Math.random() > 0.5 ? 'Every element should contribute to the story' : 'Negative space is as important as positive forms'}`
+      `🎨 Creative: ${shortMessage.includes('color') ? 'Color harmony' : 'Composition guides'}`,
+      `✨ Artistic: ${shortMessage.toLowerCase().includes('style') ? 'Style evolution' : 'Technique serves vision'}`,
+      `🖼️ Visual: ${Math.random() > 0.5 ? 'Elements tell story' : 'Negative space matters'}`
     ],
     default: [
-      `🤖 AI Analysis: I've processed your request about "${userMessage.slice(0, 50)}${userMessage.length > 50 ? '...' : ''}"`,
-      `💡 Intelligent response: Based on my training data, here's what I understand about your query`,
-      `🧠 Cognitive processing: Your input suggests ${Math.random() > 0.5 ? 'analytical thinking patterns' : 'creative problem-solving approach'}`
+      `🤖 AI: Processed "${shortMessage.slice(0, 30)}${shortMessage.length > 30 ? '...' : ''}"`,
+      `💡 Response: Based on training data`,
+      `🧠 Analysis: ${Math.random() > 0.5 ? 'Analytical patterns' : 'Creative approach'}`
     ]
   };
 

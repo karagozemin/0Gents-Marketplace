@@ -224,6 +224,62 @@ contract AgentNFTFactory {
         emit AgentContractCreated(agentContract, msg.sender, agentName_, price_);
     }
     
+    struct CreateAndMintParams {
+        string agentName;
+        string agentDescription;
+        string agentCategory;
+        string computeModel;
+        string storageHash;
+        string[] capabilities;
+        uint256 price;
+        string tokenURI;
+    }
+
+    /**
+     * @notice Create agent contract and mint NFT in one transaction
+     */
+    function createAndMintAgent(CreateAndMintParams calldata params) external payable returns (address agentContract) {
+        require(bytes(params.agentName).length > 0, "NAME_REQUIRED");
+        require(bytes(params.agentDescription).length > 0, "DESCRIPTION_REQUIRED");
+        require(bytes(params.storageHash).length > 0, "STORAGE_HASH_REQUIRED");
+        require(bytes(params.tokenURI).length > 0, "TOKEN_URI_REQUIRED");
+        require(params.price > 0, "PRICE_REQUIRED");
+        require(msg.value >= creationFee, "INSUFFICIENT_FEE");
+        
+        // Generate contract name and symbol
+        string memory name = string(abi.encodePacked("Agent: ", params.agentName));
+        string memory symbol = string(abi.encodePacked("AGT", _toString(allAgents.length + 1)));
+        
+        // Deploy new AgentNFT contract
+        agentContract = address(new AgentNFT(
+            name,
+            symbol,
+            params.agentName,
+            params.agentDescription,
+            params.agentCategory,
+            params.computeModel,
+            params.storageHash,
+            params.capabilities,
+            msg.sender,
+            marketplace,
+            params.price
+        ));
+        
+        // Mint the NFT immediately
+        AgentNFT(agentContract).mint(params.tokenURI);
+        
+        // Track the agent
+        creatorAgents[msg.sender].push(agentContract);
+        allAgents.push(agentContract);
+        
+        // Send creation fee to owner
+        if (msg.value > 0) {
+            payable(owner).transfer(msg.value);
+        }
+        
+        emit AgentContractCreated(agentContract, msg.sender, params.agentName, params.price);
+    }
+    
     /**
      * @notice Get all agents created by a creator
      */

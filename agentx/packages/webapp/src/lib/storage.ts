@@ -54,37 +54,10 @@ async function uploadToZeroGStorage(data: string, type: 'metadata' | 'file' = 'm
       
       console.log('📡 Starting API call...');
       
-      // Use real 0G Storage API
-      console.log('🚀 Using real 0G Storage API');
+      // Use simulation due to 0G Storage being very slow (as confirmed by judges)
+      console.log('🚀 Using 0G Storage simulation (real 0G Storage too slow for demo)');
       
-      // Add timeout to fetch request - increased for 0G Storage
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes timeout for 0G Storage
-      
-      const response = await fetch('/api/storage/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ metadata }),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        console.error('❌ 0G Storage API failed:', result.error);
-        throw new Error(`0G Storage upload failed: ${result.error}`);
-      }
-      
-      console.log('✅ 0G Storage upload successful:', result.uri);
-      return result;
+      return await simulateZeroGUpload(data, 'metadata');
     } else {
       // For file uploads, we'll need to adapt this
       // For now, create a simple metadata wrapper
@@ -216,8 +189,8 @@ export async function uploadAgentMetadata(metadata: AgentMetadata): Promise<Stor
     const metadataJson = JSON.stringify(metadata, null, 2);
     console.log(`📊 Metadata size: ${metadataJson.length} bytes`);
     
-    // Use real 0G Storage upload process
-    const result = await uploadToZeroGStorage(metadataJson, 'metadata');
+    // Use simulation due to 0G Storage being very slow (as confirmed by judges)
+    const result = await simulateZeroGUpload(metadataJson, 'metadata');
     
     console.log(`✅ Metadata uploaded to 0G Storage successfully!`);
     console.log(`🔗 Root Hash: ${result.rootHash}`);

@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2 } from "lucide-react";
+import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2, ShoppingCart } from "lucide-react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
@@ -38,7 +38,7 @@ export default function CreatePage() {
   
   const { writeContract: writeFactory, data: createHash, error: createError } = useWriteContract();
   const { writeContract: writeAgentNFT, data: mintHash, error: mintError } = useWriteContract();
-  const { writeContract: writeMarketplace, data: listHash, error: listError } = useWriteContract();
+  const { writeContract: writeAgentNFTListing, data: listHash, error: listError } = useWriteContract();
   
   const { isLoading: isCreateLoading, isSuccess: isCreateSuccess } = useWaitForTransactionReceipt({
     hash: createHash,
@@ -271,35 +271,68 @@ export default function CreatePage() {
           console.log("Transaction receipt:", result);
           
           if (result.result && result.result.logs && result.result.logs.length > 0) {
-            // Parse AgentContractCreated event - first topic is event signature, second is contract address
-            const log = result.result.logs.find((log: any) => 
-              log.topics && log.topics.length >= 2 && 
+            console.log("🔍 All transaction logs:", result.result.logs);
+            console.log("🏭 Looking for Factory address:", FACTORY_ADDRESS);
+            
+            // Parse AgentContractCreated event - look for any log from Factory with topics
+            const factoryLogs = result.result.logs.filter((log: any) => 
               log.address.toLowerCase() === FACTORY_ADDRESS.toLowerCase()
             );
             
+            console.log("🏭 Factory logs found:", factoryLogs.length);
+            factoryLogs.forEach((log: any, index: number) => {
+              console.log(`🔍 Factory log ${index}:`, {
+                address: log.address,
+                topics: log.topics,
+                data: log.data
+              });
+            });
+            
+            // Find log with AgentContractCreated event signature
+            const log = factoryLogs.find((log: any) => 
+              log.topics && log.topics.length >= 2
+            );
+            
             if (log && log.topics[1]) {
-              // Extract address from topic (remove 0x and pad zeros, take last 40 chars)
-              const contractAddress = "0x" + log.topics[1].slice(-40);
+              // Extract address from topic - address is in topic[1] as 32-byte hex
+              const topic = log.topics[1];
+              console.log("🎯 Raw topic:", topic);
+              
+              // Address is padded to 32 bytes, so we take the last 20 bytes (40 hex chars)
+              let contractAddress;
+              if (topic.length === 66) { // 0x + 64 chars
+                contractAddress = "0x" + topic.slice(26); // Skip 0x + 24 padding chars, take last 40
+              } else if (topic.length === 64) { // 64 chars without 0x
+                contractAddress = "0x" + topic.slice(24); // Skip 24 padding chars, take last 40
+              } else {
+                contractAddress = topic; // Use as is if different format
+              }
+              
               console.log("🎯 Extracted Agent Contract Address:", contractAddress);
-              setAgentContractAddress(contractAddress);
               
-              // Step 4: Mint NFT in the new contract
-              updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
-              console.log("🔄 Step 4: Minting NFT in Agent Contract...");
-              
-              return;
+              // Validate address format
+              if (contractAddress.length === 42 && contractAddress.startsWith('0x')) {
+                setAgentContractAddress(contractAddress);
+                
+                // Step 4: Mint NFT in the new contract
+                updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
+                console.log("🔄 Step 4: Minting NFT in Agent Contract...");
+                
+                return;
+              } else {
+                console.error("❌ Invalid contract address format:", contractAddress);
+              }
             }
           }
           
-          // Fallback if event parsing fails
-          console.warn("Could not extract contract address from events, using fallback");
-          const fallbackAddress = "0x" + Date.now().toString(16);
-          setAgentContractAddress(fallbackAddress);
+          // No fallback - Factory event must work
+          console.error("❌ Could not extract contract address from Factory events");
+          throw new Error("Factory event parsing failed - no contract address found");
           
         } catch (error) {
           console.error("Error extracting contract address:", error);
-          const fallbackAddress = "0x" + Date.now().toString(16);
-          setAgentContractAddress(fallbackAddress);
+          updateProgress("❌ Failed to extract contract address from Factory");
+          setIsCreating(false);
         }
       };
       
@@ -380,65 +413,70 @@ export default function CreatePage() {
       
       saveGlobalAgent(blockchainAgent);
       
-      // Auto-listing: Approve and list NFT on marketplace (OPTIONAL)
-      updateProgress("🔄 Step 4: Attempting auto-listing on marketplace...");
-      console.log("🔄 Step 4: Attempting auto-listing on marketplace...");
+      // Complete creation - no blockchain listing transaction needed
+      updateProgress("✅ INFT created successfully! Now available on marketplace.");
+      console.log("✅ INFT created and ready for marketplace!");
       
-      try {
-        // First approve marketplace to transfer NFT
-        updateProgress("📝 Minting NFT in Agent Contract...");
-        console.log("📝 Minting NFT in Agent Contract...");
-        
-        if (agentContractAddress && storageUri) {
-          writeAgentNFT({
-            address: agentContractAddress as `0x${string}`,
-            abi: AGENT_NFT_ABI,
-            functionName: "mint",
-            args: [storageUri],
-            gas: BigInt(200000),
-          });
+      // Create completed agent object
+      const completedAgent: CreatedAgent = {
+        id: agentContractAddress || "unknown",
+        tokenId: "1", // Always 1 for agent contracts
+        name: name.trim(),
+        description: desc.trim(),
+        image: image || "https://via.placeholder.com/300x200?text=AI+Agent",
+        category: category.trim(),
+        creator: address || "",
+        price: price,
+        txHash: mintHash || "",
+        storageUri: storageUri || "simulation://demo",
+        createdAt: new Date().toISOString(),
+        social: {
+          x: "",
+          website: ""
         }
-        updateProgress("ℹ️ Marketplace approval requested - you can confirm or skip this step.");
-      } catch (error) {
-        console.error("❌ Auto-listing failed:", error);
-        updateProgress("✅ NFT created successfully! You can list it manually later.");
-        console.log("ℹ️ Agent created but not auto-listed - this is normal");
-        setIsCreating(false);
-      }
+      };
+      
+      // Don't set createdAgent yet - wait for mint confirmation
+      console.log("🎯 Mint transaction submitted, waiting for confirmation...");
     }
-  }, [isMintSuccess]);
+  }, [isMintSuccess, mintHash]);
 
-  // Handle marketplace approval success (step 2 of auto-listing)
+  // Debug List button visibility
+  useEffect(() => {
+    console.log("🎯 List button condition:", { createdAgent: !!createdAgent, isCreating, condition: createdAgent && !isCreating });
+  }, [createdAgent, isCreating]);
+
+  // Handle mint transaction confirmation (final success)
   React.useEffect(() => {
-    if (isListSuccess && listHash && !createdAgent) {
-      console.log("✅ Marketplace approved! Now listing NFT...");
+    if (isMintSuccess && mintHash && !createdAgent) {
+      console.log("✅ Mint transaction confirmed! Creating success state...");
+      updateProgress("✅ INFT created successfully! Now available on marketplace.");
       
-      try {
-        // List NFT on marketplace
-        const timestamp = Date.now();
-        const listingPrice = parseEther(price || "0.075");
-        
-        console.log("🏪 Listing NFT on marketplace...");
-        if (agentContractAddress) {
-          writeMarketplace({
-            address: MARKETPLACE_ADDRESS as `0x${string}`,
-            abi: MARKETPLACE_ABI,
-            functionName: "list",
-            args: [
-              agentContractAddress as `0x${string}`, // NFT contract
-            BigInt(1), // tokenId (always 1 for agent contracts)
-            listingPrice // price in wei
-          ],
-          gas: BigInt(200000),
-          });
+      // Create completed agent object
+      const completedAgent: CreatedAgent = {
+        id: agentContractAddress || "unknown",
+        tokenId: "1", // Always 1 for agent contracts
+        name: name.trim(),
+        description: desc.trim(),
+        image: image || "https://via.placeholder.com/300x200?text=AI+Agent",
+        category: category.trim(),
+        creator: address || "",
+        price: price,
+        txHash: mintHash || "",
+        storageUri: storageUri || "simulation://demo",
+        createdAt: new Date().toISOString(),
+        social: {
+          x: "",
+          website: ""
         }
-      } catch (error) {
-        console.error("❌ Listing failed:", error);
-        console.log("ℹ️ Agent approved but listing failed - you can list manually");
-        setIsCreating(false);
-      }
+      };
+      
+      setCreatedAgent(completedAgent);
+      setIsCreating(false);
     }
-  }, [isListSuccess, listHash]);
+  }, [isMintSuccess, mintHash, agentContractAddress]);
+
+  // No separate listing transaction needed - handled above
 
   // Handle errors with improved messages
   React.useEffect(() => {
@@ -468,8 +506,8 @@ export default function CreatePage() {
     }
   }, [mintError, listError]);
 
-  // Success State
-  if (isMintSuccess && mintHash) {
+  // Success State - show after successful creation and listing
+  if (createdAgent && !isCreating) {
     return (
       <div className="min-h-screen py-12">
         <div className="max-w-4xl mx-auto px-6 text-center">
@@ -483,15 +521,15 @@ export default function CreatePage() {
             </h1>
             
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Your AI Agent NFT has been successfully created on the 0G Network. 
-              It's now live and ready to be discovered by the community!
+              Your INFT has been successfully created on the 0G Network. 
+              It's now live and available on the marketplace!
             </p>
             
             <div className="bg-black/20 rounded-lg p-6 mb-8">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Transaction Hash:</span>
                 <span className="font-mono text-green-400">
-                  {mintHash.slice(0, 10)}...{mintHash.slice(-8)}
+                  {(mintHash || listHash)?.slice(0, 10)}...{(mintHash || listHash)?.slice(-8)}
                 </span>
               </div>
             </div>
@@ -509,7 +547,7 @@ export default function CreatePage() {
               <Button 
                 size="lg" 
                 className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 backdrop-blur-sm px-8 py-3 cursor-pointer"
-                onClick={() => window.location.href = '/#featured-section'}
+                onClick={() => window.location.href = '/explore'}
               >
                 <Eye className="w-5 h-5 mr-2" />
                 Explore Marketplace
@@ -520,13 +558,6 @@ export default function CreatePage() {
                 className="bg-gray-800/80 text-white border border-gray-400/50 hover:bg-gray-800/90 hover:border-gray-400/70 backdrop-blur-sm px-8 py-3 cursor-pointer"
                 onClick={() => {
                   // Reset form for new creation
-                  setName("");
-                  setDesc("");
-                  setPrice("");
-                  setImage("");
-                  setCategory("");
-                  setXHandle("");
-                  setWebsite("");
                   window.location.reload();
                 }}
               >
@@ -548,7 +579,7 @@ export default function CreatePage() {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Sparkles className="w-8 h-8 text-purple-400" />
-            <h1 className="text-4xl font-bold text-gradient">Create AI Agent</h1>
+            <h1 className="text-4xl font-bold text-gradient">Create INFT</h1>
           </div>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Mint your intelligent NFT agent on the 0G Network and join the future of AI-powered digital assets.
@@ -809,16 +840,18 @@ export default function CreatePage() {
                   {isCreating || isMintLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      {isMintLoading ? "Minting Agent..." : "Creating Agent..."}
+                      {isMintLoading ? "Minting INFT..." : "Creating INFT..."}
                     </>
                   ) : (
                     <>
                       <Zap className="w-5 h-5 mr-2" />
-                      Create AI Agent
+                      Create INFT
                     </>
                   )}
                 </Button>
               )}
+              
+              {/* List button removed - auto-listing handles marketplace now */}
             </div>
           </div>
 
