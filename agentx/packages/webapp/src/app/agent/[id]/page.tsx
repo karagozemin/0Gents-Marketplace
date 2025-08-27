@@ -28,6 +28,8 @@ import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
 import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
 import { callCompute, type ChatMessage, type ComputeRequest } from "@/lib/compute";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 export default function AgentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -240,25 +242,30 @@ export default function AgentDetail() {
 
   if (!agent) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
-          <p className="text-gray-300">Agent not found</p>
-          <p className="text-sm text-gray-500 mt-2">This agent may not exist or has been removed.</p>
-          <Button 
-            className="mt-4 gradient-0g" 
-            onClick={() => window.location.href = '/'}
-          >
-            Back to Marketplace
-          </Button>
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
+            <p className="text-gray-300">Agent not found</p>
+            <p className="text-sm text-gray-500 mt-2">This agent may not exist or has been removed.</p>
+            <Button 
+              className="mt-4 gradient-0g" 
+              onClick={() => window.location.href = '/'}
+            >
+              Back to Marketplace
+            </Button>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* Agent Image */}
@@ -602,6 +609,7 @@ export default function AgentDetail() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
