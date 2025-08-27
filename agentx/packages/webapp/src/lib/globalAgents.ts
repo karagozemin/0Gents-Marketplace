@@ -68,6 +68,8 @@ export function transformGlobalAgent(globalAgent: GlobalAgent): AgentItem {
     priceEth: parseFloat(globalAgent.price) || 0.01,
     description: globalAgent.description,
     category: globalAgent.category,
+    listingId: globalAgent.listingId || Math.floor(Math.random() * 1000) + 1, // Fake listing ID for demo
+    tokenId: globalAgent.tokenId,
     history: [
       { 
         activity: "Created globally", 

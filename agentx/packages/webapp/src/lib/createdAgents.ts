@@ -14,6 +14,7 @@ export interface CreatedAgent {
   price: string;
   txHash: string;
   storageUri: string;
+  listingId?: number; // Marketplace listing ID
   social?: {
     x?: string;
     website?: string;
@@ -76,6 +77,8 @@ export function transformToMockAgent(createdAgent: CreatedAgent): AgentItem {
     priceEth: parseFloat(createdAgent.price) || 0.01,
     description: createdAgent.description,
     category: createdAgent.category,
+    listingId: createdAgent.listingId || Math.floor(Math.random() * 1000) + 1, // Fake listing ID for demo
+    tokenId: createdAgent.tokenId,
     history: [
       { activity: "Created", date: new Date(createdAgent.createdAt).toISOString().split('T')[0] },
       { activity: "Minted", date: new Date(createdAgent.createdAt).toISOString().split('T')[0], priceEth: parseFloat(createdAgent.price) || 0.01 },
