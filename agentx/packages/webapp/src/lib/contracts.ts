@@ -7,7 +7,7 @@ export const ZERO_G_EXPLORER = process.env.NEXT_PUBLIC_0G_EXPLORER;
 export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
 export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS || "0xbD5C5a4947497f531a156DE720E04065362783ff"; // Enhanced INFT with mint()
 export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0xF36ae1c0eCfd2d9ecb56Adb402751Bdca1Cbe429"; // Factory Marketplace
-export const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS || "0x9822af5443B3862ff1d4B22D11887edD3D7F0ac9"; // Agent NFT Factory
+export const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS || "0x7FC62946f03f42c721ae0237998c45b64872aD26"; // Agent NFT Factory
 
 // 0G Storage Contract Addresses
 export const ZERO_G_STORAGE_FLOW = process.env.NEXT_PUBLIC_0G_STORAGE_FLOW;

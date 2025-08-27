@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { mockAgents, type AgentItem } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
+import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
 import { useReadContract } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI } from "@/lib/contracts";
 import { Input } from "@/components/ui/input";
@@ -100,14 +101,28 @@ export default function ExplorePage() {
   useEffect(() => {
     async function loadAllAgents() {
       console.log('🔄 Loading agents from all sources...');
-      const agents = [];
+      const agents: any[] = [];
       
-      // 1. Load from localStorage (fast, own creations)
+      // 1. ✅ ÇÖZÜM: Server'dan global agent'ları yükle (tüm kullanıcılar)
+      try {
+        const serverAgents = await getAgentsFromServer();
+        const globalAgents = serverAgents.map(transformGlobalAgent);
+        agents.push(...globalAgents);
+        console.log(`🌐 Loaded ${globalAgents.length} agents from global server`);
+      } catch (error) {
+        console.error('❌ Failed to load server agents:', error);
+      }
+      
+      // 2. Load from localStorage (fallback, own creations)
       try {
         const createdAgents = getCreatedAgents();
         const localAgents = createdAgents.map(transformToMockAgent);
-        agents.push(...localAgents);
-        console.log(`📱 Loaded ${localAgents.length} agents from localStorage`);
+        // Sadece server'da olmayan local agent'ları ekle
+        const newLocalAgents = localAgents.filter(local => 
+          !agents.some(server => server.name === local.name)
+        );
+        agents.push(...newLocalAgents);
+        console.log(`📱 Loaded ${newLocalAgents.length} unique local agents (${localAgents.length} total local)`);
       } catch (error) {
         console.error('❌ Failed to load local agents:', error);
       }

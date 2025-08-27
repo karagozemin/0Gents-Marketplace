@@ -4,6 +4,7 @@ import { AgentWideCard } from "@/components/AgentWideCard";
 import { mockAgents } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
+import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Star, Zap, Users } from "lucide-react";
@@ -76,23 +77,37 @@ export default function HomePage() {
     functionName: 'getTotalAgents',
   });
 
-  // Load agents from both localStorage and blockchain
+  // Load agents from both localStorage and server
   useEffect(() => {
     async function loadAllAgents() {
       console.log('🔄 Loading agents from all sources...');
-      const agents = [];
+      const agents: any[] = [];
       
-      // 1. Load from localStorage (fast, own creations)
+      // 1. ✅ ÇÖZÜM: Server'dan global agent'ları yükle (tüm kullanıcılar)
+      try {
+        const serverAgents = await getAgentsFromServer();
+        const globalAgents = serverAgents.map(transformGlobalAgent);
+        agents.push(...globalAgents);
+        console.log(`🌐 Loaded ${globalAgents.length} agents from global server`);
+      } catch (error) {
+        console.error('❌ Failed to load server agents:', error);
+      }
+      
+      // 2. Load from localStorage (fallback, own creations)
       try {
         const createdAgents = getCreatedAgents();
         const localAgents = createdAgents.map(transformToMockAgent);
-        agents.push(...localAgents);
-        console.log(`📱 Loaded ${localAgents.length} agents from localStorage`);
+        // Sadece server'da olmayan local agent'ları ekle
+        const newLocalAgents = localAgents.filter(local => 
+          !agents.some(server => server.name === local.name)
+        );
+        agents.push(...newLocalAgents);
+        console.log(`📱 Loaded ${newLocalAgents.length} unique local agents (${localAgents.length} total local)`);
       } catch (error) {
         console.error('❌ Failed to load local agents:', error);
       }
       
-      // 2. Load from Factory contract (slow, all creations)
+      // 3. Load from Factory contract (slow, blockchain creations)
       try {
         if (totalAgents && totalAgents > BigInt(0)) {
           console.log(`🔗 Loading ${totalAgents.toString()} agents from Factory contract...`);

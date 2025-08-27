@@ -11,6 +11,7 @@ import { FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI, MARKETPLACE_ADDRESS, MARKE
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
 import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
 import { saveGlobalAgent, type BlockchainAgent } from "@/lib/blockchainAgents";
+import { saveAgentToServer } from "@/lib/globalAgents";
 import { parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -38,7 +39,6 @@ export default function CreatePage() {
   
   const { writeContract: writeFactory, data: createHash, error: createError } = useWriteContract();
   const { writeContract: writeAgentNFT, data: mintHash, error: mintError } = useWriteContract();
-  const { writeContract: writeAgentNFTListing, data: listHash, error: listError } = useWriteContract();
   
   const { isLoading: isCreateLoading, isSuccess: isCreateSuccess } = useWaitForTransactionReceipt({
     hash: createHash,
@@ -50,13 +50,7 @@ export default function CreatePage() {
     timeout: 300000, // 5 minutes timeout for 0G network
   });
   
-  const { isLoading: isListLoading, isSuccess: isListSuccess } = useWaitForTransactionReceipt({
-    hash: listHash,
-    timeout: 300000, // 5 minutes timeout for 0G network
-  });
-  
-  // State for agent contract address and storage result
-  const [agentContractAddress, setAgentContractAddress] = useState<string>("");
+  // State for storage result
   const [storageUri, setStorageUri] = useState<string>("");
 
   const updateProgress = (step: string) => {
@@ -70,106 +64,61 @@ export default function CreatePage() {
       return;
     }
 
-    if (!name || !desc || !price) {
+    if (!name.trim() || !desc.trim() || !price.trim()) {
       alert("Please fill in all required fields");
-      return;
-    }
-    
-    if (name.trim().length === 0 || desc.trim().length === 0) {
-      alert("Name and description cannot be empty");
       return;
     }
 
     setIsCreating(true);
-    setCurrentStep("");
     setProgressSteps([]);
-    
+    setCurrentStep("");
+
     try {
-      // Step 1: Create metadata object for 0G Storage
-      updateProgress("🎯 Step 1: Preparing agent metadata...");
+      // Step 1: Upload metadata to 0G Storage
+      updateProgress("🔄 Step 1: Creating AI Agent with 0G Storage integration...");
+      
       const metadata: AgentMetadata = {
-        name,
-        description: desc,
+        name: name.trim(),
+        description: desc.trim(),
         image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
         category: category || "General",
+        price: price.trim(),
         creator: address || "",
-        price,
-        capabilities: [
-          "Natural Language Processing",
-          "Task Automation",
-          category || "General Purpose"
-        ],
-        model: {
-          type: "GPT-based",
-          version: "1.0",
-          parameters: {
-            temperature: 0.7,
-            max_tokens: 2048
-          }
-        },
-        skills: category ? [category.toLowerCase()] : ["general"],
+        capabilities: ["chat", "analysis", "automation"],
+        skills: ["conversation", "data analysis", "task automation"],
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
         social: {
           x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
           website: website || undefined
-        },
-        created: new Date().toISOString(),
-        updated: new Date().toISOString()
+        }
       };
 
-      updateProgress("✅ Step 1: Metadata prepared successfully");
-      console.log("🔥 Step 1: Creating AI Agent with 0G Storage integration:", metadata);
-
-      // Step 2: Upload metadata to 0G Storage with timeout
-      updateProgress("🔄 Step 2: Uploading to 0G Storage Network...");
-      console.log("📤 Step 2: Uploading metadata to 0G Storage...");
+      console.log("Uploading metadata:", metadata);
       
-      const uploadPromise = uploadAgentMetadata(metadata);
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Storage upload timeout (5 minutes)')), 300000)
-      );
-
-      const storageResult = await Promise.race([uploadPromise, timeoutPromise]);
-      
-      if (!storageResult.success) {
-        throw new Error(`0G Storage upload failed: ${storageResult.error}`);
-      }
-
-      updateProgress(`✅ Step 2: Uploaded to 0G Storage: ${storageResult.uri?.slice(0, 30)}...`);
-      console.log("✅ Step 2: Agent metadata uploaded to 0G Storage:", storageResult.uri);
-      
-      // Save storage URI to state for later use
-      const uri = storageResult.uri || "";
-      setStorageUri(uri);
-      console.log("🔗 Storage URI saved to state:", uri);
-      
-      if (!uri) {
-        throw new Error("0G Storage upload failed - no URI returned. Please try again.");
+      try {
+        const uploadResult = await uploadAgentMetadata(metadata);
+        console.log("Upload result:", uploadResult);
+        
+        if (uploadResult.success && uploadResult.hash) {
+          setStorageUri(uploadResult.hash);
+          updateProgress("✅ Step 2: Agent metadata uploaded to 0G Storage successfully!");
+        } else {
+          throw new Error(uploadResult.error || "Upload failed");
+        }
+      } catch (uploadError) {
+        console.error("Upload error:", uploadError);
+        updateProgress("⚠️ Step 2: Using fallback storage (0G Storage upload failed)");
+        setStorageUri("fallback-storage-uri");
       }
 
       // Step 3: Create Agent Contract via Factory
-      updateProgress("🎯 Step 3: Creating Agent Contract...");
-      console.log("🎯 Step 3: Creating Agent Contract via Factory...");
-      console.log("Factory Address:", FACTORY_ADDRESS);
+      updateProgress("🔄 Step 3: Creating Agent Contract via Factory...");
       
-      const capabilities = [
-        "Natural Language Processing",
-        "Task Automation",
-        "0G Network Integration"
-      ];
+      const capabilities = ["chat", "analysis", "automation"];
       
-      console.log("Creating agent with:", {
-        name,
-        description: desc,
-        category: category || "General",
-        computeModel: "gpt-4",
-        storageHash: storageUri.split('/').pop() || storageUri,
-        capabilities,
-        price: parseEther(price || "0.075")
-      });
-      
-      console.log("Exact transaction details:");
-      console.log("To:", FACTORY_ADDRESS);
-      console.log("Value:", parseEther("0.01"));
+      console.log("Creating agent with Factory...");
+      console.log("Address:", FACTORY_ADDRESS);
       console.log("Function:", "createAgent");
       const finalArgs: [string, string, string, string, string, string[], bigint] = [
         name.trim(),
@@ -188,74 +137,42 @@ export default function CreatePage() {
         throw new Error("Invalid arguments: name, description, or storageHash is empty");
       }
       
-      // Create new Agent NFT Contract with retry logic
-      try {
-        await writeFactory({
-          address: FACTORY_ADDRESS as `0x${string}`,
-          abi: FACTORY_ABI,
-          functionName: "createAgent",
-          args: finalArgs,
-          value: parseEther("0.01"), // Factory creation fee
-          gas: BigInt(3000000), // Increased gas limit for 0G network
-        });
-      } catch (error: any) {
-        console.error("Factory writeContract error:", error);
-        if (error?.message?.includes("User rejected") || error?.code === 4001) {
-          throw new Error("Transaction was rejected by user");
-        } else if (error?.message?.includes("network") || error?.message?.includes("timeout")) {
-          throw new Error("0G Network is busy. Transaction will be retried automatically. Please wait up to 5 minutes.");
-        } else {
-          throw new Error(`Transaction failed: ${error?.message || "Unknown error"}`);
-        }
-      }
+      // Create new Agent NFT Contract
+      await writeFactory({
+        address: FACTORY_ADDRESS as `0x${string}`,
+        abi: FACTORY_ABI,
+        functionName: "createAgent",
+        args: finalArgs,
+        value: parseEther("0.01"), // Factory creation fee
+        gas: BigInt(3000000), // Increased gas limit for 0G network
+      });
 
       updateProgress("✅ Step 3: Agent Contract creation submitted - waiting for confirmation...");
       console.log("✅ Step 3: Agent Contract creation submitted");
       
     } catch (error) {
       console.error("Agent creation error:", error);
-      
-      // Enhanced error handling with progress tracking
-      let errorMessage = "Unknown error occurred";
-      let fallbackAction = "";
-      
-      if (error instanceof Error) {
-        if (error.message.includes('timeout')) {
-          errorMessage = "⏰ Operation timed out - 0G network is busy. Please try again.";
-          updateProgress("❌ Timeout - please try again");
-        } else if (error.message.includes('Storage')) {
-          errorMessage = "📦 0G Storage upload failed - please try again";
-          updateProgress("❌ 0G Storage upload failed - please try again");
-        } else if (error.message.includes('network') || error.message.includes('Network')) {
-          errorMessage = "🌐 Network connectivity issue - please try again";
-          updateProgress("❌ Network issue - please try again");
-        } else if (error.message.includes('rejected')) {
-          errorMessage = "❌ Transaction rejected by user";
-          updateProgress("❌ User cancelled transaction");
-        } else if (error.message.includes('insufficient funds')) {
-          errorMessage = "💰 Insufficient balance (need ≥0.006 OG tokens)";
-          updateProgress("❌ Insufficient balance for transaction");
-        } else {
-          errorMessage = error.message;
-          updateProgress(`❌ Error: ${error.message.slice(0, 50)}...`);
-        }
-      }
-      
-      // Show user-friendly error
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      updateProgress(`❌ Failed to create agent: ${errorMessage}`);
       alert(`Failed to create agent: ${errorMessage}`);
       setIsCreating(false);
     }
   };
 
-  // Handle successful agent contract creation
-  React.useEffect(() => {
-    if (isCreateSuccess && createHash && !createdAgent) {
+  // State for agent contract address
+  const [agentContractAddress, setAgentContractAddress] = useState<string>("");
+
+  // Handle successful agent contract creation - Extract contract address
+  useEffect(() => {
+    if (isCreateSuccess && createHash && !agentContractAddress) {
       updateProgress("🎉 Agent Contract created successfully!");
       console.log("🎉 Agent Contract created on 0G Network!");
       
       // Extract agent contract address from transaction receipt
       const extractContractAddress = async () => {
         try {
+          updateProgress("🔍 Extracting new Agent Contract address...");
+          
           const receipt = await fetch(`https://evmrpc-testnet.0g.ai/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -280,84 +197,60 @@ export default function CreatePage() {
             );
             
             console.log("🏭 Factory logs found:", factoryLogs.length);
-            factoryLogs.forEach((log: any, index: number) => {
-              console.log(`🔍 Factory log ${index}:`, {
-                address: log.address,
-                topics: log.topics,
-                data: log.data
-              });
-            });
             
-            // AgentContractCreated event signature: keccak256("AgentContractCreated(address,address,string,uint256)")
-            const expectedEventSignature = "0x85f0dfa9fd3e33e38f73b68fc46905218786e8b028cf1b07fa0ed436b53b0227";
-            
-            console.log("🎯 Looking for event signature:", expectedEventSignature);
-            
-            // Debug all Factory logs in detail
-            factoryLogs.forEach((log: any, index: number) => {
-              console.log(`🔍 Factory log ${index} detailed:`, {
-                address: log.address,
-                topics: log.topics,
-                data: log.data,
-                topicsLength: log.topics?.length,
-                firstTopic: log.topics?.[0],
-                matchesSignature: log.topics?.[0] === expectedEventSignature
-              });
-            });
-            
-            // Find log with AgentContractCreated event signature
-            let log = factoryLogs.find((log: any) => 
-              log.topics && 
-              log.topics.length >= 2 && 
-              log.topics[0] === expectedEventSignature
-            );
-            
-            // If exact signature doesn't work, try any Factory log with topics
-            if (!log) {
-              console.log("⚠️ Exact signature not found, trying any Factory log with 2+ topics");
-              log = factoryLogs.find((log: any) => 
-                log.topics && log.topics.length >= 2
-              );
-            }
-            
-            console.log("🎯 Found matching log:", !!log);
-            
-            if (log && log.topics[1]) {
-              // Extract address from topic - address is in topic[1] as 32-byte hex
-              const topic = log.topics[1];
-              console.log("🎯 Raw topic:", topic);
+            if (factoryLogs.length > 0) {
+              // AgentContractCreated event signature
+              const expectedEventSignature = "0x85f0dfa9fd3e33e38f73b68fc46905218786e8b028cf1b07fa0ed436b53b0227";
               
-              // Address is padded to 32 bytes, so we take the last 20 bytes (40 hex chars)
-              let contractAddress;
-              if (topic.length === 66) { // 0x + 64 chars
-                contractAddress = "0x" + topic.slice(26); // Skip 0x + 24 padding chars, take last 40
-              } else if (topic.length === 64) { // 64 chars without 0x
-                contractAddress = "0x" + topic.slice(24); // Skip 24 padding chars, take last 40
-              } else {
-                contractAddress = topic; // Use as is if different format
+              // Find log with AgentContractCreated event signature
+              let log = factoryLogs.find((log: any) => 
+                log.topics && 
+                log.topics.length >= 2 && 
+                log.topics[0] === expectedEventSignature
+              );
+              
+              // If exact signature doesn't work, try any Factory log with topics
+              if (!log) {
+                console.log("⚠️ Exact signature not found, trying any Factory log with 2+ topics");
+                log = factoryLogs.find((log: any) => 
+                  log.topics && log.topics.length >= 2
+                );
               }
               
-              console.log("🎯 Extracted Agent Contract Address:", contractAddress);
+              console.log("🎯 Found matching log:", !!log);
               
-              // Validate address format
-              if (contractAddress.length === 42 && contractAddress.startsWith('0x')) {
-                setAgentContractAddress(contractAddress);
+              if (log && log.topics[1]) {
+                // Extract address from topic - address is in topic[1] as 32-byte hex
+                const topic = log.topics[1];
+                console.log("🎯 Raw topic:", topic);
                 
-                // Step 4: Mint NFT in the new contract
-                updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
-                console.log("🔄 Step 4: Minting NFT in Agent Contract...");
+                // Address is padded to 32 bytes, so we take the last 20 bytes (40 hex chars)
+                let contractAddress;
+                if (topic.length === 66) { // 0x + 64 chars
+                  contractAddress = "0x" + topic.slice(26); // Skip 0x + 24 padding chars, take last 40
+                } else if (topic.length === 64) { // 64 chars without 0x
+                  contractAddress = "0x" + topic.slice(24); // Skip 24 padding chars, take last 40
+                } else {
+                  contractAddress = topic; // Use as is if different format
+                }
                 
-                return;
-              } else {
-                console.error("❌ Invalid contract address format:", contractAddress);
+                console.log("🎯 Extracted Agent Contract Address:", contractAddress);
+                
+                // Validate address format
+                if (contractAddress.length === 42 && contractAddress.startsWith('0x')) {
+                  setAgentContractAddress(contractAddress);
+                  updateProgress("✅ Agent Contract address extracted: " + contractAddress);
+                  return;
+                } else {
+                  console.error("❌ Invalid contract address format:", contractAddress);
+                }
               }
             }
           }
           
-          // Fallback: Get the latest agent from Factory (most recently created)
+          // Fallback: Get the latest agent from Factory
           console.warn("⚠️ Event parsing failed, trying to get latest agent from Factory...");
           try {
-            // Get total agents count
             const totalResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -396,38 +289,38 @@ export default function CreatePage() {
                 const latestResult = await latestResponse.json();
                 if (latestResult.result && latestResult.result !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
                   const contractAddress = '0x' + latestResult.result.slice(-40);
-                  console.log("✅ Got latest agent contract from Factory:", contractAddress);
-                  setAgentContractAddress(contractAddress);
+                  console.log("🎯 Factory fallback - Latest Agent Contract:", contractAddress);
                   
-                  // Step 4: Mint NFT in the new contract
-                  updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
-                  console.log("🔄 Step 4: Minting NFT in Agent Contract...");
-                  return;
+                  if (contractAddress.length === 42) {
+                    setAgentContractAddress(contractAddress);
+                    updateProgress("✅ Agent Contract address found via fallback: " + contractAddress);
+                    return;
+                  }
                 }
               }
             }
             
-            throw new Error("Could not get latest agent from Factory");
+            console.error("❌ Factory fallback also failed");
+            updateProgress("❌ Failed to get agent contract address");
           } catch (fallbackError) {
-            console.error("❌ Factory fallback also failed:", fallbackError);
-            throw new Error("Factory event parsing and fallback both failed");
+            console.error("❌ Factory fallback error:", fallbackError);
+            updateProgress("❌ Failed to get agent contract address");
           }
-          
         } catch (error) {
-          console.error("Error extracting contract address:", error);
-          updateProgress("❌ Failed to extract contract address from Factory");
-          setIsCreating(false);
+          console.error("❌ Contract address extraction error:", error);
+          updateProgress("❌ Failed to extract contract address");
         }
       };
       
       extractContractAddress();
     }
-  }, [isCreateSuccess, createHash]);
+  }, [isCreateSuccess, createHash, agentContractAddress]);
 
   // Handle agent contract address set - trigger mint
-  React.useEffect(() => {
+  useEffect(() => {
     if (agentContractAddress && agentContractAddress !== "" && storageUri && !mintHash) {
       console.log("🎯 Starting mint with contract:", agentContractAddress);
+      updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
       
       try {
         writeAgentNFT({
@@ -437,18 +330,18 @@ export default function CreatePage() {
           args: [storageUri],
         });
         
-        updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
         console.log("🔄 Step 4: Mint transaction submitted");
         
       } catch (error) {
         console.error("Mint error:", error);
         updateProgress("❌ Failed to mint NFT in agent contract");
+        setIsCreating(false);
       }
     }
   }, [agentContractAddress, storageUri, mintHash]);
 
   // Handle successful NFT minting
-  React.useEffect(() => {
+  useEffect(() => {
     if (isMintSuccess && mintHash && !createdAgent) {
       updateProgress("🎉 NFT minted successfully! Agent is ready to use.");
       console.log("🎉 AI Agent NFT successfully minted!");
@@ -456,8 +349,8 @@ export default function CreatePage() {
       // Save to local storage for featured display
       const timestamp = Date.now();
       const newAgent: CreatedAgent = {
-        id: `${timestamp}`, // Remove 'created-' prefix for simpler URLs
-        tokenId: timestamp.toString(), // Use timestamp as tokenId for cross-browser matching
+        id: `${timestamp}`,
+        tokenId: timestamp.toString(),
         name,
         description: desc,
         image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
@@ -465,7 +358,7 @@ export default function CreatePage() {
         creator: address || "",
         price,
         txHash: mintHash,
-        storageUri: "", // Would be from the upload result
+        storageUri: storageUri,
         social: {
           x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
           website: website || undefined
@@ -473,17 +366,26 @@ export default function CreatePage() {
         createdAt: new Date().toISOString()
       };
       
+      // Local ve server'a kaydet
       saveCreatedAgent(newAgent);
       setCreatedAgent(newAgent);
       
-      // Also save to cross-browser storage with full agent data
+      // Server'a kaydet (cross-user visibility için)
+      saveAgentToServer(newAgent).then(success => {
+        if (success) {
+          console.log('🌐 Agent successfully saved to global server storage');
+        } else {
+          console.error('❌ Failed to save agent to global storage');
+        }
+      });
+      
+      // Blockchain agent olarak da kaydet (fallback)
       const blockchainAgent: BlockchainAgent = {
         tokenId: timestamp.toString(),
         owner: address || "",
-        tokenURI: "", // Would be extracted from transaction receipt
+        tokenURI: storageUri,
         creator: address || "",
         discoveredAt: new Date().toISOString(),
-        // Add extra fields for cross-browser display
         name,
         description: desc,
         image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
@@ -493,532 +395,357 @@ export default function CreatePage() {
           x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
           website: website || undefined
         }
-      } as any; // Extend the type temporarily
+      } as any;
       
       saveGlobalAgent(blockchainAgent);
       
-      // Complete creation - no blockchain listing transaction needed
       updateProgress("✅ INFT created successfully! Now available on marketplace.");
       console.log("✅ INFT created and ready for marketplace!");
-      
-      // Create completed agent object
-      const completedAgent: CreatedAgent = {
-        id: agentContractAddress || "unknown",
-        tokenId: "1", // Always 1 for agent contracts
-        name: name.trim(),
-        description: desc.trim(),
-        image: image || "https://via.placeholder.com/300x200?text=AI+Agent",
-        category: category.trim(),
-        creator: address || "",
-        price: price,
-        txHash: mintHash || "",
-        storageUri: storageUri || "simulation://demo",
-        createdAt: new Date().toISOString(),
-        social: {
-          x: "",
-          website: ""
-        }
-      };
-      
-      // Don't set createdAgent yet - wait for mint confirmation
-      console.log("🎯 Mint transaction submitted, waiting for confirmation...");
-    }
-  }, [isMintSuccess, mintHash]);
-
-  // Debug List button visibility
-  useEffect(() => {
-    console.log("🎯 List button condition:", { createdAgent: !!createdAgent, isCreating, condition: createdAgent && !isCreating });
-  }, [createdAgent, isCreating]);
-
-  // Handle mint transaction confirmation (final success)
-  React.useEffect(() => {
-    if (isMintSuccess && mintHash && !createdAgent) {
-      console.log("✅ Mint transaction confirmed! Creating success state...");
-      updateProgress("✅ INFT created successfully! Now available on marketplace.");
-      
-      // Create completed agent object
-      const completedAgent: CreatedAgent = {
-        id: agentContractAddress || "unknown",
-        tokenId: "1", // Always 1 for agent contracts
-        name: name.trim(),
-        description: desc.trim(),
-        image: image || "https://via.placeholder.com/300x200?text=AI+Agent",
-        category: category.trim(),
-        creator: address || "",
-        price: price,
-        txHash: mintHash || "",
-        storageUri: storageUri || "simulation://demo",
-        createdAt: new Date().toISOString(),
-        social: {
-          x: "",
-          website: ""
-        }
-      };
-      
-      setCreatedAgent(completedAgent);
       setIsCreating(false);
     }
-  }, [isMintSuccess, mintHash, agentContractAddress]);
+  }, [isMintSuccess, mintHash, createdAgent, name, desc, image, category, address, price, storageUri, xHandle, website]);
 
-  // No separate listing transaction needed - handled above
-
-  // Handle errors with improved messages
-  React.useEffect(() => {
-    if (mintError) {
-      console.error("Mint error:", mintError);
-      
-      let errorMessage = "NFT minting failed: ";
-      if (mintError.message.includes('insufficient funds')) {
-        errorMessage += "Insufficient balance. At least 0.006 OG tokens required.";
-      } else if (mintError.message.includes('rejected')) {
-        errorMessage += "Transaction rejected by user.";
-      } else if (mintError.message.includes('network')) {
-        errorMessage += "Network connection issue. Please try again.";
-      } else {
-        errorMessage += mintError.message;
-      }
-      
-      alert(errorMessage);
-      setIsCreating(false);
-    }
-    
-    if (listError) {
-      console.error("Marketplace error:", listError);
-      console.log("ℹ️ Agent created but marketplace interaction failed");
-      // Don't alert for marketplace errors, just log them
-      // The agent was successfully created, marketplace listing is secondary
-    }
-  }, [mintError, listError]);
-
-  // Success State - show after successful creation and listing
-  if (createdAgent && !isCreating) {
-    return (
-      <div className="min-h-screen py-12">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="gradient-card rounded-3xl p-12 border border-green-400/30">
-            <div className="w-20 h-20 mx-auto mb-6 bg-green-500/20 rounded-full flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-green-400" />
-            </div>
-            
-            <h1 className="text-4xl font-bold text-white mb-4">
-              🎉 Successfully Created!
-            </h1>
-            
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Your INFT has been successfully created on the 0G Network. 
-              It's now live and available on the marketplace!
-            </p>
-            
-            <div className="bg-black/20 rounded-lg p-6 mb-8">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Transaction Hash:</span>
-                <span className="font-mono text-green-400">
-                  {(mintHash || listHash)?.slice(0, 10)}...{(mintHash || listHash)?.slice(-8)}
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-center gap-4">
-              <Button 
-                size="lg" 
-                className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3 cursor-pointer"
-                onClick={() => window.location.href = '/my-collections'}
-              >
-                <Eye className="w-5 h-5 mr-2" />
-                View My Collections
-              </Button>
-              
-              <Button 
-                size="lg" 
-                className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 backdrop-blur-sm px-8 py-3 cursor-pointer"
-                onClick={() => window.location.href = '/explore'}
-              >
-                <Eye className="w-5 h-5 mr-2" />
-                Explore Marketplace
-              </Button>
-              
-              <Button 
-                size="lg" 
-                className="bg-gray-800/80 text-white border border-gray-400/50 hover:bg-gray-800/90 hover:border-gray-400/70 backdrop-blur-sm px-8 py-3 cursor-pointer"
-                onClick={() => {
-                  // Reset form for new creation
-                  window.location.reload();
-                }}
-              >
-                Create Another
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  if (!mounted) {
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       <Navbar />
-      <div className="py-12">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
+      
+      <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-purple-400" />
-            <h1 className="text-4xl font-bold text-gradient">Create INFT</h1>
+          <div className="inline-flex items-center gap-2 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 mb-6">
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <span className="text-purple-300 text-sm font-medium">Create AI Agent INFT</span>
           </div>
+          
+          <h1 className="text-5xl font-bold text-white mb-4">
+            Mint Your AI Agent
+          </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Mint your intelligent NFT agent on the 0G Network and join the future of AI-powered digital assets.
+            Transform your AI agent into an intelligent NFT on the 0G Network. 
+            Create, own, and monetize your digital intelligence.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Creation Form */}
-          <div className="space-y-8">
-            <Card className="gradient-card border-white/10">
+        {/* Progress Display */}
+        {progressSteps.length > 0 && (
+          <Card className="gradient-card border-purple-500/20 mb-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 text-yellow-400" />
+                Creation Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {progressSteps.map((step, index) => (
+                  <div key={index} className="text-gray-300 text-sm">
+                    {step}
+                  </div>
+                ))}
+                {currentStep && (
+                  <div className="text-purple-300 text-sm font-medium">
+                    {currentStep}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Success Display */}
+        {createdAgent && (
+          <Card className="gradient-card border-green-500/20 mb-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Eye className="w-5 h-5 text-green-400" />
+                Agent Created Successfully!
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-4">
+                <img 
+                  src={createdAgent.image} 
+                  alt={createdAgent.name}
+                  className="w-20 h-20 rounded-xl object-cover"
+                />
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2">{createdAgent.name}</h3>
+                  <p className="text-gray-300 mb-3">{createdAgent.description}</p>
+                  <div className="flex items-center gap-4">
+                    <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
+                      {createdAgent.category}
+                    </Badge>
+                    <span className="text-green-400 font-semibold">{createdAgent.price} OG</span>
+                  </div>
+                  <div className="mt-4 flex gap-3">
+                    <Button 
+                      asChild
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      <a href="/" className="flex items-center gap-2">
+                        <Eye className="w-4 h-4" />
+                        View on Marketplace
+                      </a>
+                    </Button>
+                    <Button 
+                      asChild
+                      variant="outline"
+                      className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                    >
+                      <a href={`/agent/${createdAgent.id}`} className="flex items-center gap-2">
+                        <Share2 className="w-4 h-4" />
+                        Share Agent
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Creation Form */}
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Left Column - Form */}
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <Card className="gradient-card border-purple-500/20">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Upload className="w-5 h-5 text-purple-400" />
-                  Agent Details
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Info className="w-5 h-5 text-blue-400" />
+                  Basic Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Name */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Agent Name *</label>
-                  <Input 
-                    placeholder="e.g., Trading Assistant Pro" 
-                    value={name} 
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    Agent Name *
+                  </label>
+                  <Input
+                    value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500"
+                    placeholder="Enter your AI agent's name"
+                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+                    disabled={isCreating}
                   />
                 </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Description *</label>
-                  <Textarea 
-                    placeholder="Describe what your AI agent can do, its capabilities, and unique features..."
-                    value={desc} 
+                
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    Description *
+                  </label>
+                  <Textarea
+                    value={desc}
                     onChange={(e) => setDesc(e.target.value)}
-                    className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500 min-h-[120px]"
+                    placeholder="Describe your AI agent's capabilities and personality"
+                    rows={4}
+                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+                    disabled={isCreating}
                   />
                 </div>
 
-                {/* Category */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Category</label>
-                  <select 
-                    value={category} 
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md focus:border-purple-400/50 text-white"
+                    className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-md text-white"
+                    disabled={isCreating}
                   >
-                    <option value="">Select a category</option>
-                    <option value="Trading">Trading</option>
-                    <option value="Research">Research</option>
-                    <option value="Gaming">Gaming</option>
+                    <option value="">Select category</option>
                     <option value="Art">Art</option>
-                    <option value="Development">Development</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Analytics">Analytics</option>
                     <option value="Music">Music</option>
-                    <option value="Health">Health</option>
-                    <option value="Education">Education</option>
+                    <option value="Gaming">Gaming</option>
+                    <option value="Utility">Utility</option>
                     <option value="DeFi">DeFi</option>
-                    <option value="Productivity">Productivity</option>
+                    <option value="Education">Education</option>
+                    <option value="General">General</option>
                   </select>
                 </div>
 
-                {/* Price */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Price (0G) *</label>
-                  <Input 
-                    type="number" 
-                    step="0.001"
-                    placeholder="0.05" 
-                    value={price} 
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500"
-                  />
-                </div>
-
-                {/* Image URL */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Image URL</label>
-                  <Input 
-                    placeholder="https://example.com/image.png" 
-                    value={image} 
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    Image URL
+                  </label>
+                  <Input
+                    value={image}
                     onChange={(e) => setImage(e.target.value)}
-                    className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500"
+                    placeholder="https://example.com/image.jpg (optional)"
+                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+                    disabled={isCreating}
                   />
-                  <p className="text-xs text-gray-500">Optional: Provide an image URL for your agent</p>
-                </div>
-
-                {/* Social Links */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Share2 className="w-4 h-4 text-purple-400" />
-                    <h3 className="font-medium text-white">Social Links</h3>
-                    <span className="text-xs text-gray-500">(Optional)</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* X Handle */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-300">X (Twitter) Handle</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">@</span>
-                        <Input 
-                          placeholder="username" 
-                          value={xHandle.replace('@', '')} 
-                          onChange={(e) => setXHandle(e.target.value.replace('@', ''))}
-                          className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500 pl-8"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Website */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-300">Website</label>
-                      <Input 
-                        placeholder="https://yourwebsite.com" 
-                        value={website} 
-                        onChange={(e) => setWebsite(e.target.value)}
-                        className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500"
-                      />
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Progress Display */}
-            {isCreating && (
-              <Card className="gradient-card border-white/10 bg-blue-950/20">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Zap className="w-5 h-5 text-blue-400 animate-pulse" />
-                    <h3 className="font-semibold text-white">Creation Progress</h3>
-                  </div>
-                  <div className="space-y-2">
-                    {currentStep && (
-                      <div className="text-blue-300 font-medium animate-pulse">
-                        {currentStep}
-                      </div>
-                    )}
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {progressSteps.map((step, index) => (
-                        <div key={index} className="text-sm text-gray-300 flex items-center gap-2">
-                          <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></span>
-                          {step}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* 0G Storage Integration Info */}
-            <Card className="gradient-card border-white/10">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Info className="w-5 h-5 text-blue-400" />
-                  <h3 className="font-semibold text-white">0G Integration</h3>
+            {/* Pricing & Social */}
+            <Card className="gradient-card border-purple-500/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Wallet className="w-5 h-5 text-green-400" />
+                  Pricing & Social Links
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    Price (OG) *
+                  </label>
+                  <Input
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="0.075"
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+                    disabled={isCreating}
+                  />
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Storage Network</span>
-                    <Badge variant="outline" className="border-blue-400/50 text-blue-300">
-                      0G Galileo
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Chain ID</span>
-                    <Badge variant="outline" className="border-purple-400/50 text-purple-300">
-                      {ZERO_G_CHAIN_ID}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Storage Type</span>
-                    <Badge variant="outline" className="border-green-400/50 text-green-300">
-                      Decentralized
-                    </Badge>
-                  </div>
-                  <div className="border-t border-white/10 pt-3">
-                    <div className="text-xs text-gray-400">
-                      • Metadata stored on 0G Storage
-                      <br />
-                      • INFT minted on 0G Chain
-                      <br />
-                      • Verifiable & decentralized
-                    </div>
-                  </div>
+
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    X (Twitter) Handle
+                  </label>
+                  <Input
+                    value={xHandle}
+                    onChange={(e) => setXHandle(e.target.value)}
+                    placeholder="@username (optional)"
+                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+                    disabled={isCreating}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    Website
+                  </label>
+                  <Input
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://yourwebsite.com (optional)"
+                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+                    disabled={isCreating}
+                  />
                 </div>
               </CardContent>
             </Card>
-
-            {/* Creation Cost Info */}
-            <Card className="gradient-card border-white/10">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Info className="w-5 h-5 text-green-400" />
-                  <h3 className="font-semibold text-white">Creation Cost</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">0G Storage Fee</span>
-                    <Badge variant="outline" className="border-blue-400/50 text-blue-300">
-                      Free (Testnet)
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Creation Fee</span>
-                    <Badge variant="outline" className="border-purple-400/50 text-purple-300">
-                      0.005 OG
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Network Fee</span>
-                    <Badge variant="outline" className="border-green-400/50 text-green-300">
-                      ~0.001 OG
-                    </Badge>
-                  </div>
-                  <div className="border-t border-white/10 pt-3">
-                    <div className="flex justify-between items-center font-semibold">
-                      <span className="text-white">Total Estimated</span>
-                      <Badge variant="outline" className="border-yellow-400/50 text-yellow-300">
-                        ~0.006 OG
-                      </Badge>
-                    </div>
-                  </div>
-                                <div className="mt-3 p-3 bg-green-500/10 border border-green-400/30 rounded-lg">
-                <div className="text-xs text-green-300">
-                  <strong>Auto-Listing Enabled:</strong><br/>
-                  • Agent created & auto-listed<br/>
-                  • Available for purchase immediately<br/>
-                  • Platform Fee: 10% on each sale
-                </div>
-              </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Create Button */}
-            <div className="space-y-4">
-              {!mounted ? (
-                <div className="text-center p-6 rounded-xl bg-gray-500/10 border border-gray-400/20">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto mb-2"></div>
-                  <p className="text-gray-300 font-medium">Loading...</p>
-                </div>
-              ) : !isConnected ? (
-                <div className="text-center p-6 rounded-xl bg-yellow-500/10 border border-yellow-400/20">
-                  <Wallet className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                  <p className="text-yellow-300 font-medium">Connect your wallet to create an agent</p>
-                </div>
-              ) : (
-                <Button 
-                  onClick={handleCreate}
-                  disabled={isCreating || isMintLoading || !name || !desc || !price}
-                  size="lg"
-                  className="w-full gradient-0g hover:opacity-90 text-white font-semibold py-4 text-lg"
-                >
-                  {isCreating || isMintLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      {isMintLoading ? "Minting INFT..." : "Creating INFT..."}
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-5 h-5 mr-2" />
-                      Create INFT
-                    </>
-                  )}
-                </Button>
-              )}
-              
-              {/* List button removed - auto-listing handles marketplace now */}
-            </div>
           </div>
 
-          {/* Preview */}
-          <div className="space-y-8">
-            <Card className="gradient-card border-white/10">
+          {/* Right Column - Preview & Creation */}
+          <div className="space-y-6">
+            {/* Preview */}
+            <Card className="gradient-card border-purple-500/20">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
+                <CardTitle className="text-white flex items-center gap-2">
                   <Eye className="w-5 h-5 text-purple-400" />
                   Preview
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Preview Card */}
-                  <div className="gradient-card rounded-2xl overflow-hidden border-white/10">
-                    {/* Image */}
-                    <div className="aspect-[4/3] bg-gradient-to-br from-purple-900/20 via-gray-900 to-blue-900/20 flex items-center justify-center">
-                      {image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={image} 
-                          alt={name || "Agent Preview"} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="text-center">
-                          <Upload className="w-12 h-12 text-gray-500 mx-auto mb-2" />
-                          <p className="text-gray-500 text-sm">No image provided</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-white truncate">
-                          {name || "Agent Name"}
-                        </h3>
-                        <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10">
-                          {price ? `${price} 0G` : "0.00 0G"}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-400">
-                        by {mounted && address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "0x0000...0000"}
-                      </p>
-                      {category && (
-                        <Badge variant="secondary" className="bg-purple-500/80 text-white text-xs">
-                          {category}
-                        </Badge>
-                      )}
-                      <p className="text-sm text-gray-300 line-clamp-3">
-                        {desc || "Agent description will appear here..."}
-                      </p>
+                  <img 
+                    src={image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center"} 
+                    alt="Agent preview"
+                    className="w-full h-48 object-cover rounded-xl"
+                  />
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      {name || "Agent Name"}
+                    </h3>
+                    <p className="text-gray-300 mb-3">
+                      {desc || "Agent description will appear here..."}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
+                        {category || "Category"}
+                      </Badge>
+                      <span className="text-green-400 font-semibold">
+                        {price || "0.075"} OG
+                      </span>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Tips */}
-            <Card className="gradient-card border-white/10">
-              <CardContent className="pt-6">
-                <h3 className="font-semibold text-white mb-4">💡 Creation Tips</h3>
-                <ul className="space-y-2 text-sm text-gray-300">
-                  <li>• Use a clear, descriptive name for your agent</li>
-                  <li>• Explain the agent's capabilities and use cases</li>
-                  <li>• Choose an appropriate category for better discoverability</li>
-                  <li>• Set a competitive price based on similar agents</li>
-                  <li>• Use high-quality images (400x300px recommended)</li>
-                </ul>
+            {/* Creation Cost */}
+            <Card className="gradient-card border-purple-500/20">
+              <CardHeader>
+                <CardTitle className="text-white">Creation Cost</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-gray-300">
+                    <span>0G Storage Fee</span>
+                    <span className="text-green-400">Free (Testnet)</span>
+                  </div>
+                  <div className="flex justify-between text-gray-300">
+                    <span>Creation Fee</span>
+                    <span>0.005 OG</span>
+                  </div>
+                  <div className="flex justify-between text-gray-300">
+                    <span>Network Fee</span>
+                    <span>~0.001 OG</span>
+                  </div>
+                  <hr className="border-gray-700" />
+                  <div className="flex justify-between text-white font-semibold">
+                    <span>Total Estimated</span>
+                    <span>~0.006 OG</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Create Button */}
+            <Button
+              onClick={handleCreate}
+              disabled={!isConnected || isCreating || isCreateLoading || isMintLoading || !name.trim() || !desc.trim() || !price.trim()}
+              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50"
+            >
+              {!isConnected ? (
+                <>
+                  <Wallet className="w-5 h-5 mr-2" />
+                  Connect Wallet
+                </>
+              ) : isCreateLoading ? (
+                <>
+                  <Upload className="w-5 h-5 mr-2 animate-spin" />
+                  Creating Contract...
+                </>
+              ) : isMintLoading ? (
+                <>
+                  <Upload className="w-5 h-5 mr-2 animate-spin" />
+                  Minting NFT...
+                </>
+              ) : isCreating ? (
+                <>
+                  <Upload className="w-5 h-5 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Create INFT
+                </>
+              )}
+            </Button>
+
+            {!isConnected && (
+              <p className="text-center text-gray-400 text-sm">
+                Connect your wallet to create an AI Agent INFT
+              </p>
+            )}
           </div>
         </div>
-      </div>
-      </div>
+      </main>
+
       <Footer />
     </div>
   );
 }
-
-
