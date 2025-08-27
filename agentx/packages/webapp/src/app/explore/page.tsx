@@ -86,7 +86,7 @@ export default function ExplorePage() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
   const [sortBy, setSortBy] = useState<SortOption>("trending");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [allAgents, setAllAgents] = useState<AgentItem[]>(mockAgents);
+  const [allAgents, setAllAgents] = useState<AgentItem[]>([]);
   const [blockchainAgents, setBlockchainAgents] = useState<AgentItem[]>([]);
 
   // Get total agents from Factory contract
@@ -176,7 +176,7 @@ export default function ExplorePage() {
     loadAllAgents();
   }, [totalAgents]);
 
-  // Combine blockchain and mock agents
+  // Initialize with mock agents and combine with blockchain agents
   useEffect(() => {
     const combined = [...blockchainAgents, ...mockAgents];
     setAllAgents(combined);
@@ -330,7 +330,7 @@ export default function ExplorePage() {
                         onClick={() => setSelectedCategory(category)}
                       >
                         {category === "all" ? "All Categories" : category}
-                        <Badge variant="secondary" className="ml-auto">
+                        <Badge variant="secondary" className="ml-auto" suppressHydrationWarning>
                           {category === "all" 
                             ? allAgents.length 
                             : allAgents.filter(a => a.category === category).length

@@ -65,13 +65,13 @@ async function getAgentDetails(agentAddress: string) {
 }
 
 export default function HomePage() {
-  const [allAgents, setAllAgents] = useState(mockAgents);
+  const [allAgents, setAllAgents] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
   const [blockchainAgents, setBlockchainAgents] = useState<any[]>([]);
 
   // Get total agents from Factory contract
   const { data: totalAgents } = useReadContract({
-    address: FACTORY_ADDRESS,
+    address: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: 'getTotalAgents',
   });
@@ -94,7 +94,7 @@ export default function HomePage() {
       
       // 2. Load from Factory contract (slow, all creations)
       try {
-        if (totalAgents && totalAgents > 0n) {
+        if (totalAgents && totalAgents > BigInt(0)) {
           console.log(`🔗 Loading ${totalAgents.toString()} agents from Factory contract...`);
           
           for (let i = 0; i < Number(totalAgents); i++) {
@@ -162,11 +162,11 @@ export default function HomePage() {
   useEffect(() => {
     setMounted(true);
     
-    // Combine: blockchain agents first, then mock agents
-    const allAgents = [...blockchainAgents, ...mockAgents];
-    
-    setAllAgents(allAgents);
-    console.log(`🌐 Total agents: ${blockchainAgents.length} blockchain + ${mockAgents.length} mock = ${allAgents.length}`);
+          // Combine: blockchain agents first, then mock agents
+      const combined = [...blockchainAgents, ...mockAgents];
+      
+      setAllAgents(combined);
+      console.log(`🌐 Total agents: ${blockchainAgents.length} blockchain + ${mockAgents.length} mock = ${combined.length}`);
   }, [blockchainAgents]);
 
   if (!mounted) {
