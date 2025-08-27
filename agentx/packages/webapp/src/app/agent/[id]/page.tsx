@@ -26,6 +26,7 @@ import {
 import { mockAgents } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
+import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
 import { callCompute, type ChatMessage, type ComputeRequest } from "@/lib/compute";
 
 export default function AgentDetail() {
@@ -49,8 +50,8 @@ export default function AgentDetail() {
   useEffect(() => {
     setMounted(true);
     
-    // Find agent from mock agents, created agents, and global agents
-    const findAgent = () => {
+    // Find agent from all sources: mock agents, created agents, server agents, and global agents
+    const findAgent = async () => {
       // Decode URL-encoded ID
       const decodedId = decodeURIComponent(id);
       console.log("🔍 Looking for agent ID:", id, "→ decoded:", decodedId);
@@ -60,6 +61,22 @@ export default function AgentDetail() {
       // First check mock agents
       let foundAgent = mockAgents.find(a => a.id === searchId);
       console.log("🎯 Found in mock agents:", !!foundAgent);
+      
+      // ✅ ÇÖZÜM: Server agents'ı da kontrol et
+      if (!foundAgent) {
+        console.log("🔍 Checking server agents...");
+        try {
+          const serverAgents = await getAgentsFromServer();
+          console.log("📋 Server agents:", serverAgents.map(a => a.id));
+          const serverAgent = serverAgents.find(a => a.id === searchId);
+          console.log("🎯 Found in server agents:", !!serverAgent);
+          if (serverAgent) {
+            foundAgent = transformGlobalAgent(serverAgent);
+          }
+        } catch (error) {
+          console.error("❌ Failed to load server agents:", error);
+        }
+      }
       
       if (!foundAgent) {
         console.log("🔍 Checking created agents...");
