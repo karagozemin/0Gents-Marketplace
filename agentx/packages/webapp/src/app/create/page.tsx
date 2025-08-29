@@ -15,6 +15,7 @@ import { saveAgentToServer } from "@/lib/globalAgents";
 import { parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ProgressModal } from "@/components/ui/progress-modal";
 
 export default function CreatePage() {
   const [image, setImage] = useState("");
@@ -29,6 +30,48 @@ export default function CreatePage() {
   const [createdAgent, setCreatedAgent] = useState<CreatedAgent | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
   const [progressSteps, setProgressSteps] = useState<string[]>([]);
+  
+  // Progress Modal States
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [isProcessComplete, setIsProcessComplete] = useState(false);
+  
+  // Progress Steps Configuration
+  const modalSteps = [
+    {
+      id: 'preparing',
+      title: 'Preparing Your Asset',
+      description: 'Your digital asset is being securely packaged with metadata for marketplace visibility',
+      status: 'pending' as const
+    },
+    {
+      id: 'blockchain',
+      title: 'Blockchain Verification',
+      description: 'Confirming transaction authenticity through distributed network consensus',
+      status: 'pending' as const
+    },
+    {
+      id: 'contract',
+      title: 'Smart Contract Deployment',
+      description: 'Creating agent contract on 0G Network',
+      status: 'pending' as const
+    },
+    {
+      id: 'minting',
+      title: 'NFT Minting',
+      description: 'Minting your AI Agent NFT',
+      status: 'pending' as const
+    },
+    {
+      id: 'marketplace',
+      title: 'Marketplace Integration',
+      description: 'Finalizing visibility settings and making your asset discoverable to potential buyers',
+      status: 'pending' as const
+    }
+  ];
+  
+  const [steps, setSteps] = useState(modalSteps);
   
   const { address, isConnected } = useAccount();
 
@@ -64,6 +107,22 @@ export default function CreatePage() {
     setProgressSteps(prev => [...prev, step]);
   };
 
+  // Update Modal Progress
+  const updateModalProgress = (stepId: string, status: 'in_progress' | 'completed' | 'error') => {
+    setSteps(prev => prev.map(step => 
+      step.id === stepId ? { ...step, status } : step
+    ));
+    
+    if (status === 'in_progress') {
+      const stepIndex = modalSteps.findIndex(s => s.id === stepId);
+      setCurrentStepIndex(stepIndex);
+      setProgressPercentage((stepIndex / modalSteps.length) * 100);
+    } else if (status === 'completed') {
+      const stepIndex = modalSteps.findIndex(s => s.id === stepId);
+      setProgressPercentage(((stepIndex + 1) / modalSteps.length) * 100);
+    }
+  };
+
   const handleCreate = async () => {
     if (!isConnected) {
       alert("Please connect your wallet first");
@@ -78,10 +137,18 @@ export default function CreatePage() {
     setIsCreating(true);
     setProgressSteps([]);
     setCurrentStep("");
+    
+    // Show progress modal
+    setShowProgressModal(true);
+    setIsProcessComplete(false);
+    setSteps(modalSteps);
+    setCurrentStepIndex(0);
+    setProgressPercentage(0);
 
     try {
       // Step 1: Upload metadata to 0G Storage
       updateProgress("🔄 Step 1: Creating AI Agent with 0G Storage integration...");
+      updateModalProgress('preparing', 'in_progress');
       
       const metadata: AgentMetadata = {
         name: name.trim(),
@@ -109,17 +176,23 @@ export default function CreatePage() {
         if (uploadResult.success && uploadResult.hash) {
           setStorageUri(uploadResult.hash);
           updateProgress("✅ Step 2: Agent metadata uploaded to 0G Storage successfully!");
+          updateModalProgress('preparing', 'completed');
+          updateModalProgress('blockchain', 'in_progress');
         } else {
           throw new Error(uploadResult.error || "Upload failed");
         }
       } catch (uploadError) {
         console.error("Upload error:", uploadError);
         updateProgress("⚠️ Step 2: Using fallback storage (0G Storage upload failed)");
+        updateModalProgress('preparing', 'completed');
+        updateModalProgress('blockchain', 'in_progress');
         setStorageUri("fallback-storage-uri");
       }
 
       // Step 3: Create Agent Contract via Factory
       updateProgress("🔄 Step 3: Creating Agent Contract via Factory...");
+      updateModalProgress('blockchain', 'completed');
+      updateModalProgress('contract', 'in_progress');
       
       const capabilities = ["chat", "analysis", "automation"];
       
@@ -154,14 +227,23 @@ export default function CreatePage() {
       });
 
       updateProgress("✅ Step 3: Agent Contract creation submitted - waiting for confirmation...");
+      updateModalProgress('contract', 'completed');
       console.log("✅ Step 3: Agent Contract creation submitted");
       
     } catch (error) {
       console.error("Agent creation error:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       updateProgress(`❌ Failed to create agent: ${errorMessage}`);
+      
+      // Update current step to error
+      const currentStep = steps.find(s => s.status === 'in_progress');
+      if (currentStep) {
+        updateModalProgress(currentStep.id, 'error');
+      }
+      
       alert(`Failed to create agent: ${errorMessage}`);
       setIsCreating(false);
+      setTimeout(() => setShowProgressModal(false), 3000);
     }
   };
 
@@ -327,6 +409,7 @@ export default function CreatePage() {
     if (agentContractAddress && agentContractAddress !== "" && storageUri && !mintHash) {
       console.log("🎯 Starting mint with contract:", agentContractAddress);
       updateProgress("🔄 Step 4: Minting NFT in Agent Contract...");
+      updateModalProgress('minting', 'in_progress');
       
       try {
         writeAgentNFT({
@@ -353,6 +436,8 @@ export default function CreatePage() {
   useEffect(() => {
     if (isMintSuccess && mintHash && !createdAgent) {
       updateProgress("🎉 NFT minted successfully! Saving agent data...");
+      updateModalProgress('minting', 'completed');
+      updateModalProgress('marketplace', 'in_progress');
       console.log("🎉 AI Agent NFT successfully minted!");
       
       const timestamp = Date.now();
@@ -421,6 +506,14 @@ export default function CreatePage() {
     saveGlobalAgent(blockchainAgent);
     
     updateProgress("✅ INFT created and listed successfully! Now available for purchase.");
+    updateModalProgress('marketplace', 'completed');
+    setProgressPercentage(100);
+    
+    // Show success state after a delay
+    setTimeout(() => {
+      setIsProcessComplete(true);
+    }, 1000);
+    
     console.log("✅ INFT created, listed and ready for marketplace!");
     setIsCreating(false);
   };
@@ -429,9 +522,65 @@ export default function CreatePage() {
     return null;
   }
 
+  // Success modal buttons
+  const successButtons = createdAgent ? (
+    <div className="flex gap-4">
+      <Button 
+        onClick={() => {
+          setShowProgressModal(false);
+          window.location.href = "/";
+        }}
+        className="flex-1 h-12 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+      >
+        <Eye className="w-5 h-5 mr-2" />
+        View on Marketplace
+      </Button>
+      <Button 
+        onClick={() => {
+          setShowProgressModal(false);
+          window.location.href = `/agent/${createdAgent.id}`;
+        }}
+        variant="outline"
+        className="flex-1 h-12 text-lg font-semibold border-2 border-gray-600 text-gray-300 hover:bg-gray-800 hover:border-gray-500 transition-all duration-300 hover:scale-105"
+      >
+        <Share2 className="w-5 h-5 mr-2" />
+        Share Agent
+      </Button>
+    </div>
+  ) : (
+    <Button 
+      onClick={() => setShowProgressModal(false)}
+      className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+    >
+      Done
+    </Button>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       <Navbar />
+      
+      {/* Progress Modal */}
+      <ProgressModal
+        isOpen={showProgressModal}
+        onClose={() => !isCreating && setShowProgressModal(false)}
+        title={isProcessComplete ? "Listing Successful!" : "Listing in Progress"}
+        steps={steps}
+        currentStepIndex={currentStepIndex}
+        progress={progressPercentage}
+        assetPreview={name ? {
+          name: name,
+          image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+          description: desc || "AI Agent INFT"
+        } : undefined}
+        showKeepOpen={!isProcessComplete}
+        isSuccess={isProcessComplete}
+        successData={isProcessComplete ? {
+          title: "Listing Successful!",
+          subtitle: "Your listing was completed successfully.",
+          actionButtons: successButtons
+        } : undefined}
+      />
       
       <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="text-center mb-12">

@@ -6,6 +6,8 @@ import { parseEther, formatEther } from "viem";
 import { INFT_ADDRESS, INFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/lib/contracts";
 import { uploadAgentMetadata } from "@/lib/storage";
 import type { AgentMetadata } from "@/lib/storage";
+import { ProgressModal } from "./ui/progress-modal";
+import { Button } from "./ui/button";
 
 export function MintINFT() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +15,50 @@ export function MintINFT() {
   const [tokenId, setTokenId] = useState<string>("");
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  
+  // Progress Modal States
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [isProcessComplete, setIsProcessComplete] = useState(false);
+  
+  const mintSteps = [
+    {
+      id: 'metadata',
+      title: 'Preparing Your Asset',
+      description: 'Creating metadata and uploading to 0G Storage',
+      status: 'pending' as const
+    },
+    {
+      id: 'blockchain',
+      title: 'Blockchain Verification',
+      description: 'Confirming transaction on 0G Network',
+      status: 'pending' as const
+    },
+    {
+      id: 'mint',
+      title: 'NFT Minting',
+      description: 'Minting your INFT on the blockchain',
+      status: 'pending' as const
+    }
+  ];
+  
+  const [steps, setSteps] = useState(mintSteps);
+  
+  const updateModalProgress = (stepId: string, status: 'in_progress' | 'completed' | 'error') => {
+    setSteps(prev => prev.map(step => 
+      step.id === stepId ? { ...step, status } : step
+    ));
+    
+    if (status === 'in_progress') {
+      const stepIndex = mintSteps.findIndex(s => s.id === stepId);
+      setCurrentStepIndex(stepIndex);
+      setProgressPercentage((stepIndex / mintSteps.length) * 100);
+    } else if (status === 'completed') {
+      const stepIndex = mintSteps.findIndex(s => s.id === stepId);
+      setProgressPercentage(((stepIndex + 1) / mintSteps.length) * 100);
+    }
+  };
 
   const { data: receipt } = useWaitForTransactionReceipt({
     hash: txHash as `0x${string}`,
@@ -22,7 +68,14 @@ export function MintINFT() {
     if (!address || !INFT_ADDRESS) return;
     
     setIsLoading(true);
+    setShowProgressModal(true);
+    setIsProcessComplete(false);
+    setSteps(mintSteps);
+    setCurrentStepIndex(0);
+    setProgressPercentage(0);
+    
     try {
+      updateModalProgress('metadata', 'in_progress');
       // 1. Create sample agent metadata
       const metadata: AgentMetadata = {
         name: `AI Agent #${Date.now()}`,
@@ -47,9 +100,14 @@ export function MintINFT() {
 
       console.log("✅ Step 2: Metadata uploaded successfully!");
       console.log("📦 Storage URI:", storageResult.uri);
+      
+      updateModalProgress('metadata', 'completed');
+      updateModalProgress('blockchain', 'in_progress');
 
       // 3. Mint INFT with storage URI
       console.log("🔗 Step 3: Minting INFT on 0G Chain...");
+      updateModalProgress('blockchain', 'completed');
+      updateModalProgress('mint', 'in_progress');
       
       const hash = await writeContractAsync({
         address: INFT_ADDRESS as `0x${string}`,
@@ -60,20 +118,64 @@ export function MintINFT() {
       });
 
       setTxHash(hash);
+      updateModalProgress('mint', 'completed');
+      setProgressPercentage(100);
+      
+      setTimeout(() => {
+        setIsProcessComplete(true);
+      }, 1000);
+      
       console.log("⛓️ Transaction submitted:", hash);
       
     } catch (error) {
       console.error("❌ Mint failed:", error);
+      
+      // Update current step to error
+      const currentStep = steps.find(s => s.status === 'in_progress');
+      if (currentStep) {
+        updateModalProgress(currentStep.id, 'error');
+      }
+      
       alert(`Mint failed: ${error instanceof Error ? error.message : error}`);
+      setTimeout(() => setShowProgressModal(false), 3000);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4 p-6 border rounded-lg gradient-card">
-      <h3 className="text-lg font-semibold text-gradient">🎯 Mint INFT</h3>
-      <p className="text-sm text-gray-400">Create a new AI Agent NFT with 0G Storage metadata</p>
+    <>
+      <ProgressModal
+        isOpen={showProgressModal}
+        onClose={() => !isLoading && setShowProgressModal(false)}
+        title={isProcessComplete ? "Minting Successful!" : "Minting in Progress"}
+        steps={steps}
+        currentStepIndex={currentStepIndex}
+        progress={progressPercentage}
+        assetPreview={{
+          name: `AI Agent #${Date.now()}`,
+          image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+          description: "A powerful AI agent created on 0G Network"
+        }}
+        showKeepOpen={!isProcessComplete}
+        isSuccess={isProcessComplete}
+        successData={isProcessComplete ? {
+          title: "Minting Successful!",
+          subtitle: "Your INFT was minted successfully.",
+          actionButtons: (
+            <Button 
+              onClick={() => setShowProgressModal(false)}
+              className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              Done
+            </Button>
+          )
+        } : undefined}
+      />
+      
+      <div className="space-y-4 p-6 border rounded-lg gradient-card">
+        <h3 className="text-lg font-semibold text-gradient">🎯 Mint INFT</h3>
+        <p className="text-sm text-gray-400">Create a new AI Agent NFT with 0G Storage metadata</p>
       
       <button
         onClick={handleMint}
@@ -97,7 +199,8 @@ export function MintINFT() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
