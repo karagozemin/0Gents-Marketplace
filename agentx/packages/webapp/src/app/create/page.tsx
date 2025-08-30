@@ -43,31 +43,31 @@ export default function CreatePage() {
       id: 'preparing',
       title: 'Preparing Your Asset',
       description: 'Your digital asset is being securely packaged with metadata for marketplace visibility',
-      status: 'pending' as const
+      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
     },
     {
       id: 'blockchain',
       title: 'Blockchain Verification',
       description: 'Confirming transaction authenticity through distributed network consensus',
-      status: 'pending' as const
+      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
     },
     {
       id: 'contract',
       title: 'Smart Contract Deployment',
       description: 'Creating agent contract on 0G Network',
-      status: 'pending' as const
+      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
     },
     {
       id: 'minting',
       title: 'NFT Minting',
       description: 'Minting your AI Agent NFT',
-      status: 'pending' as const
+      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
     },
     {
       id: 'marketplace',
       title: 'Marketplace Integration',
       description: 'Finalizing visibility settings and making your asset discoverable to potential buyers',
-      status: 'pending' as const
+      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
     }
   ];
   
@@ -855,8 +855,12 @@ export default function CreatePage() {
                     <span className="text-green-400">Free (Testnet)</span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span>Creation Fee</span>
-                    <span>0.005 OG</span>
+                    <span>Factory Creation Fee</span>
+                    <span>0.01 OG</span>
+                  </div>
+                  <div className="flex justify-between text-gray-300">
+                    <span>NFT Mint Fee</span>
+                    <span className="text-green-400">Free</span>
                   </div>
                   <div className="flex justify-between text-gray-300">
                     <span>Network Fee</span>
@@ -865,7 +869,7 @@ export default function CreatePage() {
                   <hr className="border-gray-700" />
                   <div className="flex justify-between text-white font-semibold">
                     <span>Total Estimated</span>
-                    <span>~0.006 OG</span>
+                    <span>~0.011 OG</span>
                   </div>
                 </div>
               </CardContent>
