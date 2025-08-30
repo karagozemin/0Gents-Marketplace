@@ -27,6 +27,7 @@ import { mockAgents } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
 import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
+import { getUnifiedAgentById } from "@/lib/unifiedAgents";
 import { callCompute, type ChatMessage, type ComputeRequest } from "@/lib/compute";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -52,19 +53,58 @@ export default function AgentDetail() {
   useEffect(() => {
     setMounted(true);
     
-    // Find agent from all sources: mock agents, created agents, server agents, and global agents
+    // 🎯 UNIFIED AGENT SEARCH - Tek merkezi sistem
     const findAgent = async () => {
       // Decode URL-encoded ID
       const decodedId = decodeURIComponent(id);
       console.log("🔍 Looking for agent ID:", id, "→ decoded:", decodedId);
       const searchId = decodedId;
-      console.log("📋 Available mock agents:", mockAgents.map(a => a.id));
+      
+      // 🚀 ÖNCELİK 1: Unified System'den ara
+      console.log("🎯 Checking unified system...");
+      try {
+        const unifiedResult = await getUnifiedAgentById(searchId);
+        console.log("📋 Unified system result:", unifiedResult);
+        
+        if (unifiedResult.success && unifiedResult.agent) {
+          console.log("✅ Found in unified system:", unifiedResult.agent.name);
+          
+          // Transform unified agent to component format
+          const foundAgent = {
+            id: unifiedResult.agent.id,
+            name: unifiedResult.agent.name,
+            description: unifiedResult.agent.description,
+            image: unifiedResult.agent.image,
+            category: unifiedResult.agent.category,
+            price: unifiedResult.agent.price,
+            creator: unifiedResult.agent.creator,
+            likes: unifiedResult.agent.likes || 0,
+            views: unifiedResult.agent.views || 0,
+            trending: unifiedResult.agent.trending || false,
+            listingId: unifiedResult.agent.listingId,
+            agentContractAddress: unifiedResult.agent.agentContractAddress,
+            tokenId: unifiedResult.agent.tokenId,
+            txHash: unifiedResult.agent.txHash,
+            social: unifiedResult.agent.social,
+            capabilities: unifiedResult.agent.capabilities || ["chat", "analysis"],
+            computeModel: unifiedResult.agent.computeModel || "gpt-4"
+          };
+          
+          setAgent(foundAgent);
+          return;
+        }
+      } catch (error) {
+        console.error("❌ Failed to load from unified system:", error);
+      }
+      
+      // 🔄 FALLBACK: Eski sistemlerden ara (backward compatibility)
+      console.log("🔄 Falling back to legacy systems...");
       
       // First check mock agents
       let foundAgent = mockAgents.find(a => a.id === searchId);
       console.log("🎯 Found in mock agents:", !!foundAgent);
       
-      // ✅ ÇÖZÜM: Server agents'ı da kontrol et
+      // Check server agents
       if (!foundAgent) {
         console.log("🔍 Checking server agents...");
         try {
@@ -574,19 +614,27 @@ export default function AgentDetail() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {agent.history.map((item: any, index: number) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                            <div>
-                              <p className="text-white font-medium">{item.activity}</p>
-                              <p className="text-gray-400 text-sm">{item.date}</p>
+                        {agent.history && agent.history.length > 0 ? (
+                          agent.history.map((item: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                              <div>
+                                <p className="text-white font-medium">{item.activity}</p>
+                                <p className="text-gray-400 text-sm">{item.date}</p>
+                              </div>
+                              {item.priceEth && (
+                                <Badge variant="outline" className="border-green-400/50 text-green-300">
+                                  {item.priceEth} 0G
+                                </Badge>
+                              )}
                             </div>
-                            {item.priceEth && (
-                              <Badge variant="outline" className="border-green-400/50 text-green-300">
-                                {item.priceEth} 0G
-                              </Badge>
-                            )}
+                          ))
+                        ) : (
+                          <div className="text-center text-gray-500 py-8">
+                            <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>Henüz aktivite geçmişi yok</p>
+                            <p className="text-sm mt-2">Agent kullanıldıkça aktiviteler burada görünecek</p>
                           </div>
-                        ))}
+                        )}
                       </div>
                     </CardContent>
                   </Card>

@@ -6,6 +6,7 @@ import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
 import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
 import { getMarketplaceListings } from "@/lib/marketplaceListings";
+import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Star, Zap, Users } from "lucide-react";
@@ -78,53 +79,92 @@ export default function HomePage() {
     functionName: 'getTotalAgents',
   });
 
-  // Load agents from both localStorage and server
+  // 🎯 UNIFIED AGENT LOADING - Tek merkezi sistem
   useEffect(() => {
     async function loadAllAgents() {
-      console.log('🔄 Loading agents from all sources...');
+      console.log('🔄 Loading agents from unified system...');
       const agents: any[] = [];
       
-      // 1. ✅ ÇÖZÜM: Server'dan marketplace listing'leri yükle (tüm kullanıcılar)
+      // 🚀 ÖNCELİK 1: Unified System'den yükle
       try {
-        const marketplaceResult = await getMarketplaceListings();
-        if (marketplaceResult.success && marketplaceResult.listings) {
-          const marketplaceAgents = marketplaceResult.listings.map(listing => ({
-            id: listing.id,
-            name: listing.name,
-            description: listing.description,
-            image: listing.image,
-            category: listing.category,
-            owner: listing.seller,
-            priceEth: parseFloat(listing.price),
-            listingId: listing.listingId, // ✅ Gerçek marketplace listing ID
-            tokenId: listing.tokenId,
+        const unifiedResult = await getAllUnifiedAgents({ active: true });
+        if (unifiedResult.success && unifiedResult.agents) {
+          const unifiedAgents = unifiedResult.agents.map(agent => ({
+            id: agent.id,
+            name: agent.name,
+            description: agent.description,
+            image: agent.image,
+            category: agent.category,
+            owner: `${agent.creator?.slice(0, 6)}...${agent.creator?.slice(-4)}`,
+            priceEth: parseFloat(agent.price),
+            listingId: agent.listingId, // ✅ Gerçek marketplace listing ID
+            tokenId: agent.tokenId,
+            agentContractAddress: agent.agentContractAddress,
+            creator: agent.creator,
+            trending: agent.trending,
+            likes: agent.likes || 0,
+            views: agent.views || 0,
             history: [
               {
-                activity: "Listed on marketplace",
-                date: listing.createdAt,
-                priceEth: parseFloat(listing.price)
+                activity: "Created on 0G Network",
+                date: agent.createdAt,
+                priceEth: parseFloat(agent.price)
               }
             ]
           }));
-          agents.push(...marketplaceAgents);
-          console.log(`🏪 Loaded ${marketplaceAgents.length} agents from marketplace`);
+          agents.push(...unifiedAgents);
+          console.log(`🎯 Loaded ${unifiedAgents.length} agents from unified system`);
         }
       } catch (error) {
-        console.error('❌ Failed to load marketplace listings:', error);
+        console.error('❌ Failed to load from unified system:', error);
       }
+      
+      // 🔄 FALLBACK: Legacy sistemlerden yükle (backward compatibility)
+      if (agents.length === 0) {
+        console.log('🔄 Falling back to legacy systems...');
+        
+        // 1. Server'dan marketplace listing'leri yükle (fallback)
+        try {
+          const marketplaceResult = await getMarketplaceListings();
+          if (marketplaceResult.success && marketplaceResult.listings) {
+            const marketplaceAgents = marketplaceResult.listings.map(listing => ({
+              id: listing.id,
+              name: listing.name,
+              description: listing.description,
+              image: listing.image,
+              category: listing.category,
+              owner: listing.seller,
+              priceEth: parseFloat(listing.price),
+              listingId: listing.listingId,
+              tokenId: listing.tokenId,
+              history: [
+                {
+                  activity: "Listed on marketplace",
+                  date: listing.createdAt,
+                  priceEth: parseFloat(listing.price)
+                }
+              ]
+            }));
+            agents.push(...marketplaceAgents);
+            console.log(`🏪 Loaded ${marketplaceAgents.length} agents from marketplace (fallback)`);
+          }
+        } catch (error) {
+          console.error('❌ Failed to load marketplace listings:', error);
+        }
 
-      // 2. Server'dan global agent'ları yükle (fallback)
-      try {
-        const serverAgents = await getAgentsFromServer();
-        const globalAgents = serverAgents.map(transformGlobalAgent);
-        // Sadece marketplace'te olmayan agent'ları ekle
-        const newGlobalAgents = globalAgents.filter(global => 
-          !agents.some(marketplace => marketplace.name === global.name)
-        );
-        agents.push(...newGlobalAgents);
-        console.log(`🌐 Loaded ${newGlobalAgents.length} unique global agents`);
-      } catch (error) {
-        console.error('❌ Failed to load server agents:', error);
+        // 2. Server'dan global agent'ları yükle (fallback)
+        try {
+          const serverAgents = await getAgentsFromServer();
+          const globalAgents = serverAgents.map(transformGlobalAgent);
+          // Sadece marketplace'te olmayan agent'ları ekle
+          const newGlobalAgents = globalAgents.filter(global => 
+            !agents.some(marketplace => marketplace.name === global.name)
+          );
+          agents.push(...newGlobalAgents);
+          console.log(`🌐 Loaded ${newGlobalAgents.length} unique global agents (fallback)`);
+        } catch (error) {
+          console.error('❌ Failed to load server agents:', error);
+        }
       }
       
       // 2. Load from localStorage (fallback, own creations)

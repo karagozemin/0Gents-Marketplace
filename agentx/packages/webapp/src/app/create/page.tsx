@@ -13,6 +13,7 @@ import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
 import { saveGlobalAgent, type BlockchainAgent } from "@/lib/blockchainAgents";
 import { saveAgentToServer } from "@/lib/globalAgents";
 import { saveListingToServer } from "@/lib/marketplaceListings";
+import { saveUnifiedAgent, transformCreatedAgentToUnified } from "@/lib/unifiedAgents";
 import { parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -583,8 +584,38 @@ export default function CreatePage() {
         // Update agent with real listing ID
         newAgent.listingId = result.listingId;
         saveCreatedAgent(newAgent);
+        
+        // 🎯 YENİ: Unified System'e kaydet (gerçek listingId ile)
+        const unifiedAgentData = transformCreatedAgentToUnified(
+          newAgent, 
+          agentContractAddress, 
+          result.listingId
+        );
+        
+        saveUnifiedAgent(unifiedAgentData).then(unifiedResult => {
+          if (unifiedResult.success) {
+            console.log('🎯 Agent successfully saved to unified system:', unifiedResult.agent?.name);
+          } else {
+            console.error('❌ Failed to save to unified system:', unifiedResult.error);
+          }
+        });
       } else {
         console.error('❌ Failed to save marketplace listing');
+        
+        // Listing başarısız olsa bile unified system'e kaydet
+        const unifiedAgentData = transformCreatedAgentToUnified(
+          newAgent, 
+          agentContractAddress, 
+          0 // No listing ID
+        );
+        
+        saveUnifiedAgent(unifiedAgentData).then(unifiedResult => {
+          if (unifiedResult.success) {
+            console.log('🎯 Agent saved to unified system (without listing):', unifiedResult.agent?.name);
+          } else {
+            console.error('❌ Failed to save to unified system:', unifiedResult.error);
+          }
+        });
       }
     });
     

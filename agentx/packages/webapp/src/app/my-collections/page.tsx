@@ -23,6 +23,7 @@ import {
 import { getCreatedAgents, saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
 import { useReadContract } from "wagmi";
 import { INFT_ADDRESS, INFT_ABI } from "@/lib/contracts";
+import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { Navbar } from "@/components/Navbar";
 
 export default function MyCollectionsPage() {
@@ -53,35 +54,100 @@ export default function MyCollectionsPage() {
     }
   }, [address, nftBalance]);
 
-  const loadMyAgents = () => {
+  // 🎯 UNIFIED AGENT LOADING - My Collections
+  const loadMyAgents = async () => {
     if (!address) return;
     
+    // 🚀 ÖNCELİK 1: Unified System'den created agents'ları yükle
+    try {
+      const unifiedResult = await getAllUnifiedAgents({ creator: address });
+      if (unifiedResult.success && unifiedResult.agents) {
+        const createdAgents = unifiedResult.agents.map(agent => ({
+          id: agent.id,
+          tokenId: agent.tokenId,
+          name: agent.name,
+          description: agent.description,
+          image: agent.image,
+          category: agent.category,
+          creator: agent.creator,
+          price: agent.price,
+          txHash: agent.txHash,
+          storageUri: agent.storageUri,
+          listingId: agent.listingId,
+          social: agent.social || {},
+          createdAt: agent.createdAt
+        }));
+        setMyAgents(createdAgents);
+        console.log(`🎯 Loaded ${createdAgents.length} created agents from unified system`);
+        return;
+      }
+    } catch (error) {
+      console.error('❌ Failed to load from unified system:', error);
+    }
+    
+    // 🔄 FALLBACK: localStorage'dan yükle (backward compatibility)
+    console.log('🔄 Falling back to localStorage for created agents...');
     const allCreated = getCreatedAgents();
-    // Filter agents created by current user
     const userAgents = allCreated.filter(agent => 
       agent.creator.toLowerCase() === address.toLowerCase()
     );
     setMyAgents(userAgents);
+    console.log(`📱 Loaded ${userAgents.length} created agents from localStorage (fallback)`);
   };
 
-  // Blockchain'den owned NFT'leri yükle (satın alınanlar)
+  // 🎯 UNIFIED PURCHASED AGENT LOADING
   const loadBlockchainNFTs = async () => {
     if (!address || !nftBalance || Number(nftBalance) === 0) {
       setOwnedNFTs([]);
       return;
     }
 
-    console.log(`🔍 User owns ${nftBalance} NFTs on blockchain, checking ownership...`);
+    console.log(`🔍 User owns ${nftBalance} NFTs, loading purchased agents...`);
     
+    try {
+      // 🚀 ÖNCELİK 1: Unified System'den purchased agents'ları yükle
+      // currentOwner field'ı kullanarak satın alınan agent'ları bul
+      const unifiedResult = await getAllUnifiedAgents({ owner: address });
+      if (unifiedResult.success && unifiedResult.agents) {
+        const purchasedAgents = unifiedResult.agents
+          .filter(agent => 
+            agent.currentOwner.toLowerCase() === address.toLowerCase() && 
+            agent.creator.toLowerCase() !== address.toLowerCase() // Kendi oluşturduğu değil
+          )
+          .map(agent => ({
+            id: agent.id,
+            tokenId: agent.tokenId,
+            name: agent.name,
+            description: agent.description,
+            image: agent.image,
+            category: agent.category,
+            creator: agent.creator,
+            price: agent.price,
+            txHash: agent.txHash,
+            storageUri: agent.storageUri,
+            listingId: agent.listingId,
+            social: agent.social || {},
+            createdAt: agent.createdAt,
+            isPurchased: true
+          }));
+        
+        setOwnedNFTs(purchasedAgents);
+        console.log(`🎯 Loaded ${purchasedAgents.length} purchased agents from unified system`);
+        return;
+      }
+    } catch (error) {
+      console.error('❌ Failed to load purchased agents from unified system:', error);
+    }
+    
+    // 🔄 FALLBACK: Blockchain'den ownership kontrolü (legacy)
+    console.log('🔄 Falling back to blockchain ownership check...');
     try {
       const ownedNFTs: CreatedAgent[] = [];
       const balance = Number(nftBalance);
       
       // Basit approach: Check first 50 token IDs for ownership
-      // Production'da event log'ları veya indexer kullanılmalı
       for (let tokenId = 1; tokenId <= Math.min(balance + 50, 100); tokenId++) {
         try {
-          // Her token için ownership kontrolü
           const ownerResponse = await fetch('/api/blockchain/check-owner', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -96,7 +162,6 @@ export default function MyCollectionsPage() {
             const { isOwner, tokenURI } = await ownerResponse.json();
             
             if (isOwner) {
-              // Bu NFT kullanıcının - My Collections'a ekle
               const ownedNFT: CreatedAgent = {
                 id: `owned-${tokenId}`,
                 tokenId: tokenId.toString(),
@@ -104,26 +169,24 @@ export default function MyCollectionsPage() {
                 description: "AI Agent purchased from marketplace",
                 image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
                 category: "Purchased",
-                creator: "Unknown", // Original creator unknown
+                creator: "Unknown",
                 price: "N/A",
                 txHash: "",
                 storageUri: tokenURI || "",
                 listingId: 0,
                 social: {},
                 createdAt: new Date().toISOString(),
-                isPurchased: true // Satın alınmış flag
+                isPurchased: true
               };
-              
               ownedNFTs.push(ownedNFT);
             }
           }
         } catch (tokenError) {
-          // Token exist etmeyebilir, devam et
           continue;
         }
       }
       
-      console.log(`✅ Found ${ownedNFTs.length} owned NFTs`);
+      console.log(`📱 Found ${ownedNFTs.length} owned NFTs via blockchain check (fallback)`);
       setOwnedNFTs(ownedNFTs);
       
     } catch (error) {
