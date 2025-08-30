@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,9 +122,7 @@ export default function MyCollectionsPage() {
               <p className="text-gray-300 mb-8">
                 Please connect your wallet to view and manage your AI Agent collections.
               </p>
-              <Button className="gradient-0g px-8 py-3 cursor-pointer">
-                Connect Wallet
-              </Button>
+              <ConnectButton />
             </div>
           </div>
         </div>
