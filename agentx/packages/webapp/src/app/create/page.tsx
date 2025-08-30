@@ -301,10 +301,23 @@ export default function CreatePage() {
             console.log("🏭 Factory logs found:", factoryLogs.length);
             
             if (factoryLogs.length > 0) {
-              // AgentContractCreated event signature
+              // Debug all Factory logs in detail
+              factoryLogs.forEach((log: any, index: number) => {
+                console.log(`🔍 Factory log ${index}:`, {
+                  address: log.address,
+                  topics: log.topics,
+                  data: log.data,
+                  topicsLength: log.topics?.length,
+                  firstTopic: log.topics?.[0]
+                });
+              });
+              
+              // AgentContractCreated event signature: keccak256("AgentContractCreated(address,address,string,uint256)")
               const expectedEventSignature = "0x85f0dfa9fd3e33e38f73b68fc46905218786e8b028cf1b07fa0ed436b53b0227";
               
-              // Find log with AgentContractCreated event signature
+              console.log("🎯 Looking for event signature:", expectedEventSignature);
+              
+              // Try exact event signature first
               let log = factoryLogs.find((log: any) => 
                 log.topics && 
                 log.topics.length >= 2 && 
@@ -353,6 +366,7 @@ export default function CreatePage() {
           // Fallback: Get the latest agent from Factory
           console.warn("⚠️ Event parsing failed, trying to get latest agent from Factory...");
           try {
+            // Use getTotalAgents function (0x3731a16f is keccak256("getTotalAgents()"))
             const totalResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -361,19 +375,24 @@ export default function CreatePage() {
                 method: 'eth_call',
                 params: [{
                   to: FACTORY_ADDRESS,
-                  data: '0x9d76ea58' // getTotalAgents()
+                  data: '0x3731a16f' // getTotalAgents()
                 }, 'latest'],
                 id: 999
               })
             });
             
             const totalResult = await totalResponse.json();
-            if (totalResult.result) {
+            console.log("📊 getTotalAgents response:", totalResult);
+            
+            if (totalResult.result && totalResult.result !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
               const totalAgents = parseInt(totalResult.result, 16);
               console.log("📊 Total agents in Factory:", totalAgents);
               
               if (totalAgents > 0) {
                 // Get the latest agent (index = totalAgents - 1)
+                const latestIndex = totalAgents - 1;
+                console.log("🔍 Getting agent at index:", latestIndex);
+                
                 const latestResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -382,31 +401,44 @@ export default function CreatePage() {
                     method: 'eth_call',
                     params: [{
                       to: FACTORY_ADDRESS,
-                      data: '0x8c3c4b34' + (totalAgents - 1).toString(16).padStart(64, '0') // getAgentAt(totalAgents - 1)
+                      data: '0xe468619d' + latestIndex.toString(16).padStart(64, '0') // getAgentAt(index)
                     }, 'latest'],
                     id: 1000
                   })
                 });
                 
                 const latestResult = await latestResponse.json();
+                console.log("📊 getAgentAt response:", latestResult);
+                
                 if (latestResult.result && latestResult.result !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
                   const contractAddress = '0x' + latestResult.result.slice(-40);
                   console.log("🎯 Factory fallback - Latest Agent Contract:", contractAddress);
                   
-                  if (contractAddress.length === 42) {
+                  if (contractAddress.length === 42 && contractAddress !== '0x0000000000000000000000000000000000000000') {
                     setAgentContractAddress(contractAddress);
-                    updateProgress("✅ Agent Contract address found via fallback: " + contractAddress);
+                    updateProgress("✅ Agent Contract address found via Factory fallback: " + contractAddress);
                     return;
+                  } else {
+                    console.error("❌ Invalid contract address from Factory:", contractAddress);
                   }
+                } else {
+                  console.error("❌ No valid result from getAgentAt");
                 }
+              } else {
+                console.error("❌ No agents in Factory");
               }
+            } else {
+              console.error("❌ Invalid result from getTotalAgents");
             }
             
-            console.error("❌ Factory fallback also failed");
-            updateProgress("❌ Failed to get agent contract address");
+            throw new Error("Factory fallback methods failed");
+            
           } catch (fallbackError) {
             console.error("❌ Factory fallback error:", fallbackError);
-            updateProgress("❌ Failed to get agent contract address");
+            updateProgress("❌ Failed to get agent contract address - both event parsing and Factory queries failed");
+            alert("❌ Agent creation failed: Could not extract contract address. Please try again.");
+            setIsCreating(false);
+            setTimeout(() => setShowProgressModal(false), 3000);
           }
         } catch (error) {
           console.error("❌ Contract address extraction error:", error);
