@@ -432,10 +432,10 @@ export default function CreatePage() {
   // State for token ID (needed for listing)
   const [mintedTokenId, setMintedTokenId] = useState<string>("");
 
-  // Handle successful NFT minting - save agent data
+  // Handle successful NFT minting - list on marketplace
   useEffect(() => {
-    if (isMintSuccess && mintHash && !createdAgent) {
-      updateProgress("🎉 NFT minted successfully! Saving agent data...");
+    if (isMintSuccess && mintHash && !createdAgent && agentContractAddress) {
+      updateProgress("🎉 NFT minted successfully! Listing on marketplace...");
       updateModalProgress('minting', 'completed');
       updateModalProgress('marketplace', 'in_progress');
       console.log("🎉 AI Agent NFT successfully minted!");
@@ -443,12 +443,12 @@ export default function CreatePage() {
       const timestamp = Date.now();
       setMintedTokenId(timestamp.toString());
       
-      // Direct save without complex listing for now
+      // List on marketplace after mint
       setTimeout(() => {
-        handleAgentSave();
-      }, 1000);
+        handleMarketplaceListing();
+      }, 2000);
     }
-  }, [isMintSuccess, mintHash, createdAgent]);
+  }, [isMintSuccess, mintHash, createdAgent, agentContractAddress]);
 
   // Function to save agent data
   const handleAgentSave = () => {

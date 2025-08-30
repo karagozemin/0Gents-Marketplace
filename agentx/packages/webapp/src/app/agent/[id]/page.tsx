@@ -156,14 +156,34 @@ export default function AgentDetail() {
         functionName: "buy",
         args: [BigInt(listingId)],
         value: price, // Full price
-        gas: BigInt(300000),
+        gas: BigInt(500000), // 0G Network için yeterli gas
       });
 
       console.log("✅ Purchase transaction submitted");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Purchase failed:", error);
-      alert(`Purchase failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      
+      // Gelişmiş error handling
+      let errorMessage = "Purchase failed. Please try again.";
+      
+      if (error?.message?.includes("out of gas") || error?.message?.includes("gas")) {
+        errorMessage = "Transaction failed due to insufficient gas. The network may be congested. Please try again.";
+      } else if (error?.message?.includes("NOT_ACTIVE")) {
+        errorMessage = "This NFT is no longer available for purchase.";
+      } else if (error?.message?.includes("BAD_PRICE")) {
+        errorMessage = "Price mismatch. The NFT price may have changed.";
+      } else if (error?.message?.includes("User rejected") || error?.code === 4001) {
+        errorMessage = "Transaction was cancelled by user.";
+      } else if (error?.message?.includes("network") || error?.message?.includes("timeout")) {
+        errorMessage = "Network timeout. Please check your connection and try again.";
+      } else if (error?.message?.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds in your wallet.";
+      } else if (error instanceof Error) {
+        errorMessage = `Purchase failed: ${error.message}`;
+      }
+      
+      alert(errorMessage);
       setIsBuying(false);
     }
   };

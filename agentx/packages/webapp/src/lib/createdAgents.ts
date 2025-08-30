@@ -20,6 +20,7 @@ export interface CreatedAgent {
     website?: string;
   };
   createdAt: string;
+  isPurchased?: boolean; // Flag for purchased NFTs
 }
 
 const STORAGE_KEY = 'agentx_created_agents';

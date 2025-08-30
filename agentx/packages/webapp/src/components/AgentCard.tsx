@@ -69,11 +69,29 @@ export function AgentCard({
         functionName: "buy",
         args: [BigInt(listingId)],
         value: parseEther(priceEth.toString()),
-        gas: BigInt(300000),
+        gas: BigInt(500000), // 0G Network için yeterli gas
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Buy failed:", error);
-      alert("Purchase failed. Please try again.");
+      
+      // Gelişmiş error handling
+      let errorMessage = "Purchase failed. Please try again.";
+      
+      if (error?.message?.includes("out of gas") || error?.message?.includes("gas")) {
+        errorMessage = "Transaction failed due to insufficient gas. The network may be congested. Please try again.";
+      } else if (error?.message?.includes("NOT_ACTIVE")) {
+        errorMessage = "This NFT is no longer available for purchase.";
+      } else if (error?.message?.includes("BAD_PRICE")) {
+        errorMessage = "Price mismatch. The NFT price may have changed.";
+      } else if (error?.message?.includes("User rejected") || error?.code === 4001) {
+        errorMessage = "Transaction was cancelled by user.";
+      } else if (error?.message?.includes("network") || error?.message?.includes("timeout")) {
+        errorMessage = "Network timeout. Please check your connection and try again.";
+      } else if (error?.message?.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds in your wallet.";
+      }
+      
+      alert(errorMessage);
       setIsBuying(false);
     }
   };

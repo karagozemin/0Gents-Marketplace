@@ -17,22 +17,41 @@ import {
   Wallet,
   Calendar,
   Hash,
-  ExternalLink
+  ExternalLink,
+  ShoppingCart
 } from "lucide-react";
 import { getCreatedAgents, saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
+import { useReadContract } from "wagmi";
+import { INFT_ADDRESS, INFT_ABI } from "@/lib/contracts";
 import { Navbar } from "@/components/Navbar";
 
 export default function MyCollectionsPage() {
   const { address, isConnected } = useAccount();
   const [myAgents, setMyAgents] = useState<CreatedAgent[]>([]);
+  const [ownedNFTs, setOwnedNFTs] = useState<CreatedAgent[]>([]);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<CreatedAgent>>({});
   const [mounted, setMounted] = useState(false);
+
+  // Blockchain'den NFT balance kontrolü
+  const { data: nftBalance } = useReadContract({
+    address: INFT_ADDRESS as `0x${string}`,
+    abi: INFT_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+  });
 
   useEffect(() => {
     setMounted(true);
     loadMyAgents();
   }, [address]);
+
+  // NFT balance değiştiğinde blockchain'den owned NFT'leri yükle
+  useEffect(() => {
+    if (address && nftBalance) {
+      loadBlockchainNFTs();
+    }
+  }, [address, nftBalance]);
 
   const loadMyAgents = () => {
     if (!address) return;
@@ -43,6 +62,74 @@ export default function MyCollectionsPage() {
       agent.creator.toLowerCase() === address.toLowerCase()
     );
     setMyAgents(userAgents);
+  };
+
+  // Blockchain'den owned NFT'leri yükle (satın alınanlar)
+  const loadBlockchainNFTs = async () => {
+    if (!address || !nftBalance || Number(nftBalance) === 0) {
+      setOwnedNFTs([]);
+      return;
+    }
+
+    console.log(`🔍 User owns ${nftBalance} NFTs on blockchain, checking ownership...`);
+    
+    try {
+      const ownedNFTs: CreatedAgent[] = [];
+      const balance = Number(nftBalance);
+      
+      // Basit approach: Check first 50 token IDs for ownership
+      // Production'da event log'ları veya indexer kullanılmalı
+      for (let tokenId = 1; tokenId <= Math.min(balance + 50, 100); tokenId++) {
+        try {
+          // Her token için ownership kontrolü
+          const ownerResponse = await fetch('/api/blockchain/check-owner', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              contractAddress: INFT_ADDRESS,
+              tokenId: tokenId.toString(),
+              userAddress: address
+            })
+          });
+          
+          if (ownerResponse.ok) {
+            const { isOwner, tokenURI } = await ownerResponse.json();
+            
+            if (isOwner) {
+              // Bu NFT kullanıcının - My Collections'a ekle
+              const ownedNFT: CreatedAgent = {
+                id: `owned-${tokenId}`,
+                tokenId: tokenId.toString(),
+                name: `Purchased Agent #${tokenId}`,
+                description: "AI Agent purchased from marketplace",
+                image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+                category: "Purchased",
+                creator: "Unknown", // Original creator unknown
+                price: "N/A",
+                txHash: "",
+                storageUri: tokenURI || "",
+                listingId: 0,
+                social: {},
+                createdAt: new Date().toISOString(),
+                isPurchased: true // Satın alınmış flag
+              };
+              
+              ownedNFTs.push(ownedNFT);
+            }
+          }
+        } catch (tokenError) {
+          // Token exist etmeyebilir, devam et
+          continue;
+        }
+      }
+      
+      console.log(`✅ Found ${ownedNFTs.length} owned NFTs`);
+      setOwnedNFTs(ownedNFTs);
+      
+    } catch (error) {
+      console.error("❌ Error loading blockchain NFTs:", error);
+      setOwnedNFTs([]);
+    }
   };
 
   const startEditing = (agent: CreatedAgent) => {
@@ -145,9 +232,19 @@ export default function MyCollectionsPage() {
           </div>
           
           <div className="flex items-center gap-4">
-            <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-400/30">
-              {myAgents.length} Agent{myAgents.length !== 1 ? 's' : ''}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-400/30">
+                {myAgents.length} Created
+              </Badge>
+              {ownedNFTs.length > 0 && (
+                <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-400/30">
+                  {ownedNFTs.length} Purchased
+                </Badge>
+              )}
+              <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-400/30">
+                {myAgents.length + ownedNFTs.length} Total
+              </Badge>
+            </div>
             <Button 
               className="gradient-0g cursor-pointer"
               onClick={() => window.location.href = '/create'}
@@ -183,7 +280,7 @@ export default function MyCollectionsPage() {
         </Card>
 
         {/* Collections Grid */}
-        {myAgents.length === 0 ? (
+        {myAgents.length === 0 && ownedNFTs.length === 0 ? (
           <Card className="gradient-card border-white/10">
             <CardContent className="p-12 text-center">
               <div className="w-20 h-20 mx-auto mb-6 bg-purple-500/20 rounded-full flex items-center justify-center">
@@ -204,8 +301,16 @@ export default function MyCollectionsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myAgents.map((agent) => (
+          <div className="space-y-8">
+            {/* Created Agents Section */}
+            {myAgents.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  <Plus className="w-6 h-6 text-purple-400" />
+                  Created Agents ({myAgents.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {myAgents.map((agent) => (
               <Card key={agent.id} className="gradient-card border-white/10 group hover:glow-purple transition-all duration-300">
                 <CardHeader className="p-0">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-t-lg">
@@ -348,7 +453,91 @@ export default function MyCollectionsPage() {
                   )}
                 </CardContent>
               </Card>
-            ))}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Purchased NFTs Section */}
+            {ownedNFTs.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  <ShoppingCart className="w-6 h-6 text-green-400" />
+                  Purchased Agents ({ownedNFTs.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {ownedNFTs.map((agent) => (
+                    <Card key={agent.id} className="gradient-card border-white/10 group hover:glow-green transition-all duration-300">
+                      <CardHeader className="p-0">
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-t-lg">
+                          <img 
+                            src={agent.image} 
+                            alt={agent.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute top-3 right-3 flex gap-2">
+                            <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
+                              Purchased
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-white mb-2">{agent.name}</h3>
+                            <p className="text-gray-300 text-sm mb-3 line-clamp-2">
+                              {agent.description}
+                            </p>
+                            
+                            <div className="flex items-center gap-2 mb-3">
+                              <Badge variant="secondary" className="bg-gray-700/50 text-gray-300">
+                                {agent.category}
+                              </Badge>
+                              <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
+                                Token #{agent.tokenId}
+                              </Badge>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm text-gray-400">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                Purchased
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Hash className="w-4 h-4" />
+                                #{agent.tokenId}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800 cursor-pointer"
+                            onClick={() => window.location.href = `/agent/${agent.id}`}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="border-blue-400/50 text-blue-300 hover:bg-blue-400/10 cursor-pointer"
+                            onClick={() => window.open(`https://chainscan-galileo.0g.ai/token/${INFT_ADDRESS}?a=${agent.tokenId}`, '_blank')}
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
