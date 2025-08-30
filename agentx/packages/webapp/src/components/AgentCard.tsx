@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/lib/contracts";
 import { parseEther } from "viem";
+import { deactivateListing } from "@/lib/marketplaceListings";
 
 export function AgentCard({ 
   id, 
@@ -98,6 +99,17 @@ export function AgentCard({
   
   // Handle buy success
   if (isBuySuccess && buyHash) {
+    // Deactivate listing after successful purchase
+    if (listingId) {
+      deactivateListing(listingId).then(result => {
+        if (result.success) {
+          console.log(`✅ Listing ${listingId} deactivated after purchase`);
+        } else {
+          console.error(`❌ Failed to deactivate listing ${listingId}:`, result.error);
+        }
+      });
+    }
+
     return (
       <motion.div
         whileHover={{ y: -8, scale: 1.02 }}

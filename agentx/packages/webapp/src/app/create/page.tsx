@@ -12,6 +12,7 @@ import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
 import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
 import { saveGlobalAgent, type BlockchainAgent } from "@/lib/blockchainAgents";
 import { saveAgentToServer } from "@/lib/globalAgents";
+import { saveListingToServer } from "@/lib/marketplaceListings";
 import { parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -98,6 +99,19 @@ export default function CreatePage() {
     hash: listHash,
     timeout: 300000, // 5 minutes timeout for 0G network
   });
+
+  // Handle successful marketplace listing
+  useEffect(() => {
+    if (isListSuccess && listHash && !createdAgent) {
+      updateProgress("🎉 Marketplace listing successful! Finalizing agent creation...");
+      console.log("🎉 Agent successfully listed on marketplace!");
+      
+      // Now save agent data with real listing
+      setTimeout(() => {
+        handleAgentSave();
+      }, 1000);
+    }
+  }, [isListSuccess, listHash, createdAgent]);
   
   // State for storage result
   const [storageUri, setStorageUri] = useState<string>("");
@@ -450,6 +464,40 @@ export default function CreatePage() {
     }
   }, [isMintSuccess, mintHash, createdAgent, agentContractAddress]);
 
+  // Handle marketplace listing
+  const handleMarketplaceListing = async () => {
+    if (!agentContractAddress || !MARKETPLACE_ADDRESS) {
+      console.error("❌ Missing contract addresses for listing");
+      handleAgentSave(); // Fallback to save without listing
+      return;
+    }
+
+    try {
+      updateProgress("🔄 Listing NFT on marketplace...");
+      console.log("📋 Starting marketplace listing process...");
+
+      // Step 1: Call listOnMarketplace on AgentNFT contract
+      await writeMarketplace({
+        address: agentContractAddress as `0x${string}`,
+        abi: AGENT_NFT_ABI,
+        functionName: "listOnMarketplace",
+        gas: BigInt(200000),
+      });
+
+      updateProgress("✅ Marketplace listing transaction submitted...");
+      console.log("✅ Marketplace listing transaction submitted");
+
+    } catch (error) {
+      console.error("❌ Marketplace listing failed:", error);
+      updateProgress("⚠️ Marketplace listing failed, saving agent data...");
+      
+      // Continue with save even if listing fails
+      setTimeout(() => {
+        handleAgentSave();
+      }, 1000);
+    }
+  };
+
   // Function to save agent data
   const handleAgentSave = () => {
     const timestamp = Date.now();
@@ -464,7 +512,7 @@ export default function CreatePage() {
       price,
       txHash: mintHash || "",
       storageUri: storageUri,
-      listingId: Math.floor(Math.random() * 1000) + 1, // Fake listing ID for demo - shows "Buy Now"
+      listingId: 0, // Will be updated with real listing ID from server
       social: {
         x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
         website: website || undefined
@@ -482,6 +530,29 @@ export default function CreatePage() {
         console.log('🌐 Agent successfully saved to global server storage');
       } else {
         console.error('❌ Failed to save agent to global storage');
+      }
+    });
+
+    // Server'a marketplace listing kaydet
+    saveListingToServer({
+      agentContractAddress,
+      tokenId: mintedTokenId || "1",
+      seller: address || "",
+      price,
+      name,
+      description: desc,
+      image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+      category: category || "General",
+      txHash: listHash || ""
+    }).then(result => {
+      if (result.success) {
+        console.log(`🏪 Marketplace listing created with ID: ${result.listingId}`);
+        
+        // Update agent with real listing ID
+        newAgent.listingId = result.listingId;
+        saveCreatedAgent(newAgent);
+      } else {
+        console.error('❌ Failed to save marketplace listing');
       }
     });
     

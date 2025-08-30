@@ -5,6 +5,7 @@ import { mockAgents } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
 import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
+import { getMarketplaceListings } from "@/lib/marketplaceListings";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Star, Zap, Users } from "lucide-react";
@@ -83,12 +84,45 @@ export default function HomePage() {
       console.log('🔄 Loading agents from all sources...');
       const agents: any[] = [];
       
-      // 1. ✅ ÇÖZÜM: Server'dan global agent'ları yükle (tüm kullanıcılar)
+      // 1. ✅ ÇÖZÜM: Server'dan marketplace listing'leri yükle (tüm kullanıcılar)
+      try {
+        const marketplaceResult = await getMarketplaceListings();
+        if (marketplaceResult.success && marketplaceResult.listings) {
+          const marketplaceAgents = marketplaceResult.listings.map(listing => ({
+            id: listing.id,
+            name: listing.name,
+            description: listing.description,
+            image: listing.image,
+            category: listing.category,
+            owner: listing.seller,
+            priceEth: parseFloat(listing.price),
+            listingId: listing.listingId, // ✅ Gerçek marketplace listing ID
+            tokenId: listing.tokenId,
+            history: [
+              {
+                activity: "Listed on marketplace",
+                date: listing.createdAt,
+                priceEth: parseFloat(listing.price)
+              }
+            ]
+          }));
+          agents.push(...marketplaceAgents);
+          console.log(`🏪 Loaded ${marketplaceAgents.length} agents from marketplace`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load marketplace listings:', error);
+      }
+
+      // 2. Server'dan global agent'ları yükle (fallback)
       try {
         const serverAgents = await getAgentsFromServer();
         const globalAgents = serverAgents.map(transformGlobalAgent);
-        agents.push(...globalAgents);
-        console.log(`🌐 Loaded ${globalAgents.length} agents from global server`);
+        // Sadece marketplace'te olmayan agent'ları ekle
+        const newGlobalAgents = globalAgents.filter(global => 
+          !agents.some(marketplace => marketplace.name === global.name)
+        );
+        agents.push(...newGlobalAgents);
+        console.log(`🌐 Loaded ${newGlobalAgents.length} unique global agents`);
       } catch (error) {
         console.error('❌ Failed to load server agents:', error);
       }

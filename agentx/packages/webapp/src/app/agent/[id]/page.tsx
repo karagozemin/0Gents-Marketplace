@@ -143,9 +143,8 @@ export default function AgentDetail() {
     try {
       console.log("💰 Purchasing NFT from marketplace...");
       
-      // TODO: In production, get real listingId from agent data or blockchain query
-      // For now, we'll use the agent's tokenId as listingId (assumption: listingId = tokenId)
-      const listingId = agent.id; // Use agent ID as listing ID
+      // Use real listingId from agent data
+      const listingId = agent.listingId || agent.id; // Use real listing ID or fallback
       const price = parseEther(agent.priceEth.toString());
       
       console.log(`🛒 Buying listing ${listingId} for ${agent.priceEth} 0G`);
