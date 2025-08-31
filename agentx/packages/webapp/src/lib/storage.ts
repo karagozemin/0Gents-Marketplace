@@ -340,8 +340,8 @@ export async function getFromDA(uri: string): Promise<unknown | null> {
   try {
     const hash = uri.replace('0g://da/', '');
     
-    // Simulate DA retrieval time
-    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+    // ✅ PERFORMANS İYİLEŞTİRMESİ: Delay'i azalt
+    await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200)); // 100-300ms instead of 300-800ms
     
     const stored = localStorage.getItem(`0g_da_${hash}`);
     if (stored) {

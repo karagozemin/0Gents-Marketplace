@@ -1,6 +1,18 @@
 // Unified Agent Management Library
 // Tek merkezi agent sistemi için helper functions
 
+// ✅ PERFORMANS İYİLEŞTİRMESİ: Client-side cache for unified agents
+const clientCache = new Map<string, { data: any; timestamp: number }>();
+const CLIENT_CACHE_TTL = 60 * 1000; // 1 minute cache
+
+/**
+ * Clear client cache (called after create/update operations)
+ */
+export function clearUnifiedAgentsCache(): void {
+  clientCache.clear();
+  console.log('🧹 Unified agents cache cleared');
+}
+
 export interface UnifiedAgent {
   id: string;
   tokenId: string;
@@ -58,6 +70,10 @@ export async function saveUnifiedAgent(agentData: Partial<UnifiedAgent>): Promis
     
     if (result.success) {
       console.log(`✅ Agent saved to unified system: ${result.agent.name}`);
+      
+      // ✅ PERFORMANS İYİLEŞTİRMESİ: Cache'i temizle ki yeni agent görünsün
+      clearUnifiedAgentsCache();
+      
       return {
         success: true,
         agent: result.agent
@@ -93,6 +109,15 @@ export async function getAllUnifiedAgents(filters?: {
   error?: string;
 }> {
   try {
+    // ✅ PERFORMANS İYİLEŞTİRMESİ: Cache key oluştur
+    const cacheKey = JSON.stringify(filters || {});
+    const cached = clientCache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp) < CLIENT_CACHE_TTL) {
+      console.log('⚡ Client cache hit for unified agents');
+      return cached.data;
+    }
+    
     console.log('📋 Fetching agents from unified system');
     
     // Build query string
@@ -109,11 +134,18 @@ export async function getAllUnifiedAgents(filters?: {
     const result = await response.json();
     
     if (result.success) {
-      console.log(`✅ Fetched ${result.agents.length} agents from unified system`);
-      return {
+      // ✅ PERFORMANS İYİLEŞTİRMESİ: Cache'e kaydet
+      const responseData = {
         success: true,
         agents: result.agents
       };
+      clientCache.set(cacheKey, { 
+        data: responseData, 
+        timestamp: Date.now() 
+      });
+      
+      console.log(`✅ Fetched ${result.agents.length} agents from unified system`);
+      return responseData;
     } else {
       return {
         success: false,

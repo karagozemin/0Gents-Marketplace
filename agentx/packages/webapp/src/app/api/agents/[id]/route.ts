@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UnifiedAgent } from '../route';
 
+// ✅ PERFORMANS İYİLEŞTİRMESİ: Memory cache for individual agent queries
+const agentCache = new Map<string, { agent: UnifiedAgent; timestamp: number }>();
+const CACHE_TTL = 30 * 1000; // 30 seconds cache
+
 // Import the unified agents storage from parent route
 // In production, this would be a database query
 let unifiedAgents: UnifiedAgent[] = [];
@@ -28,8 +32,45 @@ export async function GET(
     
     console.log(`🔍 Looking for agent: ${agentId}`);
     
-    // In development, we'll fetch from the main endpoint
-    // In production, this would be a direct database query
+    // ✅ PERFORMANS İYİLEŞTİRMESİ: Cache kontrolü
+    const cached = agentCache.get(agentId);
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+      console.log(`⚡ Cache hit for agent: ${agentId}`);
+      cached.agent.views = (cached.agent.views || 0) + 1;
+      return NextResponse.json({ 
+        success: true, 
+        agent: cached.agent 
+      });
+    }
+    
+    // ✅ ÇÖZÜM: Direkt agent storage'dan bul, tüm listeyi fetch etme
+    try {
+      // Import the unified agents storage from parent route
+      const parentModule = await import('../route');
+      const agents = (parentModule as any).unifiedAgents || [];
+      
+      const agent = agents.find((a: UnifiedAgent) => a.id === agentId);
+      
+      if (agent) {
+        // ✅ Cache'e kaydet
+        agentCache.set(agentId, { agent, timestamp: Date.now() });
+        
+        console.log(`✅ Agent found via direct access: ${agent.name}`);
+        
+        // Increment view count
+        agent.views = (agent.views || 0) + 1;
+        
+        return NextResponse.json({ 
+          success: true, 
+          agent 
+        });
+      }
+    } catch (directAccessError) {
+      console.log('Direct access failed, using API fallback');
+    }
+    
+    // ✅ FALLBACK: Eğer direkt access başarısızsa, eski yöntemi kullan ama optimize et
+    console.log('🔄 Using API fallback for agent lookup');
     const response = await fetch(`${request.nextUrl.origin}/api/agents`);
     const data = await response.json();
     
@@ -51,7 +92,10 @@ export async function GET(
       }, { status: 404 });
     }
     
-    console.log(`✅ Agent found: ${agent.name}`);
+    // ✅ Cache'e kaydet
+    agentCache.set(agentId, { agent, timestamp: Date.now() });
+    
+    console.log(`✅ Agent found via API fallback: ${agent.name}`);
     
     // Increment view count
     agent.views = (agent.views || 0) + 1;
