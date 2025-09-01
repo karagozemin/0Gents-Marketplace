@@ -27,7 +27,7 @@ export function Footer() {
               <Link href="/create" className="block text-sm text-gray-400 hover:text-purple-300 transition-colors">
                 Create Agent
               </Link>
-              <Link href="/trending" className="block text-sm text-gray-400 hover:text-purple-300 transition-colors">
+              <Link href="" className="block text-sm text-gray-400 hover:text-purple-300 transition-colors">
                 Trending
               </Link>
             </div>
