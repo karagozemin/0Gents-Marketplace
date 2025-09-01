@@ -89,29 +89,38 @@ export default function HomePage() {
       try {
         const unifiedResult = await getAllUnifiedAgents({ active: true });
         if (unifiedResult.success && unifiedResult.agents) {
-          const unifiedAgents = unifiedResult.agents.map(agent => ({
-            id: agent.id,
-            name: agent.name,
-            description: agent.description,
-            image: agent.image,
-            category: agent.category,
-            owner: `${agent.creator?.slice(0, 6)}...${agent.creator?.slice(-4)}`,
-            priceEth: parseFloat(agent.price),
-            listingId: agent.listingId, // ✅ Gerçek marketplace listing ID
-            tokenId: agent.tokenId,
-            agentContractAddress: agent.agentContractAddress,
-            creator: agent.creator,
-            trending: agent.trending,
-            likes: agent.likes || 0,
-            views: agent.views || 0,
-            history: [
-              {
-                activity: "Created on 0G Network",
-                date: agent.createdAt,
-                priceEth: parseFloat(agent.price)
-              }
-            ]
-          }));
+          const unifiedAgents = unifiedResult.agents.map(agent => {
+            console.log('🔍 DEBUG: Agent from unified system:', {
+              name: agent.name,
+              listingId: agent.listingId,
+              listingIdType: typeof agent.listingId,
+              price: agent.price,
+              priceType: typeof agent.price
+            });
+            return {
+              id: agent.id,
+              name: agent.name,
+              description: agent.description,
+              image: agent.image,
+              category: agent.category,
+              owner: `${agent.creator?.slice(0, 6)}...${agent.creator?.slice(-4)}`,
+              priceEth: parseFloat(agent.price || "0"),
+              listingId: agent.listingId, // ✅ Gerçek marketplace listing ID
+              tokenId: agent.tokenId,
+              agentContractAddress: agent.agentContractAddress,
+              creator: agent.creator,
+              trending: agent.trending,
+              likes: agent.likes || 0,
+              views: agent.views || 0,
+              history: [
+                {
+                  activity: "Created on 0G Network",
+                  date: agent.createdAt,
+                  priceEth: parseFloat(agent.price || "0")
+                }
+              ]
+            };
+          });
           agents.push(...unifiedAgents);
           console.log(`🎯 Loaded ${unifiedAgents.length} agents from unified system`);
         }

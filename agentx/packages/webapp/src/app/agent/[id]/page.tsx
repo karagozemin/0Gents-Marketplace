@@ -183,11 +183,21 @@ export default function AgentDetail() {
     try {
       console.log("💰 Purchasing NFT from marketplace...");
       
-      // Use real listingId from agent data
-      const listingId = agent.listingId || agent.id; // Use real listing ID or fallback
-      const price = parseEther(agent.priceEth.toString());
+      // ✅ FIX: Use real listingId from agent data
+      console.log("🔍 DEBUG: agent.listingId:", agent.listingId, "type:", typeof agent.listingId);
+      console.log("🔍 DEBUG: agent.price:", agent.price, "type:", typeof agent.price);
       
-      console.log(`🛒 Buying listing ${listingId} for ${agent.priceEth} 0G`);
+      if (!agent.listingId || agent.listingId <= 0) {
+        alert("This agent is not listed on the marketplace");
+        setIsBuying(false);
+        return;
+      }
+      
+      const listingId = agent.listingId;
+      const priceValue = agent.price || agent.priceEth || "0";
+      const price = parseEther(priceValue.toString());
+      
+      console.log(`🛒 Buying listing ${listingId} for ${priceValue} 0G`);
       
       await writeContract({
         address: MARKETPLACE_ADDRESS as `0x${string}`,

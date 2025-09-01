@@ -66,6 +66,14 @@ export function AgentCard({
       console.log("🔍 DEBUG: priceEth:", priceEth, "type:", typeof priceEth);
       console.log("🔍 DEBUG: MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
       
+      // ✅ FIX: priceEth validation
+      if (!priceEth || isNaN(priceEth)) {
+        console.error("❌ Invalid priceEth:", priceEth);
+        alert("Invalid price for this NFT");
+        setIsBuying(false);
+        return;
+      }
+      
       // ✅ FIX: Marketplace'de listing var mı kontrol et
       try {
         const listingResponse = await fetch('https://evmrpc-testnet.0g.ai/', {
@@ -76,7 +84,7 @@ export function AgentCard({
             method: 'eth_call',
             params: [{
               to: MARKETPLACE_ADDRESS,
-              data: '0x3f26479e' + listingId.toString(16).padStart(64, '0') // listings(uint256)
+              data: '0x3f26479e' + (listingId || 0).toString(16).padStart(64, '0') // listings(uint256)
             }, 'latest'],
             id: 1
           })
@@ -100,7 +108,7 @@ export function AgentCard({
         abi: MARKETPLACE_ABI,
         functionName: "buy",
         args: [BigInt(listingId)],
-        value: parseEther(priceEth.toString()),
+        value: parseEther(priceEth.toString() || "0"),
         gas: BigInt(500000), // 0G Network için yeterli gas
       });
     } catch (error: any) {
