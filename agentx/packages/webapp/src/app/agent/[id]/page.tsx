@@ -27,10 +27,11 @@ import { mockAgents } from "@/lib/mock";
 import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
 import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
 import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
-import { getUnifiedAgentById } from "@/lib/unifiedAgents";
+import { getUnifiedAgentById, clearUnifiedAgentsCache } from "@/lib/unifiedAgents";
 import { callCompute, type ChatMessage, type ComputeRequest } from "@/lib/compute";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import Confetti from "react-confetti";
 
 export default function AgentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,8 @@ export default function AgentDetail() {
   const [computeStats, setComputeStats] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Buy functionality
   const { writeContract, data: buyHash, error: buyError } = useWriteContract();
@@ -296,7 +299,12 @@ This could mean the listing was never properly created on the blockchain.`;
         errorMessage = `Transaction failed: ${error.message}`;
       }
       
-      alert(`❌ ${errorMessage}`);
+      alert(`❌ ${errorMessage}
+
+💡 If the problem persists:
+• Refresh the page and try again
+• Check your wallet connection
+• Ensure you have enough 0G tokens`);
       setIsBuying(false);
     }
   };
@@ -309,8 +317,15 @@ This could mean the listing was never properly created on the blockchain.`;
       // ✅ ÇÖZÜM: Agent'ı marketplace'ten kaldır (inactive yap)
       markAgentAsSold();
       
-      alert("🎉 NFT purchased successfully! Check your wallet.");
+      // ✅ Kutlama başlat
+      setShowCelebration(true);
+      setShowSuccessModal(true);
       setIsBuying(false);
+      
+      // 5 saniye sonra confetti'yi durdur
+      setTimeout(() => {
+        setShowCelebration(false);
+      }, 5000);
     }
   }, [isBuySuccess, buyHash]);
 
@@ -337,8 +352,11 @@ This could mean the listing was never properly created on the blockchain.`;
       const result = await response.json();
       if (result.success) {
         console.log("✅ Agent marked as sold successfully");
+        // ✅ Cache'i temizle ki refresh'te gözükmesin
+        clearUnifiedAgentsCache();
+        console.log("🧹 Cache cleared after purchase");
         // Update local state
-        setAgent(prev => ({ ...prev, active: false, currentOwner: address }));
+        setAgent((prev: any) => ({ ...prev, active: false, currentOwner: address }));
       } else {
         console.error("❌ Failed to mark agent as sold:", result.error);
       }
@@ -788,6 +806,52 @@ This could mean the listing was never properly created on the blockchain.`;
         </div>
       </div>
       <Footer />
+      
+      {/* ✅ Confetti Animation */}
+      {showCelebration && (
+        <Confetti
+          width={typeof window !== 'undefined' ? window.innerWidth : 300}
+          height={typeof window !== 'undefined' ? window.innerHeight : 200}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.3}
+        />
+      )}
+      
+      {/* ✅ Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 border border-purple-500/30 rounded-3xl p-8 max-w-md mx-4 text-center">
+            <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-white mb-4">Purchase Successful! 🎉</h2>
+            <p className="text-gray-300 mb-6">
+              Congratulations! You now own <span className="text-purple-400 font-semibold">{agent?.name}</span>.
+              The NFT has been transferred to your wallet.
+            </p>
+            
+            <div className="space-y-3">
+              <Button 
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full gradient-0g hover:opacity-90 text-white font-semibold"
+              >
+                Awesome! 🚀
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => window.open(`https://scan-testnet.0g.ai/tx/${buyHash}`, '_blank')}
+                className="w-full text-purple-400 hover:text-purple-300"
+              >
+                View Transaction
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

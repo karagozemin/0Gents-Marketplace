@@ -2,7 +2,6 @@
 import { AgentCard } from "@/components/AgentCard";
 import { AgentWideCard } from "@/components/AgentWideCard";
 import { mockAgents } from "@/lib/mock";
-
 import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -204,11 +203,9 @@ export default function HomePage() {
   useEffect(() => {
     setMounted(true);
     
-          // Combine: blockchain agents first, then mock agents
-      const combined = [...blockchainAgents, ...mockAgents];
-      
-      setAllAgents(combined);
-      console.log(`🌐 Total agents: ${blockchainAgents.length} blockchain + ${mockAgents.length} mock = ${combined.length}`);
+          // ✅ Featured: Sadece gerçek agents, Trending: Mock agents de dahil
+      setAllAgents(blockchainAgents);
+      console.log(`🌐 Featured agents: ${blockchainAgents.length} real agents (no mock in featured)`);
   }, [blockchainAgents]);
 
   if (!mounted) {
@@ -282,11 +279,14 @@ export default function HomePage() {
           </div>
         </div>
         <div className="flex gap-6 overflow-x-auto pb-4 snap-x scrollbar-hide">
-          {allAgents.slice(0, 6).map((agent) => (
-            <div key={agent.id} className="snap-start">
-              <AgentWideCard {...agent} tag="Featured" />
-            </div>
-          ))}
+          {allAgents.slice(0, 6).map((agent) => {
+            console.log('🔍 Featured agent:', { id: agent.id, name: agent.name });
+            return (
+              <div key={agent.id} className="snap-start">
+                <AgentWideCard {...agent} tag="Featured" />
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -310,7 +310,8 @@ export default function HomePage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {allAgents.map((agent) => (
+          {/* ✅ Trending: Gerçek agents + mock agents */}
+          {[...allAgents, ...mockAgents].map((agent) => (
             <AgentCard key={agent.id} {...agent} />
           ))}
         </div>

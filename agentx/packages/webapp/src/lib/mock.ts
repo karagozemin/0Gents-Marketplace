@@ -10,68 +10,7 @@ export type AgentItem = {
 };
 
 export const mockAgents: AgentItem[] = [
-  // Cross-browser test agents (work in any browser)
-  {
-    id: "1755780653835",
-    name: "Created Test Agent",
-    owner: "0xa9b8305C821dC2221dfDEcaacCa8AF5abB1D1788",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-    priceEth: 0.075,
-    description: "Cross-browser test agent created via blockchain",
-    category: "General",
-    history: [
-      { activity: "Created by user", date: "2025-08-21", priceEth: 0.005 }
-    ]
-  },
-  {
-    id: "1755780468531",
-    name: "Another Test Agent", 
-    owner: "0xa9b8305C821dC2221dfDEcaacCa8AF5abB1D1788",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-    priceEth: 0.075,
-    description: "Another cross-browser test agent",
-    category: "General", 
-    history: [
-      { activity: "Created by user", date: "2025-08-21", priceEth: 0.005 }
-    ]
-  },
-  {
-    id: "1755780976768",
-    name: "User Created Agent",
-    owner: "0xa9b8305C821dC2221dfDEcaacCa8AF5abB1D1788", 
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-    priceEth: 0.075,
-    description: "Recently created agent by user",
-    category: "General",
-    history: [
-      { activity: "Created by user", date: "2025-08-21", priceEth: 0.005 }
-    ]
-  },
-  {
-    id: "1755781297900",
-    name: "New test",
-    owner: "0x267C...99D7",
-    image: "https://cdn.everythingrf.com/live/1574854414411_637104512178775834.jpeg", 
-    priceEth: 0.0321,
-    description: "0g",
-    category: "Art",
-    history: [
-      { activity: "Created by user", date: "2025-08-21", priceEth: 0.005 }
-    ]
-  },
-  {
-    id: "1",
-    name: "Research Agent",
-    owner: "0x8a...52a",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-    priceEth: 0.02,
-    description: "Summarizes academic papers and extracts key insights.",
-    category: "Research",
-    history: [
-      { activity: "Minted", date: "2025-08-17", priceEth: 0.01 },
-      { activity: "Listed", date: "2025-08-18", priceEth: 0.02 },
-    ],
-  },
+
   {
     id: "2",
     name: "Trading Scout",

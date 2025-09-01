@@ -423,7 +423,23 @@ export default function CreatePage() {
         });
       }
       
-      alert(`Failed to create agent: ${errorMessage}`);
+      // ✅ User-friendly error message
+      let userFriendlyMessage = "Creation failed. Please refresh the page and try again.";
+      
+      if (errorMessage.includes("User rejected") || errorMessage.includes("user rejected")) {
+        userFriendlyMessage = "Transaction was cancelled. You can try again anytime.";
+      } else if (errorMessage.includes("insufficient funds")) {
+        userFriendlyMessage = "Insufficient funds. Please add more 0G tokens to your wallet and try again.";
+      } else if (errorMessage.includes("network") || errorMessage.includes("connection")) {
+        userFriendlyMessage = "Network error. Please refresh the page and try again.";
+      }
+      
+      alert(`❌ ${userFriendlyMessage}
+      
+💡 If the problem persists:
+• Refresh the page and try again
+• Check your wallet connection
+• Ensure you have enough 0G tokens`);
       setIsCreating(false);
       setTimeout(() => setShowProgressModal(false), 3000);
     }
