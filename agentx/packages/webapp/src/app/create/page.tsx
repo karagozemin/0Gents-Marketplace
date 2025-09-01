@@ -698,9 +698,9 @@ export default function CreatePage() {
     updateModalProgress('marketplace', 'in_progress');
     console.log("🎉 AI Agent NFT successfully minted!");
     
-    const timestamp = Date.now();
-    const tokenId = timestamp.toString();
-    setMintedTokenId(tokenId);
+    // ✅ GERÇEK TOKEN ID = 1 (AgentNFT contract'ında _nextTokenId = 1)
+    const realTokenId = "1"; // AgentNFT her zaman token ID 1 ile mint ediyor
+    setMintedTokenId(realTokenId);
     
     // Reset retry count
     setMintRetryAttempts(0);
@@ -708,12 +708,13 @@ export default function CreatePage() {
     console.log("🚨 MINT SUCCESS - setTimeout başlatılıyor...");
     console.log("🔍 agentContractAddress:", agentContractAddress);
     console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
-    console.log("🔍 tokenId (timestamp):", tokenId);
+    console.log("🔍 GERÇEK TOKEN ID:", realTokenId);
+    console.log("🚨 TOKEN ID DEĞİŞTİRİLDİ: timestamp yerine 1 kullanılıyor!");
     
-    // List on marketplace after mint - TOKEN ID PARAMETRE OLARAK GEÇ!
+    // List on marketplace after mint - GERÇEK TOKEN ID GEÇ!
     setTimeout(async () => {
       console.log("🚨 TIMEOUT ÇALIŞTI - handleMarketplaceListing çağrılacak!");
-      await handleMarketplaceListing(tokenId);
+      await handleMarketplaceListing(realTokenId);
     }, 2000);
   };
 
@@ -779,6 +780,13 @@ export default function CreatePage() {
       updateProgress("🔄 Step 2: Creating marketplace listing (MetaMask WILL open again)...");
       console.log("🏪 Requesting marketplace listing transaction...");
       
+      console.log("🔍 LIST TRANSACTION PARAMETRELERI:");
+      console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
+      console.log("🔍 agentContractAddress:", agentContractAddress);
+      console.log("🔍 finalTokenId:", finalTokenId);
+      console.log("🔍 price (ETH):", price);
+      console.log("🔍 price (Wei):", parseEther(price).toString());
+      
       const listingHash = await writeListingAsync({
         address: MARKETPLACE_ADDRESS as `0x${string}`,
         abi: MARKETPLACE_ABI,
@@ -788,8 +796,10 @@ export default function CreatePage() {
           BigInt(finalTokenId),
           parseEther(price)
         ],
-        gas: BigInt(300000),
+        gas: BigInt(500000), // Gas artırdım
       });
+      
+      console.log("🔍 LIST TRANSACTION HASH:", listingHash);
 
       console.log("🎉 REAL marketplace listing created:", listingHash);
       updateProgress("✅ REAL marketplace listing created successfully!");
@@ -827,7 +837,9 @@ Saving agent without marketplace listing...`);
   const getRealListingIdFromTransaction = async (txHash: string) => {
     try {
       updateProgress("🔍 Getting real listing ID from blockchain...");
+      console.log("🚨 getRealListingIdFromTransaction BAŞLADI!");
       console.log("🔍 Extracting listing ID from transaction:", txHash);
+      console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
       
       // Wait for transaction to be mined
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -846,6 +858,8 @@ Saving agent without marketplace listing...`);
       
       const receiptResult = await response.json();
       console.log("📋 Transaction receipt:", receiptResult);
+      console.log("🔍 Receipt result success:", !!receiptResult.result);
+      console.log("🔍 Receipt logs:", receiptResult.result?.logs?.length || 0);
       
       let realListingId = 0;
       
@@ -854,17 +868,33 @@ Saving agent without marketplace listing...`);
           log.address?.toLowerCase() === MARKETPLACE_ADDRESS?.toLowerCase()
         );
         
+        console.log("🔍 Total logs:", receiptResult.result.logs.length);
+        console.log("🔍 Marketplace logs found:", marketplaceLogs.length);
+        console.log("🔍 First marketplace log:", marketplaceLogs[0]);
+        
         if (marketplaceLogs.length > 0 && marketplaceLogs[0].topics?.[1]) {
           realListingId = parseInt(marketplaceLogs[0].topics[1], 16);
           console.log(`🎯 REAL listing ID extracted: ${realListingId}`);
           updateProgress(`✅ Real blockchain listing ID: ${realListingId}`);
+        } else {
+          console.log("❌ No marketplace logs or missing topics[1]");
         }
       }
       
       if (realListingId === 0) {
+        console.log("❌ REAL LISTING ID ALINAMADI - FALLBACK KULLANILIYOR!");
+        console.log("❌ Bu demek oluyor ki:");
+        console.log("❌ 1. Transaction receipt alınamadı");
+        console.log("❌ 2. Marketplace logs bulunamadı");
+        console.log("❌ 3. Event parsing başarısız");
+        
         // Fallback listing ID
         realListingId = Math.floor(Date.now() / 1000) % 10000 + 1;
         console.log(`🔄 Using fallback listing ID: ${realListingId}`);
+        console.log("🚨 BU YÜZDEN BUY İŞLEMİ BAŞARISIZ!");
+      } else {
+        console.log("✅ GERÇEK LISTING ID BAŞARILI!");
+        console.log("✅ Bu buy işlemi çalışmalı!");
       }
       
       // Store real listing ID
