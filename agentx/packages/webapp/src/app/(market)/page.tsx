@@ -176,19 +176,9 @@ export default function HomePage() {
         }
       }
       
-      // 2. Load from localStorage (fallback, own creations)
-      try {
-        const createdAgents = getCreatedAgents();
-        const localAgents = createdAgents.map(transformToMockAgent);
-        // Sadece server'da olmayan local agent'ları ekle
-        const newLocalAgents = localAgents.filter(local => 
-          !agents.some(server => server.name === local.name)
-        );
-        agents.push(...newLocalAgents);
-        console.log(`📱 Loaded ${newLocalAgents.length} unique local agents (${localAgents.length} total local)`);
-      } catch (error) {
-        console.error('❌ Failed to load local agents:', error);
-      }
+      // 2. ✅ LOCAL AGENTS DEVRE DIŞI - Sadece server/unified system kullan
+      // Local agents artık gösterilmiyor, duplicate önlemek için
+      console.log('📱 Local agents disabled - only showing unified system agents');
       
       // 3. Load from Factory contract (slow, blockchain creations)
       try {

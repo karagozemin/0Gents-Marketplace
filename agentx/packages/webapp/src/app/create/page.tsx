@@ -957,12 +957,17 @@ Saving agent without marketplace listing...`);
       createdAt: new Date().toISOString()
     };
     
-    // ✅ FIX: Sadece local'a kaydet (unified system ana kaynak olacak)
-    saveCreatedAgent(newAgent);
+    // ✅ FIX: Sadece server'a kaydet (local'a kaydetme, duplicate önlemek için)
     setCreatedAgent(newAgent);
     
-    // ✅ DEVRE DIŞI: GlobalAgents'a kaydetme (duplicate önlemek için)
-    // saveAgentToServer(newAgent);
+    // ✅ SERVER'A KAYDET: Tüm kullanıcılar görebilsin!
+    saveAgentToServer(newAgent).then(success => {
+      if (success) {
+        console.log('🌐 Agent successfully saved to global server storage');
+      } else {
+        console.error('❌ Failed to save agent to global storage');
+      }
+    });
 
     // Server'a marketplace listing kaydet
     // ✅ GET REAL LISTING ID FROM BLOCKCHAIN
