@@ -61,24 +61,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get real listing ID from blockchain
+    // ❌ PROBLEM IDENTIFIED: nextListingId is for FUTURE listings, not current ones
+    // We need to use a different approach since we don't actually create blockchain listings
     let realListingId = 0;
     try {
-      // Connect to 0G Network
-      const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
-      const provider = new ethers.JsonRpcProvider(OG_RPC_URL);
-      const marketplaceContract = new ethers.Contract(MARKETPLACE_ADDRESS!, MARKETPLACE_ABI, provider);
-      
-      // Get next listing ID (this will be the ID of our listing)
-      const nextListingId = await marketplaceContract.nextListingId();
-      realListingId = Number(nextListingId); // ✅ FIX: nextListingId is the ID that will be assigned to our listing
-      
-      console.log(`🔍 Real marketplace listing ID: ${realListingId}`);
-      
-    } catch (blockchainError) {
-      console.error('❌ Failed to get real listing ID:', blockchainError);
-      // Use fallback ID
+      // For demo purposes, we'll use a sequential ID based on existing listings
+      // In production, this would be handled by actual marketplace contract transactions
       realListingId = marketplaceListings.length + 1;
+      
+      console.log(`🔍 Assigning demo listing ID: ${realListingId}`);
+      console.log(`⚠️  NOTE: This is a demo listing ID, not from actual marketplace contract`);
+      
+    } catch (error) {
+      console.error('❌ Failed to generate listing ID:', error);
+      realListingId = Date.now() % 10000; // Fallback to timestamp-based ID
     }
 
     // Create listing object

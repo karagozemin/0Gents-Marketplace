@@ -181,58 +181,146 @@ export default function AgentDetail() {
 
     setIsBuying(true);
     try {
-      console.log("💰 Purchasing NFT from marketplace...");
+      console.log("💰 Starting NFT purchase process...");
       
-      // ✅ FIX: Use real listingId from agent data
+      // ✅ COMPREHENSIVE VALIDATION
       console.log("🔍 DEBUG: agent.listingId:", agent.listingId, "type:", typeof agent.listingId);
       console.log("🔍 DEBUG: agent.price:", agent.price, "type:", typeof agent.price);
+      console.log("🔍 DEBUG: agent.priceEth:", agent.priceEth, "type:", typeof agent.priceEth);
       
       if (!agent.listingId || agent.listingId <= 0) {
-        alert("This agent is not listed on the marketplace");
+        alert("⚠️ This agent is not properly listed on the marketplace. Please contact the creator to list it properly.");
         setIsBuying(false);
         return;
       }
       
+      // ✅ STEP 1: Validate listing exists on blockchain
+      console.log("🔍 Step 1: Validating listing on blockchain...");
+      try {
+        const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
+        const response = await fetch(OG_RPC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_call',
+            params: [{
+              to: MARKETPLACE_ADDRESS,
+              data: '0x3f26479e' + agent.listingId.toString(16).padStart(64, '0') // listings(uint256)
+            }, 'latest'],
+            id: 1
+          })
+        });
+        
+        const result = await response.json();
+        console.log("🔍 Blockchain listing check result:", result);
+        
+        if (!result.result || result.result === '0x' || result.result === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+          throw new Error("Listing not found on blockchain");
+        }
+        
+        // Decode the result to check if listing is active
+        const decoded = result.result;
+        console.log("🔍 Raw listing data:", decoded);
+        
+        // Check if listing is active (last boolean in the struct)
+        const isActive = decoded.slice(-64, -62) === '01'; // Last byte should be 01 for true
+        if (!isActive) {
+          throw new Error("Listing is not active");
+        }
+        
+        console.log("✅ Listing validation passed");
+        
+      } catch (validationError) {
+        console.error("❌ Listing validation failed:", validationError);
+        alert(`❌ This listing is not available on the marketplace. 
+
+Possible reasons:
+• The agent was never properly listed
+• The listing has been cancelled or sold
+• The listing ID is incorrect
+
+Please contact the creator or try refreshing the page.`);
+        setIsBuying(false);
+        return;
+      }
+      
+      // ✅ STEP 2: Prepare transaction parameters
       const listingId = agent.listingId;
       const priceValue = agent.price || agent.priceEth || "0";
+      
+      // Ensure price is valid
+      if (!priceValue || isNaN(parseFloat(priceValue))) {
+        alert("❌ Invalid price for this NFT. Please refresh the page and try again.");
+        setIsBuying(false);
+        return;
+      }
+      
       const price = parseEther(priceValue.toString());
       
-      console.log(`🛒 Buying listing ${listingId} for ${priceValue} 0G`);
+      console.log(`🛒 Step 2: Executing purchase - Listing ${listingId} for ${priceValue} 0G`);
+      console.log(`🔍 Price in wei:`, price.toString());
       
+      // ✅ STEP 3: Execute transaction with proper error handling
       await writeContract({
         address: MARKETPLACE_ADDRESS as `0x${string}`,
         abi: MARKETPLACE_ABI,
         functionName: "buy",
         args: [BigInt(listingId)],
-        value: price, // Full price
-        gas: BigInt(500000), // 0G Network için yeterli gas
+        value: price,
+        gas: BigInt(600000), // Increased gas limit for 0G Network
       });
 
-      console.log("✅ Purchase transaction submitted");
+      console.log("✅ Purchase transaction submitted successfully");
       
     } catch (error: any) {
       console.error("❌ Purchase failed:", error);
       
-      // Gelişmiş error handling
+      // ✅ COMPREHENSIVE ERROR HANDLING
       let errorMessage = "Purchase failed. Please try again.";
+      let showDebugInfo = false;
       
       if (error?.message?.includes("out of gas") || error?.message?.includes("gas")) {
-        errorMessage = "Transaction failed due to insufficient gas. The network may be congested. Please try again.";
+        errorMessage = "❌ Transaction failed due to insufficient gas. The network may be congested. Please try again with higher gas limit.";
       } else if (error?.message?.includes("NOT_ACTIVE")) {
-        errorMessage = "This NFT is no longer available for purchase.";
+        errorMessage = "❌ This NFT is no longer available for purchase. It may have been sold or delisted.";
       } else if (error?.message?.includes("BAD_PRICE")) {
-        errorMessage = "Price mismatch. The NFT price may have changed.";
+        errorMessage = "❌ Price mismatch. The NFT price may have changed. Please refresh the page and try again.";
       } else if (error?.message?.includes("User rejected") || error?.code === 4001) {
-        errorMessage = "Transaction was cancelled by user.";
+        errorMessage = "❌ Transaction was cancelled by user.";
       } else if (error?.message?.includes("network") || error?.message?.includes("timeout")) {
-        errorMessage = "Network timeout. Please check your connection and try again.";
+        errorMessage = "❌ Network timeout. Please check your connection and try again.";
       } else if (error?.message?.includes("insufficient funds")) {
-        errorMessage = "Insufficient funds in your wallet.";
+        errorMessage = "❌ Insufficient funds in your wallet. Please add more 0G tokens.";
+      } else if (error?.message?.includes("execution reverted")) {
+        errorMessage = "❌ Transaction reverted. This listing may not exist on the marketplace.";
+        showDebugInfo = true;
       } else if (error instanceof Error) {
-        errorMessage = `Purchase failed: ${error.message}`;
+        errorMessage = `❌ Purchase failed: ${error.message}`;
+        showDebugInfo = true;
       }
       
-      alert(errorMessage);
+      // Show detailed error with debug information
+      if (showDebugInfo) {
+        const debugInfo = `
+
+🔍 DEBUG INFO:
+• Listing ID: ${agent.listingId}
+• Price: ${agent.price || agent.priceEth} 0G
+• Marketplace: ${MARKETPLACE_ADDRESS}
+• Agent: ${agent.name}
+
+💡 POSSIBLE SOLUTIONS:
+1. This agent may not be properly listed on the blockchain
+2. Try refreshing the page and checking again
+3. Contact the agent creator
+4. Visit /debug/marketplace to check listing status`;
+
+        alert(errorMessage + debugInfo);
+      } else {
+        alert(errorMessage);
+      }
+      
       setIsBuying(false);
     }
   };
