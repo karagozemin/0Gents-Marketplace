@@ -119,9 +119,9 @@ export default function HomePage() {
         console.error('❌ Failed to load from unified system:', error);
       }
       
-      // 🔄 FALLBACK: Legacy sistemlerden yükle (backward compatibility)
+      // ✅ FIX: Sadece unified system boşsa fallback yap (duplicate prevention)
       if (agents.length === 0) {
-        console.log('🔄 Falling back to legacy systems...');
+        console.log('🔄 No unified agents found, falling back to legacy systems...');
         
         // 1. Server'dan marketplace listing'leri yükle (fallback)
         try {

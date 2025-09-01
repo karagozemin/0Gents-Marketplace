@@ -42,40 +42,69 @@ export default function CreatePage() {
   // ✅ RPC HATA ÇÖZÜMÜ: Retry states (create flow'unu bozmadan)
   const [mintRetryAttempts, setMintRetryAttempts] = useState(0);
   const [listRetryAttempts, setListRetryAttempts] = useState(0);
+  const [circuitBreakerRetryCount, setCircuitBreakerRetryCount] = useState(0);
   const [isManualVerifying, setIsManualVerifying] = useState(false);
   const MAX_RETRY_ATTEMPTS = 3;
+  const MAX_CIRCUIT_BREAKER_RETRIES = 2;
   
-  // Progress Steps Configuration
-  const modalSteps = [
+  // ✅ ENHANCED: Progress Steps Configuration with new features - proper typing
+  interface ProgressStepLocal {
+    id: string;
+    title: string;
+    description: string;
+    status: 'pending' | 'in_progress' | 'completed' | 'error' | 'retrying';
+    estimatedTime?: string;
+    txHash?: string;
+    explorerLink?: string;
+    retryCount?: number;
+    maxRetries?: number;
+  }
+
+  const modalSteps: ProgressStepLocal[] = [
     {
       id: 'preparing',
       title: 'Preparing Your Asset',
       description: 'Your digital asset is being securely packaged with metadata for marketplace visibility',
-      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
+      status: 'pending',
+      estimatedTime: '30s'
     },
     {
       id: 'blockchain',
       title: 'Blockchain Verification',
       description: 'Confirming transaction authenticity through distributed network consensus',
-      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
+      status: 'pending',
+      estimatedTime: '45s'
     },
     {
       id: 'contract',
       title: 'Smart Contract Deployment',
       description: 'Creating agent contract on 0G Network',
-      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
+      status: 'pending',
+      estimatedTime: '60s',
+      txHash: '',
+      explorerLink: ''
     },
     {
       id: 'minting',
       title: 'NFT Minting',
       description: 'Minting your AI Agent NFT',
-      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
+      status: 'pending',
+      estimatedTime: '45s',
+      txHash: '',
+      explorerLink: '',
+      retryCount: 0,
+      maxRetries: 3
     },
     {
       id: 'marketplace',
       title: 'Marketplace Integration',
       description: 'Finalizing visibility settings and making your asset discoverable to potential buyers',
-      status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'error'
+      status: 'pending',
+      estimatedTime: '30s',
+      txHash: '',
+      explorerLink: '',
+      retryCount: 0,
+      maxRetries: 3
     }
   ];
   
@@ -169,6 +198,12 @@ export default function CreatePage() {
       
       setIsManualVerifying(true);
       updateProgress(`🔍 Verifying marketplace listing manually (attempt ${listRetryAttempts + 1})...`);
+      updateModalProgress('marketplace', 'retrying', {
+        txHash: listHash,
+        explorerLink: `https://chainscan-newton.0g.ai/tx/${listHash}`,
+        retryCount: listRetryAttempts + 1,
+        description: `Verifying listing transaction manually (attempt ${listRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`
+      });
       
       setTimeout(async () => {
         const verified = await verifyTransactionManually(listHash, 'list');
@@ -191,9 +226,13 @@ export default function CreatePage() {
     }
   }, [isListSuccess, listHash, createdAgent, listRetryAttempts, isListLoading]);
 
-  // ✅ Separate listing success handler
+  // ✅ ENHANCED: Separate listing success handler with transaction details
   const handleListingSuccess = () => {
     updateProgress("🎉 Marketplace listing successful! Finalizing agent creation...");
+    updateModalProgress('marketplace', 'completed', {
+      txHash: listHash || '',
+      explorerLink: listHash ? `https://chainscan-newton.0g.ai/tx/${listHash}` : ''
+    });
     console.log("🎉 Agent successfully listed on marketplace!");
     
     // Reset retry count
@@ -213,10 +252,28 @@ export default function CreatePage() {
     setProgressSteps(prev => [...prev, step]);
   };
 
-  // Update Modal Progress
-  const updateModalProgress = (stepId: string, status: 'in_progress' | 'completed' | 'error') => {
+  // ✅ ENHANCED: Update Modal Progress with new features - proper typing
+  const updateModalProgress = (
+    stepId: string, 
+    status: 'in_progress' | 'completed' | 'error' | 'retrying',
+    extras?: {
+      txHash?: string;
+      explorerLink?: string;
+      retryCount?: number;
+      maxRetries?: number;
+      description?: string;
+    }
+  ) => {
     setSteps(prev => prev.map(step => 
-      step.id === stepId ? { ...step, status } : step
+      step.id === stepId ? { 
+        ...step, 
+        status,
+        ...(extras?.txHash !== undefined && { txHash: extras.txHash }),
+        ...(extras?.explorerLink !== undefined && { explorerLink: extras.explorerLink }),
+        ...(extras?.retryCount !== undefined && { retryCount: extras.retryCount }),
+        ...(extras?.maxRetries !== undefined && { maxRetries: extras.maxRetries }),
+        ...(extras?.description !== undefined && { description: extras.description })
+      } : step
     ));
     
     if (status === 'in_progress') {
@@ -230,6 +287,12 @@ export default function CreatePage() {
   };
 
   const handleCreate = async () => {
+    // ✅ DOUBLE-CLICK PROTECTION: Prevent duplicate creation
+    if (isCreating) {
+      console.log("🛡️ Creation already in progress, ignoring duplicate request");
+      return;
+    }
+
     if (!isConnected) {
       alert("Please connect your wallet first");
       return;
@@ -244,9 +307,10 @@ export default function CreatePage() {
     setProgressSteps([]);
     setCurrentStep("");
     
-    // Reset retry counters
+    // ✅ Reset all retry counters
     setMintRetryAttempts(0);
     setListRetryAttempts(0);
+    setCircuitBreakerRetryCount(0);
     
     // Show progress modal
     setShowProgressModal(true);
@@ -337,18 +401,75 @@ export default function CreatePage() {
       });
 
       updateProgress("✅ Step 3: Agent Contract creation submitted - waiting for confirmation...");
-      updateModalProgress('contract', 'completed');
+      updateModalProgress('contract', 'completed', {
+        txHash: createHash || '',
+        explorerLink: createHash ? `https://chainscan-newton.0g.ai/tx/${createHash}` : ''
+      });
       console.log("✅ Step 3: Agent Contract creation submitted");
       
     } catch (error) {
       console.error("Agent creation error:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      
+      // ✅ CIRCUIT BREAKER HANDLING: Check for specific error types
+      if (errorMessage.toLowerCase().includes('circuit breaker is open')) {
+        if (circuitBreakerRetryCount < MAX_CIRCUIT_BREAKER_RETRIES) {
+          console.warn(`🔄 Circuit breaker detected, implementing retry mechanism... (${circuitBreakerRetryCount + 1}/${MAX_CIRCUIT_BREAKER_RETRIES})`);
+          updateProgress(`⚠️ Network congestion detected. Retrying in 30 seconds... (${circuitBreakerRetryCount + 1}/${MAX_CIRCUIT_BREAKER_RETRIES})`);
+          
+          // Update current step to retrying
+          const currentStep = steps.find(s => s.status === 'in_progress');
+          if (currentStep) {
+            updateModalProgress(currentStep.id, 'retrying', {
+              description: `Network congestion detected. Retrying automatically in 30 seconds... (${circuitBreakerRetryCount + 1}/${MAX_CIRCUIT_BREAKER_RETRIES})`,
+              retryCount: circuitBreakerRetryCount + 1,
+              maxRetries: MAX_CIRCUIT_BREAKER_RETRIES
+            });
+          }
+          
+          // Increment retry counter
+          setCircuitBreakerRetryCount(prev => prev + 1);
+          
+          // Retry after 30 seconds
+          setTimeout(() => {
+            console.log('🔄 Retrying agent creation after circuit breaker delay...');
+            updateProgress('🔄 Retrying agent creation...');
+            
+            // Reset form state but keep data
+            setIsCreating(true);
+            
+            // Retry the creation process
+            handleCreate();
+          }, 30000); // 30 seconds delay
+          
+          return; // Don't show error alert, we're retrying
+        } else {
+          // Max retries reached for circuit breaker
+          console.error('❌ Circuit breaker max retries reached');
+          updateProgress(`❌ Network congestion persists after ${MAX_CIRCUIT_BREAKER_RETRIES} attempts. Please try again later.`);
+          
+          const currentStep = steps.find(s => s.status === 'in_progress');
+          if (currentStep) {
+            updateModalProgress(currentStep.id, 'error', {
+              description: `Network congestion persists. Max retries (${MAX_CIRCUIT_BREAKER_RETRIES}) reached. Please try again later.`
+            });
+          }
+          
+          alert(`Network congestion detected. Please try again in a few minutes.`);
+          setIsCreating(false);
+          setTimeout(() => setShowProgressModal(false), 5000);
+          return;
+        }
+      }
+      
       updateProgress(`❌ Failed to create agent: ${errorMessage}`);
       
       // Update current step to error
       const currentStep = steps.find(s => s.status === 'in_progress');
       if (currentStep) {
-        updateModalProgress(currentStep.id, 'error');
+        updateModalProgress(currentStep.id, 'error', {
+          description: `Error: ${errorMessage}`
+        });
       }
       
       alert(`Failed to create agent: ${errorMessage}`);
@@ -585,6 +706,12 @@ export default function CreatePage() {
       
       setIsManualVerifying(true);
       updateProgress(`🔍 Verifying mint transaction manually (attempt ${mintRetryAttempts + 1})...`);
+      updateModalProgress('minting', 'retrying', {
+        txHash: mintHash,
+        explorerLink: `https://chainscan-newton.0g.ai/tx/${mintHash}`,
+        retryCount: mintRetryAttempts + 1,
+        description: `Verifying transaction manually (attempt ${mintRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`
+      });
       
       setTimeout(async () => {
         const verified = await verifyTransactionManually(mintHash, 'mint');
@@ -607,10 +734,13 @@ export default function CreatePage() {
     }
   }, [isMintSuccess, mintHash, createdAgent, agentContractAddress, mintRetryAttempts, isMintLoading]);
 
-  // ✅ Separate mint success handler
+  // ✅ ENHANCED: Separate mint success handler with transaction details
   const handleMintSuccess = () => {
     updateProgress("🎉 NFT minted successfully! Listing on marketplace...");
-    updateModalProgress('minting', 'completed');
+    updateModalProgress('minting', 'completed', {
+      txHash: mintHash || '',
+      explorerLink: mintHash ? `https://chainscan-newton.0g.ai/tx/${mintHash}` : ''
+    });
     updateModalProgress('marketplace', 'in_progress');
     console.log("🎉 AI Agent NFT successfully minted!");
     
@@ -682,18 +812,12 @@ export default function CreatePage() {
       createdAt: new Date().toISOString()
     };
     
-    // Local ve server'a kaydet
+    // ✅ FIX: Sadece local'a kaydet (unified system ana kaynak olacak)
     saveCreatedAgent(newAgent);
     setCreatedAgent(newAgent);
     
-    // Server'a kaydet (cross-user visibility için)
-    saveAgentToServer(newAgent).then(success => {
-      if (success) {
-        console.log('🌐 Agent successfully saved to global server storage');
-      } else {
-        console.error('❌ Failed to save agent to global storage');
-      }
-    });
+    // ✅ DEVRE DIŞI: GlobalAgents'a kaydetme (duplicate önlemek için)
+    // saveAgentToServer(newAgent);
 
     // Server'a marketplace listing kaydet
     saveListingToServer({
@@ -709,21 +833,36 @@ export default function CreatePage() {
     }).then(result => {
       if (result.success) {
         console.log(`🏪 Marketplace listing created with ID: ${result.listingId}`);
+        console.log(`🔍 DEBUG: Listing result:`, result);
+        
+        // ✅ FIX: Ensure listingId is properly set
+        const realListingId = result.listingId || 0;
+        console.log(`🎯 Setting listingId to: ${realListingId}`);
         
         // Update agent with real listing ID
-        newAgent.listingId = result.listingId;
+        newAgent.listingId = realListingId;
         saveCreatedAgent(newAgent);
         
         // 🎯 YENİ: Unified System'e kaydet (gerçek listingId ile)
         const unifiedAgentData = transformCreatedAgentToUnified(
           newAgent, 
           agentContractAddress, 
-          result.listingId
+          realListingId
         );
+        
+        console.log('🔍 DEBUG: Unified agent data:', unifiedAgentData);
+        console.log('🔍 DEBUG: Real listing ID being saved:', realListingId);
         
         saveUnifiedAgent(unifiedAgentData).then(unifiedResult => {
           if (unifiedResult.success) {
             console.log('🎯 Agent successfully saved to unified system:', unifiedResult.agent?.name);
+            console.log('🔍 DEBUG: Unified agent listingId:', unifiedResult.agent?.listingId);
+            console.log('🔍 DEBUG: Unified agent active:', unifiedResult.agent?.active);
+            
+            // ✅ FIX: Verify listing ID is properly set
+            if (!unifiedResult.agent?.listingId || unifiedResult.agent.listingId <= 0) {
+              console.warn('⚠️ WARNING: Unified agent has invalid listingId:', unifiedResult.agent?.listingId);
+            }
           } else {
             console.error('❌ Failed to save to unified system:', unifiedResult.error);
           }
@@ -748,25 +887,9 @@ export default function CreatePage() {
       }
     });
     
-    // Blockchain agent olarak da kaydet (fallback)
-    const blockchainAgent: BlockchainAgent = {
-      tokenId: mintedTokenId || timestamp.toString(),
-      owner: address || "",
-      tokenURI: storageUri,
-      creator: address || "",
-      discoveredAt: new Date().toISOString(),
-      name,
-      description: desc,
-      image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-      category: category || "General",
-      price,
-      social: {
-        x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
-        website: website || undefined
-      }
-    } as any;
-    
-    saveGlobalAgent(blockchainAgent);
+    // ✅ DEVRE DIŞI: BlockchainAgent kaydetme (duplicate önlemek için)
+    // const blockchainAgent: BlockchainAgent = { ... };
+    // saveGlobalAgent(blockchainAgent);
     
     updateProgress("✅ INFT created and listed successfully! Now available for purchase.");
     updateModalProgress('marketplace', 'completed');
@@ -823,7 +946,7 @@ export default function CreatePage() {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       <Navbar />
       
-      {/* Progress Modal */}
+      {/* ✅ ENHANCED: Progress Modal with retry callback */}
       <ProgressModal
         isOpen={showProgressModal}
         onClose={() => !isCreating && setShowProgressModal(false)}
@@ -843,6 +966,50 @@ export default function CreatePage() {
           subtitle: "Your listing was completed successfully.",
           actionButtons: successButtons
         } : undefined}
+        onRetry={(stepId) => {
+          console.log(`🔄 Manual retry requested for step: ${stepId}`);
+          if (stepId === 'minting' && mintHash) {
+            setMintRetryAttempts(0);
+            setIsManualVerifying(true);
+            updateModalProgress('minting', 'retrying', {
+              txHash: mintHash,
+              explorerLink: `https://chainscan-newton.0g.ai/tx/${mintHash}`,
+              retryCount: 1,
+              description: 'Manual retry initiated...'
+            });
+            setTimeout(async () => {
+              const verified = await verifyTransactionManually(mintHash, 'mint');
+              if (verified) {
+                handleMintSuccess();
+              } else {
+                updateModalProgress('minting', 'error', {
+                  description: 'Manual retry failed. Please check transaction manually.'
+                });
+              }
+              setIsManualVerifying(false);
+            }, 2000);
+          } else if (stepId === 'marketplace' && listHash) {
+            setListRetryAttempts(0);
+            setIsManualVerifying(true);
+            updateModalProgress('marketplace', 'retrying', {
+              txHash: listHash,
+              explorerLink: `https://chainscan-newton.0g.ai/tx/${listHash}`,
+              retryCount: 1,
+              description: 'Manual retry initiated...'
+            });
+            setTimeout(async () => {
+              const verified = await verifyTransactionManually(listHash, 'list');
+              if (verified) {
+                handleListingSuccess();
+              } else {
+                updateModalProgress('marketplace', 'error', {
+                  description: 'Manual retry failed. Please check transaction manually.'
+                });
+              }
+              setIsManualVerifying(false);
+            }, 2000);
+          }
+        }}
       />
       
       <main className="max-w-4xl mx-auto px-6 py-12">
@@ -1143,7 +1310,13 @@ export default function CreatePage() {
 
             {/* Create Button */}
             <Button
-              onClick={handleCreate}
+              onClick={(e) => {
+                e.preventDefault();
+                // ✅ ADDITIONAL DOUBLE-CLICK PROTECTION
+                if (!isCreating) {
+                  handleCreate();
+                }
+              }}
               disabled={!isConnected || isCreating || isCreateLoading || isMintLoading || !name.trim() || !desc.trim() || !price.trim()}
               className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50"
             >

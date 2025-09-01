@@ -282,6 +282,13 @@ export const MARKETPLACE_ABI = [
     stateMutability: "view",
   },
   {
+    type: "function",
+    name: "nextListingId",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
     type: "event",
     name: "Listed",
     inputs: [

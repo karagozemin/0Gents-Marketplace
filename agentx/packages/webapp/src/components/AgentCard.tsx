@@ -47,8 +47,9 @@ export function AgentCard({
       return;
     }
     
-    if (!listingId) {
-      alert("This NFT is not available for purchase");
+    if (!listingId || listingId <= 0) {
+      console.error("❌ Invalid listingId:", listingId);
+      alert("This NFT is not available for purchase (invalid listing ID)");
       return;
     }
     
@@ -61,8 +62,38 @@ export function AgentCard({
     
     try {
       console.log("🛒 Buying NFT from marketplace...");
-      console.log("Listing ID:", listingId);
-      console.log("Price:", priceEth, "0G");
+      console.log("🔍 DEBUG: listingId:", listingId, "type:", typeof listingId);
+      console.log("🔍 DEBUG: priceEth:", priceEth, "type:", typeof priceEth);
+      console.log("🔍 DEBUG: MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
+      
+      // ✅ FIX: Marketplace'de listing var mı kontrol et
+      try {
+        const listingResponse = await fetch('https://evmrpc-testnet.0g.ai/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_call',
+            params: [{
+              to: MARKETPLACE_ADDRESS,
+              data: '0x3f26479e' + listingId.toString(16).padStart(64, '0') // listings(uint256)
+            }, 'latest'],
+            id: 1
+          })
+        });
+        
+        const listingResult = await listingResponse.json();
+        console.log("🔍 DEBUG: Marketplace listing check:", listingResult);
+        
+        if (!listingResult.result || listingResult.result === '0x') {
+          throw new Error("Listing not found on marketplace");
+        }
+      } catch (validationError) {
+        console.error("❌ Marketplace validation failed:", validationError);
+        alert("This listing is not available on the marketplace. Please refresh the page.");
+        setIsBuying(false);
+        return;
+      }
       
       buyNFT({
         address: MARKETPLACE_ADDRESS as `0x${string}`,
@@ -201,7 +232,7 @@ export function AgentCard({
                 </Button>
               </Link>
               
-              {listingId && owner.toLowerCase() !== address?.toLowerCase() ? (
+              {listingId && listingId > 0 && owner.toLowerCase() !== address?.toLowerCase() ? (
                 <Button 
                   size="sm" 
                   className="flex-1 gradient-0g hover:opacity-90 text-white font-medium cursor-pointer"

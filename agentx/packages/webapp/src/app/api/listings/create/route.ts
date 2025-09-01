@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       
       // Get next listing ID (this will be the ID of our listing)
       const nextListingId = await marketplaceContract.nextListingId();
-      realListingId = Number(nextListingId) - 1; // Our listing ID is nextListingId - 1
+      realListingId = Number(nextListingId); // ✅ FIX: nextListingId is the ID that will be assigned to our listing
       
       console.log(`🔍 Real marketplace listing ID: ${realListingId}`);
       

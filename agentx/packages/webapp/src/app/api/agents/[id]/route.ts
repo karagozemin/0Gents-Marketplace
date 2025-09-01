@@ -25,10 +25,10 @@ function syncWithParentStorage() {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const agentId = params.id;
+    const { id: agentId } = await params;
     
     console.log(`🔍 Looking for agent: ${agentId}`);
     
