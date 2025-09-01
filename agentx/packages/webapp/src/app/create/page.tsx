@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2, ShoppingCart } from "lucide-react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useWriteContract as useWriteContractAsync } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
 import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
@@ -119,7 +119,11 @@ export default function CreatePage() {
   
   const { writeContract: writeFactory, data: createHash, error: createError } = useWriteContract();
   const { writeContract: writeAgentNFT, data: mintHash, error: mintError } = useWriteContract();
-  const { writeContract: writeMarketplace, writeContractAsync, data: listHash, error: listError } = useWriteContract();
+  const { writeContract: writeMarketplace, data: listHash, error: listError } = useWriteContract();
+  
+  // ✅ SEPARATE HOOKS FOR ASYNC OPERATIONS (KÖKTEN ÇÖZÜM)
+  const { writeContractAsync: writeApprovalAsync } = useWriteContract();
+  const { writeContractAsync: writeListingAsync } = useWriteContract();
   
   const { isLoading: isCreateLoading, isSuccess: isCreateSuccess } = useWaitForTransactionReceipt({
     hash: createHash,
@@ -706,7 +710,7 @@ export default function CreatePage() {
     }, 2000);
   };
 
-  // Handle marketplace listing - CREATE REAL BLOCKCHAIN LISTINGS
+  // ✅ KÖKTEN ÇÖZÜM: REAL BLOCKCHAIN MARKETPLACE LISTING
   const handleMarketplaceListing = async () => {
     if (!agentContractAddress || !MARKETPLACE_ADDRESS || !mintedTokenId) {
       console.error("❌ Missing required data for real marketplace listing");
@@ -722,11 +726,11 @@ export default function CreatePage() {
       console.log("🎯 Price:", price, "0G");
       console.log("🎯 Marketplace:", MARKETPLACE_ADDRESS);
 
-      // ✅ STEP 1: First approve marketplace to transfer NFT
+      // ✅ STEP 1: First approve marketplace to transfer NFT (MetaMask AÇILACAK!)
       updateProgress("🔄 Step 1: Approving marketplace (MetaMask WILL open)...");
       console.log("🔓 Requesting approval transaction...");
       
-      const approveHash = await writeContractAsync({
+      const approveHash = await writeApprovalAsync({
         address: agentContractAddress as `0x${string}`,
         abi: [
           {
@@ -749,13 +753,13 @@ export default function CreatePage() {
       updateProgress("✅ Approval confirmed! Now creating listing...");
       
       // Wait for approval to be mined
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
-      // ✅ STEP 2: Create marketplace listing (MetaMask WILL open again)
+      // ✅ STEP 2: Create marketplace listing (MetaMask YİNE AÇILACAK!)
       updateProgress("🔄 Step 2: Creating marketplace listing (MetaMask WILL open again)...");
       console.log("🏪 Requesting marketplace listing transaction...");
       
-      const listingHash = await writeContractAsync({
+      const listingHash = await writeListingAsync({
         address: MARKETPLACE_ADDRESS as `0x${string}`,
         abi: MARKETPLACE_ABI,
         functionName: "list",
