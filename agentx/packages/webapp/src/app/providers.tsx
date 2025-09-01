@@ -33,7 +33,7 @@ const wagmiConfig = getDefaultConfig({
   projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || "demo-project-id",
   chains: [ogGalileo] as const,
   transports: {
-    [ogGalileo.id]: http(ogRpcUrl || "https://evmrpc-testnet.0g.ai"),
+    [ogGalileo.id]: http("https://evmrpc-testnet.0g.ai"), // ZORLA AYNI RPC
   },
 });
 

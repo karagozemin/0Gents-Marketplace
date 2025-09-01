@@ -201,9 +201,10 @@ This ensures real blockchain transactions only.`);
       console.log(`🎯 Price: ${agent.price || agent.priceEth} 0G`);
       console.log(`🔍 MARKETPLACE_ADDRESS (buy): ${MARKETPLACE_ADDRESS}`);
       
-      // ✅ VALIDATE LISTING EXISTS ON BLOCKCHAIN
-      const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
+      // ✅ VALIDATE LISTING EXISTS ON BLOCKCHAIN - AYNI RPC KULLAN!
+      const OG_RPC_URL = 'https://evmrpc-testnet.0g.ai'; // Create ile aynı RPC zorla
       console.log(`🔍 RPC URL (buy): ${OG_RPC_URL}`);
+      console.log(`🚨 ZORLA AYNI RPC KULLANILIYOR: evmrpc-testnet.0g.ai`);
       console.log(`🔍 Calling listings(${agent.listingId}) on marketplace...`);
       
       const response = await fetch(OG_RPC_URL, {
