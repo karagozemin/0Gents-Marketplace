@@ -704,16 +704,22 @@ export default function CreatePage() {
     // Reset retry count
     setMintRetryAttempts(0);
     
-    // List on marketplace after mint
-    setTimeout(() => {
-      handleMarketplaceListing();
+    // List on marketplace after mint - AWAIT EDİLMELİ!
+    setTimeout(async () => {
+      await handleMarketplaceListing();
     }, 2000);
   };
 
   // ✅ KÖKTEN ÇÖZÜM: REAL BLOCKCHAIN MARKETPLACE LISTING
   const handleMarketplaceListing = async () => {
+    console.log("🚨 MARKETPLACE LISTING BAŞLADI - handleMarketplaceListing çağrıldı!");
+    console.log("🔍 agentContractAddress:", agentContractAddress);
+    console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
+    console.log("🔍 mintedTokenId:", mintedTokenId);
+    
     if (!agentContractAddress || !MARKETPLACE_ADDRESS || !mintedTokenId) {
       console.error("❌ Missing required data for real marketplace listing");
+      console.log("❌ Eksik veriler - handleAgentSave'e geçiyor");
       handleAgentSave(); // Fallback to save without listing
       return;
     }
@@ -725,11 +731,14 @@ export default function CreatePage() {
       console.log("🎯 Token ID:", mintedTokenId);
       console.log("🎯 Price:", price, "0G");
       console.log("🎯 Marketplace:", MARKETPLACE_ADDRESS);
+      console.log("🚨 writeApprovalAsync fonksiyonu çağrılacak...");
+      console.log("🔍 writeApprovalAsync:", typeof writeApprovalAsync, writeApprovalAsync);
 
       // ✅ STEP 1: First approve marketplace to transfer NFT (MetaMask AÇILACAK!)
       updateProgress("🔄 Step 1: Approving marketplace (MetaMask WILL open)...");
       console.log("🔓 Requesting approval transaction...");
       
+      console.log("🚨 writeApprovalAsync çağrılıyor...");
       const approveHash = await writeApprovalAsync({
         address: agentContractAddress as `0x${string}`,
         abi: [
