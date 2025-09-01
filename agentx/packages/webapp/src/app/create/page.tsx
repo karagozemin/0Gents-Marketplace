@@ -699,25 +699,36 @@ export default function CreatePage() {
     console.log("🎉 AI Agent NFT successfully minted!");
     
     const timestamp = Date.now();
-    setMintedTokenId(timestamp.toString());
+    const tokenId = timestamp.toString();
+    setMintedTokenId(tokenId);
     
     // Reset retry count
     setMintRetryAttempts(0);
     
-    // List on marketplace after mint - AWAIT EDİLMELİ!
+    console.log("🚨 MINT SUCCESS - setTimeout başlatılıyor...");
+    console.log("🔍 agentContractAddress:", agentContractAddress);
+    console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
+    console.log("🔍 tokenId (timestamp):", tokenId);
+    
+    // List on marketplace after mint - TOKEN ID PARAMETRE OLARAK GEÇ!
     setTimeout(async () => {
-      await handleMarketplaceListing();
+      console.log("🚨 TIMEOUT ÇALIŞTI - handleMarketplaceListing çağrılacak!");
+      await handleMarketplaceListing(tokenId);
     }, 2000);
   };
 
   // ✅ KÖKTEN ÇÖZÜM: REAL BLOCKCHAIN MARKETPLACE LISTING
-  const handleMarketplaceListing = async () => {
+  const handleMarketplaceListing = async (tokenId?: string) => {
+    const finalTokenId = tokenId || mintedTokenId;
+    
     console.log("🚨 MARKETPLACE LISTING BAŞLADI - handleMarketplaceListing çağrıldı!");
     console.log("🔍 agentContractAddress:", agentContractAddress);
     console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
-    console.log("🔍 mintedTokenId:", mintedTokenId);
+    console.log("🔍 finalTokenId:", finalTokenId);
+    console.log("🔍 tokenId parameter:", tokenId);
+    console.log("🔍 mintedTokenId state:", mintedTokenId);
     
-    if (!agentContractAddress || !MARKETPLACE_ADDRESS || !mintedTokenId) {
+    if (!agentContractAddress || !MARKETPLACE_ADDRESS || !finalTokenId) {
       console.error("❌ Missing required data for real marketplace listing");
       console.log("❌ Eksik veriler - handleAgentSave'e geçiyor");
       handleAgentSave(); // Fallback to save without listing
@@ -728,7 +739,7 @@ export default function CreatePage() {
       updateProgress("🔄 Creating REAL blockchain marketplace listing...");
       console.log("📋 Starting REAL marketplace listing process...");
       console.log("🎯 Agent Contract:", agentContractAddress);
-      console.log("🎯 Token ID:", mintedTokenId);
+      console.log("🎯 Token ID:", finalTokenId);
       console.log("🎯 Price:", price, "0G");
       console.log("🎯 Marketplace:", MARKETPLACE_ADDRESS);
       console.log("🚨 writeApprovalAsync fonksiyonu çağrılacak...");
@@ -754,7 +765,7 @@ export default function CreatePage() {
           }
         ],
         functionName: "approve",
-        args: [MARKETPLACE_ADDRESS as `0x${string}`, BigInt(mintedTokenId)],
+        args: [MARKETPLACE_ADDRESS as `0x${string}`, BigInt(finalTokenId)],
         gas: BigInt(150000),
       });
 
@@ -774,7 +785,7 @@ export default function CreatePage() {
         functionName: "list",
         args: [
           agentContractAddress as `0x${string}`,
-          BigInt(mintedTokenId),
+          BigInt(finalTokenId),
           parseEther(price)
         ],
         gas: BigInt(300000),
