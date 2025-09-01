@@ -841,23 +841,41 @@ Saving agent without marketplace listing...`);
       console.log("🔍 Extracting listing ID from transaction:", txHash);
       console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
       
-      // Wait for transaction to be mined
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Wait for transaction to be mined (0G Network can be slow)
+      console.log("⏳ Waiting for transaction to be mined...");
+      await new Promise(resolve => setTimeout(resolve, 10000)); // 10 saniye bekle
       
       const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
-      const response = await fetch(OG_RPC_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'eth_getTransactionReceipt',
-          params: [txHash],
-          id: 1
-        })
-      });
       
-      const receiptResult = await response.json();
-      console.log("📋 Transaction receipt:", receiptResult);
+      // ✅ RETRY MEKANİZMASI: Transaction receipt alana kadar dene
+      let receiptResult = null;
+      let retryCount = 0;
+      const maxRetries = 5;
+      
+      while (retryCount < maxRetries && !receiptResult?.result) {
+        console.log(`🔄 Receipt alma denemesi ${retryCount + 1}/${maxRetries}...`);
+        
+        const response = await fetch(OG_RPC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_getTransactionReceipt',
+            params: [txHash],
+            id: 1
+          })
+        });
+        
+        receiptResult = await response.json();
+        
+        if (!receiptResult.result) {
+          console.log(`⏳ Receipt henüz hazır değil, 3 saniye bekleyip tekrar deniyorum...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          retryCount++;
+        }
+      }
+      
+      console.log("📋 Final transaction receipt:", receiptResult);
       console.log("🔍 Receipt result success:", !!receiptResult.result);
       console.log("🔍 Receipt logs:", receiptResult.result?.logs?.length || 0);
       
