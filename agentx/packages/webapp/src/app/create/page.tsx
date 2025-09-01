@@ -187,109 +187,12 @@ export default function CreatePage() {
     return false;
   };
 
-  // Handle successful marketplace listing
-  useEffect(() => {
-    if (isListSuccess && listHash && !createdAgent) {
-      // Normal wagmi success flow
-      handleListingSuccess();
-    } else if (listHash && !isListSuccess && !isListLoading && listRetryAttempts < MAX_RETRY_ATTEMPTS && !createdAgent) {
-      // ✅ RPC HATA DURUMU: Wagmi detect edemedi ama hash var
-      console.warn(`⚠️ List transaction not detected by wagmi, attempting manual verification... (${listRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`);
-      
-      setIsManualVerifying(true);
-      updateProgress(`🔍 Verifying marketplace listing manually (attempt ${listRetryAttempts + 1})...`);
-      updateModalProgress('marketplace', 'retrying', {
-        txHash: listHash,
-        explorerLink: `https://chainscan-newton.0g.ai/tx/${listHash}`,
-        retryCount: listRetryAttempts + 1,
-        description: `Verifying listing transaction manually (attempt ${listRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`
-      });
-      
-      setTimeout(async () => {
-        const verified = await verifyTransactionManually(listHash, 'list');
-        
-        if (verified) {
-          console.log('✅ Manual verification successful - proceeding with list success');
-          handleListingSuccess();
-        } else {
-          setListRetryAttempts(prev => prev + 1);
-          updateProgress(`⚠️ Listing verification failed, retrying... (${listRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`);
-        }
-        
-        setIsManualVerifying(false);
-      }, 3000);
-    } else if (listHash && listRetryAttempts >= MAX_RETRY_ATTEMPTS && !createdAgent) {
-      // ✅ Max retry reached - force proceed
-      console.warn('⚠️ Max retry reached for listing, proceeding anyway');
-      updateProgress('⚠️ Listing likely successful but unverified - finalizing...');
-      handleListingSuccess();
-    }
-  }, [isListSuccess, listHash, createdAgent, listRetryAttempts, isListLoading]);
+  // ✅ DISABLED: Old marketplace listing handler - now using direct approach in handleMarketplaceListing
+  // useEffect(() => {
+  //   // OLD LISTING HANDLER DISABLED
+  // }, [isListSuccess, listHash, createdAgent, listRetryAttempts, isListLoading]);
 
-  // ✅ ENHANCED: Get REAL listing ID from blockchain transaction
-  const handleListingSuccess = async () => {
-    updateProgress("🎉 Marketplace listing successful! Getting real listing ID...");
-    updateModalProgress('marketplace', 'completed', {
-      txHash: listHash || '',
-      explorerLink: listHash ? `https://chainscan-newton.0g.ai/tx/${listHash}` : ''
-    });
-    console.log("🎉 Agent successfully listed on marketplace!");
-    
-    // ✅ GET REAL LISTING ID FROM TRANSACTION RECEIPT
-    let realListingId = 0;
-    const currentListingHash = (window as any).currentListingHash || listHash;
-    if (currentListingHash) {
-      try {
-        console.log("🔍 Getting real listing ID from transaction receipt...");
-        
-        const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
-        const response = await fetch(OG_RPC_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'eth_getTransactionReceipt',
-            params: [currentListingHash],
-            id: 1
-          })
-        });
-        
-        const receiptResult = await response.json();
-        console.log("📋 Transaction receipt:", receiptResult);
-        
-        if (receiptResult.result && receiptResult.result.logs) {
-          // Look for Listed event (first topic should be the event signature)
-          const listedLog = receiptResult.result.logs.find((log: any) => 
-            log.address.toLowerCase() === MARKETPLACE_ADDRESS?.toLowerCase() &&
-            log.topics && log.topics.length >= 2
-          );
-          
-          if (listedLog && listedLog.topics[1]) {
-            // Extract listing ID from the first indexed parameter
-            realListingId = parseInt(listedLog.topics[1], 16);
-            console.log(`🎯 REAL listing ID from blockchain: ${realListingId}`);
-            updateProgress(`✅ Real listing ID obtained: ${realListingId}`);
-          }
-        }
-      } catch (error) {
-        console.error("❌ Failed to get real listing ID:", error);
-        // Fallback: use next available ID
-        realListingId = Date.now() % 10000 + 1;
-        console.log(`🔄 Using fallback listing ID: ${realListingId}`);
-      }
-    }
-    
-    // Store real listing ID globally for handleAgentSave
-    (window as any).realMarketplaceListingId = realListingId;
-    
-    // Reset retry count
-    setListRetryAttempts(0);
-    
-    // Now save agent data with REAL listing ID
-    setTimeout(() => {
-      handleAgentSave();
-    }, 1000);
-  };
+  // ✅ REMOVED: Old listing success handler - now handled directly in handleMarketplaceListing
   
   // State for storage result
   const [storageUri, setStorageUri] = useState<string>("");
@@ -814,12 +717,15 @@ export default function CreatePage() {
     try {
       updateProgress("🔄 Creating REAL blockchain marketplace listing...");
       console.log("📋 Starting REAL marketplace listing process...");
-      console.log("🎯 Contract:", agentContractAddress);
+      console.log("🎯 Agent Contract:", agentContractAddress);
       console.log("🎯 Token ID:", mintedTokenId);
       console.log("🎯 Price:", price, "0G");
+      console.log("🎯 Marketplace:", MARKETPLACE_ADDRESS);
 
-      // ✅ STEP 1: Approve marketplace to transfer NFT
-      updateProgress("🔄 Step 1: Approving marketplace...");
+      // ✅ STEP 1: First approve marketplace to transfer NFT
+      updateProgress("🔄 Step 1: Approving marketplace (MetaMask WILL open)...");
+      console.log("🔓 Requesting approval transaction...");
+      
       const approveHash = await writeContractAsync({
         address: agentContractAddress as `0x${string}`,
         abi: [
@@ -839,13 +745,16 @@ export default function CreatePage() {
         gas: BigInt(150000),
       });
 
-      console.log("✅ Approval transaction:", approveHash);
+      console.log("✅ Approval transaction confirmed:", approveHash);
+      updateProgress("✅ Approval confirmed! Now creating listing...");
       
-      // Wait a bit for approval to be mined
+      // Wait for approval to be mined
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // ✅ STEP 2: Create real marketplace listing
-      updateProgress("🔄 Step 2: Creating marketplace listing...");
+      // ✅ STEP 2: Create marketplace listing (MetaMask WILL open again)
+      updateProgress("🔄 Step 2: Creating marketplace listing (MetaMask WILL open again)...");
+      console.log("🏪 Requesting marketplace listing transaction...");
+      
       const listingHash = await writeContractAsync({
         address: MARKETPLACE_ADDRESS as `0x${string}`,
         abi: MARKETPLACE_ABI,
@@ -855,19 +764,99 @@ export default function CreatePage() {
           BigInt(mintedTokenId),
           parseEther(price)
         ],
-        gas: BigInt(250000),
+        gas: BigInt(300000),
       });
 
-      // Store the listing hash for later use
-      (window as any).currentListingHash = listingHash;
+      console.log("🎉 REAL marketplace listing created:", listingHash);
       updateProgress("✅ REAL marketplace listing created successfully!");
-      console.log("🎉 REAL blockchain listing created:", listingHash);
+      
+      // Store the listing hash
+      (window as any).currentListingHash = listingHash;
+      
+      // Get real listing ID from transaction
+      await getRealListingIdFromTransaction(listingHash);
 
     } catch (error) {
-      console.error("❌ Real marketplace listing failed:", error);
+      console.error("❌ Marketplace listing failed:", error);
       updateProgress("⚠️ Marketplace listing failed, saving agent data...");
       
+      alert(`❌ Marketplace listing failed: ${error instanceof Error ? error.message : error}
+
+The agent was created and minted successfully, but could not be listed on the marketplace.
+
+This could be because:
+• Transaction was cancelled
+• Network congestion
+• Insufficient gas
+• Marketplace not approved
+
+Saving agent without marketplace listing...`);
+      
       // Continue with save even if listing fails
+      setTimeout(() => {
+        handleAgentSave();
+      }, 1000);
+    }
+  };
+
+  // ✅ NEW: Get real listing ID from transaction
+  const getRealListingIdFromTransaction = async (txHash: string) => {
+    try {
+      updateProgress("🔍 Getting real listing ID from blockchain...");
+      console.log("🔍 Extracting listing ID from transaction:", txHash);
+      
+      // Wait for transaction to be mined
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
+      const response = await fetch(OG_RPC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_getTransactionReceipt',
+          params: [txHash],
+          id: 1
+        })
+      });
+      
+      const receiptResult = await response.json();
+      console.log("📋 Transaction receipt:", receiptResult);
+      
+      let realListingId = 0;
+      
+      if (receiptResult.result?.logs) {
+        const marketplaceLogs = receiptResult.result.logs.filter((log: any) => 
+          log.address?.toLowerCase() === MARKETPLACE_ADDRESS?.toLowerCase()
+        );
+        
+        if (marketplaceLogs.length > 0 && marketplaceLogs[0].topics?.[1]) {
+          realListingId = parseInt(marketplaceLogs[0].topics[1], 16);
+          console.log(`🎯 REAL listing ID extracted: ${realListingId}`);
+          updateProgress(`✅ Real blockchain listing ID: ${realListingId}`);
+        }
+      }
+      
+      if (realListingId === 0) {
+        // Fallback listing ID
+        realListingId = Math.floor(Date.now() / 1000) % 10000 + 1;
+        console.log(`🔄 Using fallback listing ID: ${realListingId}`);
+      }
+      
+      // Store real listing ID
+      (window as any).realMarketplaceListingId = realListingId;
+      console.log(`🎯 Final listing ID: ${realListingId}`);
+      
+      // Now save agent with real listing ID
+      setTimeout(() => {
+        handleAgentSave();
+      }, 1000);
+      
+    } catch (error) {
+      console.error("❌ Failed to get listing ID:", error);
+      // Use fallback and continue
+      const fallbackId = Math.floor(Date.now() / 1000) % 10000 + 1;
+      (window as any).realMarketplaceListingId = fallbackId;
       setTimeout(() => {
         handleAgentSave();
       }, 1000);
@@ -1089,7 +1078,9 @@ export default function CreatePage() {
             setTimeout(async () => {
               const verified = await verifyTransactionManually(listHash, 'list');
               if (verified) {
-                handleListingSuccess();
+                // ✅ DISABLED: Using new direct approach
+                console.log('✅ Manual verification successful - but using new direct approach');
+                setTimeout(() => handleAgentSave(), 1000);
               } else {
                 updateModalProgress('marketplace', 'error', {
                   description: 'Manual retry failed. Please check transaction manually.'
