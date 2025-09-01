@@ -9,10 +9,7 @@ import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2, ShoppingCart } from "
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
-import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
-import { saveGlobalAgent, type BlockchainAgent } from "@/lib/blockchainAgents";
-import { saveAgentToServer } from "@/lib/globalAgents";
-import { saveListingToServer } from "@/lib/marketplaceListings";
+import { type CreatedAgent } from "@/lib/createdAgents";
 import { saveUnifiedAgent, transformCreatedAgentToUnified } from "@/lib/unifiedAgents";
 import { parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
@@ -957,88 +954,39 @@ Saving agent without marketplace listing...`);
       createdAt: new Date().toISOString()
     };
     
-    // ✅ FIX: Sadece server'a kaydet (local'a kaydetme, duplicate önlemek için)
+    // ✅ FIX: Sadece unified system'e kaydet (duplicate önlemek için)
     setCreatedAgent(newAgent);
     
-    // ✅ SERVER'A KAYDET: Tüm kullanıcılar görebilsin!
-    saveAgentToServer(newAgent).then(success => {
-      if (success) {
-        console.log('🌐 Agent successfully saved to global server storage');
-      } else {
-        console.error('❌ Failed to save agent to global storage');
-      }
-    });
-
-    // Server'a marketplace listing kaydet
     // ✅ GET REAL LISTING ID FROM BLOCKCHAIN
     const realListingId = (window as any).realMarketplaceListingId || 0;
+    console.log(`🎯 Using REAL blockchain listing ID: ${realListingId}`);
     
-    saveListingToServer({
-      agentContractAddress,
-      tokenId: mintedTokenId || "1",
-      seller: address || "",
-      price,
-      name,
-      description: desc,
-      image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-      category: category || "General",
-      txHash: listHash || "",
-      realListingId // Pass the REAL blockchain listing ID
-    }).then(result => {
-      if (result.success) {
-        console.log(`🏪 Marketplace listing created with ID: ${result.listingId}`);
-        console.log(`🔍 DEBUG: Listing result:`, result);
+    // Update agent with REAL blockchain listing ID
+    newAgent.listingId = realListingId;
+    
+    // 🎯 UNIFIED SYSTEM: Tek kaynak - Save with REAL blockchain listing ID
+    const unifiedAgentData = transformCreatedAgentToUnified(
+      newAgent, 
+      agentContractAddress, 
+      realListingId
+    );
+    
+    console.log('🔍 DEBUG: Unified agent data:', unifiedAgentData);
+    console.log('🔍 DEBUG: Real listing ID being saved:', realListingId);
+    
+    // ✅ UNIFIED SYSTEM'E KAYDET
+    saveUnifiedAgent(unifiedAgentData).then(unifiedResult => {
+      if (unifiedResult.success) {
+        console.log('🎯 Agent successfully saved to unified system:', unifiedResult.agent?.name);
+        console.log('🔍 DEBUG: Unified agent listingId:', unifiedResult.agent?.listingId);
+        console.log('🔍 DEBUG: Unified agent active:', unifiedResult.agent?.active);
         
-        // ✅ USE REAL BLOCKCHAIN LISTING ID (not from server)
-        const realListingId = (window as any).realMarketplaceListingId || 0;
-        console.log(`🎯 Using REAL blockchain listing ID: ${realListingId}`);
-        
-        // Update agent with REAL blockchain listing ID
-        newAgent.listingId = realListingId;
-        saveCreatedAgent(newAgent);
-        
-        // 🎯 UNIFIED SYSTEM: Save with REAL blockchain listing ID
-        const unifiedAgentData = transformCreatedAgentToUnified(
-          newAgent, 
-          agentContractAddress, 
-          realListingId
-        );
-        
-        console.log('🔍 DEBUG: Unified agent data:', unifiedAgentData);
-        console.log('🔍 DEBUG: Real listing ID being saved:', realListingId);
-        
-        saveUnifiedAgent(unifiedAgentData).then(unifiedResult => {
-          if (unifiedResult.success) {
-            console.log('🎯 Agent successfully saved to unified system:', unifiedResult.agent?.name);
-            console.log('🔍 DEBUG: Unified agent listingId:', unifiedResult.agent?.listingId);
-            console.log('🔍 DEBUG: Unified agent active:', unifiedResult.agent?.active);
-            
-            // ✅ FIX: Verify listing ID is properly set
-            if (!unifiedResult.agent?.listingId || unifiedResult.agent.listingId <= 0) {
-              console.warn('⚠️ WARNING: Unified agent has invalid listingId:', unifiedResult.agent?.listingId);
-            }
-          } else {
-            console.error('❌ Failed to save to unified system:', unifiedResult.error);
-          }
-        });
+        // ✅ FIX: Verify listing ID is properly set
+        if (!unifiedResult.agent?.listingId || unifiedResult.agent.listingId <= 0) {
+          console.warn('⚠️ WARNING: Unified agent has invalid listingId:', unifiedResult.agent?.listingId);
+        }
       } else {
-        console.error('❌ Failed to save marketplace listing');
-        
-        // Listing başarısız olsa bile unified system'e kaydet (with real listing ID if available)
-        const realListingId = (window as any).realMarketplaceListingId || 0;
-        const unifiedAgentData = transformCreatedAgentToUnified(
-          newAgent, 
-          agentContractAddress, 
-          realListingId // Use real listing ID even if server save failed
-        );
-        
-        saveUnifiedAgent(unifiedAgentData).then(unifiedResult => {
-          if (unifiedResult.success) {
-            console.log('🎯 Agent saved to unified system (without listing):', unifiedResult.agent?.name);
-          } else {
-            console.error('❌ Failed to save to unified system:', unifiedResult.error);
-          }
-        });
+        console.error('❌ Failed to save to unified system:', unifiedResult.error);
       }
     });
     

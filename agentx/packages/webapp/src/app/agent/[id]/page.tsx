@@ -305,10 +305,47 @@ This could mean the listing was never properly created on the blockchain.`;
   React.useEffect(() => {
     if (isBuySuccess && buyHash) {
       console.log("🎉 NFT purchased successfully!");
+      
+      // ✅ ÇÖZÜM: Agent'ı marketplace'ten kaldır (inactive yap)
+      markAgentAsSold();
+      
       alert("🎉 NFT purchased successfully! Check your wallet.");
       setIsBuying(false);
     }
   }, [isBuySuccess, buyHash]);
+
+  // Mark agent as sold (inactive) after successful purchase
+  const markAgentAsSold = async () => {
+    try {
+      console.log("🔄 Marking agent as sold in unified system...");
+      
+      const response = await fetch('/api/agents', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: agent.id,
+          updates: { 
+            active: false,
+            currentOwner: address // Update owner to buyer
+          },
+          userAddress: agent.creator || agent.owner // Use creator for permission check
+        }),
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        console.log("✅ Agent marked as sold successfully");
+        // Update local state
+        setAgent(prev => ({ ...prev, active: false, currentOwner: address }));
+      } else {
+        console.error("❌ Failed to mark agent as sold:", result.error);
+      }
+    } catch (error) {
+      console.error("❌ Error marking agent as sold:", error);
+    }
+  };
 
   // Handle purchase errors
   React.useEffect(() => {

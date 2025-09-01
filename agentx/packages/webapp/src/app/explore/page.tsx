@@ -4,8 +4,7 @@ import { AgentCard } from "@/components/AgentCard";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { mockAgents, type AgentItem } from "@/lib/mock";
-import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
-import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
+import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { useReadContract } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI } from "@/lib/contracts";
 import { Input } from "@/components/ui/input";
@@ -103,19 +102,30 @@ export default function ExplorePage() {
       console.log('🔄 Loading agents from all sources...');
       const agents: any[] = [];
       
-      // 1. ✅ ÇÖZÜM: Server'dan global agent'ları yükle (tüm kullanıcılar)
+      // 1. ✅ UNIFIED SYSTEM: Sadece aktif agent'ları yükle
       try {
-        const serverAgents = await getAgentsFromServer();
-        const globalAgents = serverAgents.map(transformGlobalAgent);
-        agents.push(...globalAgents);
-        console.log(`🌐 Loaded ${globalAgents.length} agents from global server`);
+        const unifiedResult = await getAllUnifiedAgents({ active: true });
+        if (unifiedResult.success && unifiedResult.agents) {
+          const unifiedAgents = unifiedResult.agents.map(agent => ({
+            id: agent.id,
+            name: agent.name,
+            owner: `${agent.creator.slice(0, 6)}...${agent.creator.slice(-4)}`,
+            image: agent.image,
+            priceEth: parseFloat(agent.price) || 0.01,
+            description: agent.description,
+            category: agent.category,
+            listingId: agent.listingId,
+            tokenId: agent.tokenId,
+            history: [
+              { activity: "Created", date: new Date(agent.createdAt).toISOString().split('T')[0] }
+            ],
+          }));
+          agents.push(...unifiedAgents);
+          console.log(`🎯 Loaded ${unifiedAgents.length} active agents from unified system`);
+        }
       } catch (error) {
-        console.error('❌ Failed to load server agents:', error);
+        console.error('❌ Failed to load unified agents:', error);
       }
-      
-      // 2. ✅ LOCAL AGENTS DEVRE DIŞI - Sadece server/unified system kullan
-      // Local agents artık gösterilmiyor, duplicate önlemek için
-      console.log('📱 Local agents disabled - only showing server agents');
       
       // 2. Load from Factory contract (slow, all creations) - Skip if Factory fails
       try {
