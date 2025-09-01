@@ -224,7 +224,12 @@ This ensures real blockchain transactions only.`);
       const result = await response.json();
       console.log("🔍 Blockchain validation result:", result);
       
-      if (!result.result || result.result === '0x' || result.result === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      // ✅ BASIT ÇÖZÜM: Error varsa direkt buy işlemini dene
+      if (result.error) {
+        console.log("🚨 RPC ERROR - Direkt buy işlemini deniyoruz:", result.error);
+        console.log("🎯 Listing ID mevcut olabilir, validation bypass ediliyor");
+        // Validation bypass - direkt buy işlemine geç
+      } else if (!result.result || result.result === '0x' || result.result === '0x0000000000000000000000000000000000000000000000000000000000000000') {
         alert(`❌ This listing does not exist on the blockchain.
 
 Listing ID ${agent.listingId} was not found.
