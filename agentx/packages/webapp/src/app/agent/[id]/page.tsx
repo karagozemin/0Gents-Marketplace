@@ -199,9 +199,13 @@ This ensures real blockchain transactions only.`);
       console.log("💰 Purchasing NFT with REAL blockchain listing...");
       console.log(`🎯 Listing ID: ${agent.listingId}`);
       console.log(`🎯 Price: ${agent.price || agent.priceEth} 0G`);
+      console.log(`🔍 MARKETPLACE_ADDRESS (buy): ${MARKETPLACE_ADDRESS}`);
       
       // ✅ VALIDATE LISTING EXISTS ON BLOCKCHAIN
       const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
+      console.log(`🔍 RPC URL (buy): ${OG_RPC_URL}`);
+      console.log(`🔍 Calling listings(${agent.listingId}) on marketplace...`);
+      
       const response = await fetch(OG_RPC_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
