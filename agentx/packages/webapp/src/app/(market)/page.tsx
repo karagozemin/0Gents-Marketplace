@@ -2,10 +2,7 @@
 import { AgentCard } from "@/components/AgentCard";
 import { AgentWideCard } from "@/components/AgentWideCard";
 import { mockAgents } from "@/lib/mock";
-import { getCreatedAgents, transformToMockAgent } from "@/lib/createdAgents";
-import { getGlobalAgents, transformBlockchainAgent } from "@/lib/blockchainAgents";
-import { getAgentsFromServer, transformGlobalAgent } from "@/lib/globalAgents";
-import { getMarketplaceListings } from "@/lib/marketplaceListings";
+
 import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -128,52 +125,9 @@ export default function HomePage() {
         console.error('❌ Failed to load from unified system:', error);
       }
       
-      // ✅ FIX: Sadece unified system boşsa fallback yap (duplicate prevention)
+      // ✅ Sadece unified system kullan
       if (agents.length === 0) {
-        console.log('🔄 No unified agents found, falling back to legacy systems...');
-        
-        // 1. Server'dan marketplace listing'leri yükle (fallback)
-        try {
-          const marketplaceResult = await getMarketplaceListings();
-          if (marketplaceResult.success && marketplaceResult.listings) {
-            const marketplaceAgents = marketplaceResult.listings.map(listing => ({
-              id: listing.id,
-              name: listing.name,
-              description: listing.description,
-              image: listing.image,
-              category: listing.category,
-              owner: listing.seller,
-              priceEth: parseFloat(listing.price),
-              listingId: listing.listingId,
-              tokenId: listing.tokenId,
-              history: [
-                {
-                  activity: "Listed on marketplace",
-                  date: listing.createdAt,
-                  priceEth: parseFloat(listing.price)
-                }
-              ]
-            }));
-            agents.push(...marketplaceAgents);
-            console.log(`🏪 Loaded ${marketplaceAgents.length} agents from marketplace (fallback)`);
-          }
-        } catch (error) {
-          console.error('❌ Failed to load marketplace listings:', error);
-        }
-
-        // 2. Server'dan global agent'ları yükle (fallback)
-        try {
-          const serverAgents = await getAgentsFromServer();
-          const globalAgents = serverAgents.map(transformGlobalAgent);
-          // Sadece marketplace'te olmayan agent'ları ekle
-          const newGlobalAgents = globalAgents.filter(global => 
-            !agents.some(marketplace => marketplace.name === global.name)
-          );
-          agents.push(...newGlobalAgents);
-          console.log(`🌐 Loaded ${newGlobalAgents.length} unique global agents (fallback)`);
-        } catch (error) {
-          console.error('❌ Failed to load server agents:', error);
-        }
+        console.log('⚠️ No agents found in unified system');
       }
       
       // 2. ✅ LOCAL AGENTS DEVRE DIŞI - Sadece server/unified system kullan
@@ -330,7 +284,7 @@ export default function HomePage() {
         <div className="flex gap-6 overflow-x-auto pb-4 snap-x scrollbar-hide">
           {allAgents.slice(0, 6).map((agent) => (
             <div key={agent.id} className="snap-start">
-              <AgentWideCard {...agent} tag={allAgents.indexOf(agent) < getCreatedAgents().length ? "New" : "Featured"} />
+              <AgentWideCard {...agent} tag="Featured" />
             </div>
           ))}
         </div>
@@ -356,8 +310,8 @@ export default function HomePage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {allAgents.concat(allAgents).map((agent, index) => (
-            <AgentCard key={`${agent.id}-${index}`} {...agent} />
+          {allAgents.map((agent) => (
+            <AgentCard key={agent.id} {...agent} />
           ))}
         </div>
       </section>
