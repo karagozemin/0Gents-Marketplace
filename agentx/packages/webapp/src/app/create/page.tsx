@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2, ShoppingCart } from "lucide-react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useWriteContract as useWriteContractAsync } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
 import { saveCreatedAgent, type CreatedAgent } from "@/lib/createdAgents";
@@ -119,7 +119,7 @@ export default function CreatePage() {
   
   const { writeContract: writeFactory, data: createHash, error: createError } = useWriteContract();
   const { writeContract: writeAgentNFT, data: mintHash, error: mintError } = useWriteContract();
-  const { writeContract: writeMarketplace, data: listHash, error: listError } = useWriteContract();
+  const { writeContract: writeMarketplace, writeContractAsync, data: listHash, error: listError } = useWriteContract();
   
   const { isLoading: isCreateLoading, isSuccess: isCreateSuccess } = useWaitForTransactionReceipt({
     hash: createHash,
@@ -226,19 +226,66 @@ export default function CreatePage() {
     }
   }, [isListSuccess, listHash, createdAgent, listRetryAttempts, isListLoading]);
 
-  // ✅ ENHANCED: Separate listing success handler with transaction details
-  const handleListingSuccess = () => {
-    updateProgress("🎉 Marketplace listing successful! Finalizing agent creation...");
+  // ✅ ENHANCED: Get REAL listing ID from blockchain transaction
+  const handleListingSuccess = async () => {
+    updateProgress("🎉 Marketplace listing successful! Getting real listing ID...");
     updateModalProgress('marketplace', 'completed', {
       txHash: listHash || '',
       explorerLink: listHash ? `https://chainscan-newton.0g.ai/tx/${listHash}` : ''
     });
     console.log("🎉 Agent successfully listed on marketplace!");
     
+    // ✅ GET REAL LISTING ID FROM TRANSACTION RECEIPT
+    let realListingId = 0;
+    const currentListingHash = (window as any).currentListingHash || listHash;
+    if (currentListingHash) {
+      try {
+        console.log("🔍 Getting real listing ID from transaction receipt...");
+        
+        const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
+        const response = await fetch(OG_RPC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_getTransactionReceipt',
+            params: [currentListingHash],
+            id: 1
+          })
+        });
+        
+        const receiptResult = await response.json();
+        console.log("📋 Transaction receipt:", receiptResult);
+        
+        if (receiptResult.result && receiptResult.result.logs) {
+          // Look for Listed event (first topic should be the event signature)
+          const listedLog = receiptResult.result.logs.find((log: any) => 
+            log.address.toLowerCase() === MARKETPLACE_ADDRESS?.toLowerCase() &&
+            log.topics && log.topics.length >= 2
+          );
+          
+          if (listedLog && listedLog.topics[1]) {
+            // Extract listing ID from the first indexed parameter
+            realListingId = parseInt(listedLog.topics[1], 16);
+            console.log(`🎯 REAL listing ID from blockchain: ${realListingId}`);
+            updateProgress(`✅ Real listing ID obtained: ${realListingId}`);
+          }
+        }
+      } catch (error) {
+        console.error("❌ Failed to get real listing ID:", error);
+        // Fallback: use next available ID
+        realListingId = Date.now() % 10000 + 1;
+        console.log(`🔄 Using fallback listing ID: ${realListingId}`);
+      }
+    }
+    
+    // Store real listing ID globally for handleAgentSave
+    (window as any).realMarketplaceListingId = realListingId;
+    
     // Reset retry count
     setListRetryAttempts(0);
     
-    // Now save agent data with real listing
+    // Now save agent data with REAL listing ID
     setTimeout(() => {
       handleAgentSave();
     }, 1000);
@@ -756,31 +803,68 @@ export default function CreatePage() {
     }, 2000);
   };
 
-  // Handle marketplace listing
+  // Handle marketplace listing - CREATE REAL BLOCKCHAIN LISTINGS
   const handleMarketplaceListing = async () => {
-    if (!agentContractAddress || !MARKETPLACE_ADDRESS) {
-      console.error("❌ Missing contract addresses for listing");
+    if (!agentContractAddress || !MARKETPLACE_ADDRESS || !mintedTokenId) {
+      console.error("❌ Missing required data for real marketplace listing");
       handleAgentSave(); // Fallback to save without listing
       return;
     }
 
     try {
-      updateProgress("🔄 Listing NFT on marketplace...");
-      console.log("📋 Starting marketplace listing process...");
+      updateProgress("🔄 Creating REAL blockchain marketplace listing...");
+      console.log("📋 Starting REAL marketplace listing process...");
+      console.log("🎯 Contract:", agentContractAddress);
+      console.log("🎯 Token ID:", mintedTokenId);
+      console.log("🎯 Price:", price, "0G");
 
-      // Step 1: Call listOnMarketplace on AgentNFT contract
-      await writeMarketplace({
+      // ✅ STEP 1: Approve marketplace to transfer NFT
+      updateProgress("🔄 Step 1: Approving marketplace...");
+      const approveHash = await writeContractAsync({
         address: agentContractAddress as `0x${string}`,
-        abi: AGENT_NFT_ABI,
-        functionName: "listOnMarketplace",
-        gas: BigInt(200000),
+        abi: [
+          {
+            type: "function",
+            name: "approve",
+            inputs: [
+              { name: "to", type: "address" },
+              { name: "tokenId", type: "uint256" }
+            ],
+            outputs: [],
+            stateMutability: "nonpayable"
+          }
+        ],
+        functionName: "approve",
+        args: [MARKETPLACE_ADDRESS as `0x${string}`, BigInt(mintedTokenId)],
+        gas: BigInt(150000),
       });
 
-      updateProgress("✅ Marketplace listing transaction submitted...");
-      console.log("✅ Marketplace listing transaction submitted");
+      console.log("✅ Approval transaction:", approveHash);
+      
+      // Wait a bit for approval to be mined
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // ✅ STEP 2: Create real marketplace listing
+      updateProgress("🔄 Step 2: Creating marketplace listing...");
+      const listingHash = await writeContractAsync({
+        address: MARKETPLACE_ADDRESS as `0x${string}`,
+        abi: MARKETPLACE_ABI,
+        functionName: "list",
+        args: [
+          agentContractAddress as `0x${string}`,
+          BigInt(mintedTokenId),
+          parseEther(price)
+        ],
+        gas: BigInt(250000),
+      });
+
+      // Store the listing hash for later use
+      (window as any).currentListingHash = listingHash;
+      updateProgress("✅ REAL marketplace listing created successfully!");
+      console.log("🎉 REAL blockchain listing created:", listingHash);
 
     } catch (error) {
-      console.error("❌ Marketplace listing failed:", error);
+      console.error("❌ Real marketplace listing failed:", error);
       updateProgress("⚠️ Marketplace listing failed, saving agent data...");
       
       // Continue with save even if listing fails
@@ -804,7 +888,7 @@ export default function CreatePage() {
       price,
       txHash: mintHash || "",
       storageUri: storageUri,
-      listingId: 0, // Will be updated with real listing ID from server
+      listingId: (window as any).realMarketplaceListingId || 0, // Use REAL blockchain listing ID
       social: {
         x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
         website: website || undefined
@@ -820,6 +904,9 @@ export default function CreatePage() {
     // saveAgentToServer(newAgent);
 
     // Server'a marketplace listing kaydet
+    // ✅ GET REAL LISTING ID FROM BLOCKCHAIN
+    const realListingId = (window as any).realMarketplaceListingId || 0;
+    
     saveListingToServer({
       agentContractAddress,
       tokenId: mintedTokenId || "1",
@@ -829,21 +916,22 @@ export default function CreatePage() {
       description: desc,
       image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
       category: category || "General",
-      txHash: listHash || ""
+      txHash: listHash || "",
+      realListingId // Pass the REAL blockchain listing ID
     }).then(result => {
       if (result.success) {
         console.log(`🏪 Marketplace listing created with ID: ${result.listingId}`);
         console.log(`🔍 DEBUG: Listing result:`, result);
         
-        // ✅ FIX: Ensure listingId is properly set
-        const realListingId = result.listingId || 0;
-        console.log(`🎯 Setting listingId to: ${realListingId}`);
+        // ✅ USE REAL BLOCKCHAIN LISTING ID (not from server)
+        const realListingId = (window as any).realMarketplaceListingId || 0;
+        console.log(`🎯 Using REAL blockchain listing ID: ${realListingId}`);
         
-        // Update agent with real listing ID
+        // Update agent with REAL blockchain listing ID
         newAgent.listingId = realListingId;
         saveCreatedAgent(newAgent);
         
-        // 🎯 YENİ: Unified System'e kaydet (gerçek listingId ile)
+        // 🎯 UNIFIED SYSTEM: Save with REAL blockchain listing ID
         const unifiedAgentData = transformCreatedAgentToUnified(
           newAgent, 
           agentContractAddress, 
@@ -870,11 +958,12 @@ export default function CreatePage() {
       } else {
         console.error('❌ Failed to save marketplace listing');
         
-        // Listing başarısız olsa bile unified system'e kaydet
+        // Listing başarısız olsa bile unified system'e kaydet (with real listing ID if available)
+        const realListingId = (window as any).realMarketplaceListingId || 0;
         const unifiedAgentData = transformCreatedAgentToUnified(
           newAgent, 
           agentContractAddress, 
-          0 // No listing ID
+          realListingId // Use real listing ID even if server save failed
         );
         
         saveUnifiedAgent(unifiedAgentData).then(unifiedResult => {

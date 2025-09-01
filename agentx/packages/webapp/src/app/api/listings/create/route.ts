@@ -61,20 +61,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ❌ PROBLEM IDENTIFIED: nextListingId is for FUTURE listings, not current ones
-    // We need to use a different approach since we don't actually create blockchain listings
+    // ✅ USE REAL BLOCKCHAIN LISTING ID if provided
     let realListingId = 0;
-    try {
-      // For demo purposes, we'll use a sequential ID based on existing listings
-      // In production, this would be handled by actual marketplace contract transactions
+    
+    if (listingData.realListingId && listingData.realListingId > 0) {
+      // Use the real blockchain listing ID from the transaction
+      realListingId = listingData.realListingId;
+      console.log(`🎯 Using REAL blockchain listing ID: ${realListingId}`);
+    } else {
+      // Fallback: generate sequential ID for demo
       realListingId = marketplaceListings.length + 1;
-      
-      console.log(`🔍 Assigning demo listing ID: ${realListingId}`);
-      console.log(`⚠️  NOTE: This is a demo listing ID, not from actual marketplace contract`);
-      
-    } catch (error) {
-      console.error('❌ Failed to generate listing ID:', error);
-      realListingId = Date.now() % 10000; // Fallback to timestamp-based ID
+      console.log(`🔄 Using fallback sequential ID: ${realListingId}`);
+      console.log(`⚠️  NOTE: This is a fallback ID, not from blockchain transaction`);
     }
 
     // Create listing object

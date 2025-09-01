@@ -11,6 +11,7 @@ export interface ListingData {
   image: string;
   category: string;
   txHash: string;
+  realListingId?: number; // Real blockchain listing ID
   blockNumber?: number;
 }
 
