@@ -3,7 +3,8 @@
 > **Decentralized marketplace for AI-powered Intelligent NFTs built on 0G Network**
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://0-gents-marketplace.vercel.app)
-[![Demo Video](https://img.shields.io/badge/Demo-Video-red?style=for-the-badge)](https://youtu.be/Q8J8AylG4uA)
+[![Wave 2 Demo](https://img.shields.io/badge/Wave_2-Demo-red?style=for-the-badge)](https://youtu.be/rReR3pXp8No)
+[![Wave 1 Demo](https://img.shields.io/badge/Wave_1-Demo-orange?style=for-the-badge)](https://youtu.be/Q8J8AylG4uA)
 [![0G Network](https://img.shields.io/badge/Built_on-0G_Network-purple?style=for-the-badge)](https://0g.ai)
 
 ## 🌟 Overview
@@ -196,7 +197,8 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ## 🔗 Links
 
 - **Live Demo**: https://0-gents-marketplace.vercel.app
-- **Demo Video**: https://youtu.be/Q8J8AylG4uA
+- **Wave 2 Demo**: https://youtu.be/rReR3pXp8No
+- **Wave 1 Demo**: https://youtu.be/Q8J8AylG4uA
 - **0G Network**: https://0g.ai
 - **Documentation**: [/docs](./docs)
 - **GitHub**: https://github.com/karagozemin/0Gents-Marketplace
