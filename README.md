@@ -164,11 +164,15 @@ NEXT_PUBLIC_0G_DA_ENTRANCE=0x...
 
 ## 🚧 Roadmap
 
-### Wave 2 (Next Release)
-- [ ] Complete buy functionality with escrow
-- [ ] Enhanced AI chat with memory persistence
-- [ ] Bulk listing and management tools
-- [ ] Dynamic fee configuration panel
+### ✅ Wave 2 (Completed)
+- [x] **Real Buy Functionality** - Complete blockchain-based purchase system with MetaMask integration
+- [x] **Unified Agent System** - Centralized agent management for cross-user visibility
+- [x] **Auto-Listing** - Automatic marketplace listing during NFT creation process
+- [x] **Celebration Animation** - Success animations and modals for completed purchases
+- [x] **Cross-User Visibility** - All users can see and purchase each other's created NFTs
+- [x] **RPC Consistency** - Unified RPC endpoint usage for create and buy operations
+- [x] **Real Validation** - Blockchain-based listing verification before purchase attempts
+- [x] **Enhanced Error Handling** - User-friendly error messages for all transaction states
 
 ### Wave 3 (Advanced Features)
 - [ ] Advanced marketplace filters and search
