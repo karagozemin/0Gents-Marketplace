@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// 🎯 UNIFIED AGENT INTERFACE - Tek merkezi agent storage
+// 🎯 UNIFIED AGENT INTERFACE - Central agent storage
 export interface UnifiedAgent {
   id: string;                    // Unique agent ID
   tokenId: string;              // NFT token ID  
@@ -31,7 +31,7 @@ export interface UnifiedAgent {
 }
 
 // 🏪 UNIFIED AGENT STORAGE - Cross-user visibility
-// Memory-based storage (production'da database kullanılmalı)
+// Memory-based storage (should use database in production)
 let unifiedAgents: UnifiedAgent[] = [];
 
 /**

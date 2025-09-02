@@ -204,10 +204,10 @@ This ensures real blockchain transactions only.`);
       console.log(`🎯 Price: ${agent.price || agent.priceEth} 0G`);
       console.log(`🔍 MARKETPLACE_ADDRESS (buy): ${MARKETPLACE_ADDRESS}`);
       
-      // ✅ VALIDATE LISTING EXISTS ON BLOCKCHAIN - AYNI RPC KULLAN!
-      const OG_RPC_URL = 'https://evmrpc-testnet.0g.ai'; // Create ile aynı RPC zorla
+      // ✅ VALIDATE LISTING EXISTS ON BLOCKCHAIN - USE SAME RPC!
+      const OG_RPC_URL = 'https://evmrpc-testnet.0g.ai'; // Force same RPC as create
       console.log(`🔍 RPC URL (buy): ${OG_RPC_URL}`);
-      console.log(`🚨 ZORLA AYNI RPC KULLANILIYOR: evmrpc-testnet.0g.ai`);
+      console.log(`🚨 FORCING SAME RPC USAGE: evmrpc-testnet.0g.ai`);
       console.log(`🔍 Calling listings(${agent.listingId}) on marketplace...`);
       
       const response = await fetch(OG_RPC_URL, {
@@ -227,11 +227,11 @@ This ensures real blockchain transactions only.`);
       const result = await response.json();
       console.log("🔍 Blockchain validation result:", result);
       
-      // ✅ BASIT ÇÖZÜM: Error varsa direkt buy işlemini dene
+      // ✅ SIMPLE SOLUTION: If error, try direct buy operation
       if (result.error) {
-        console.log("🚨 RPC ERROR - Direkt buy işlemini deniyoruz:", result.error);
-        console.log("🎯 Listing ID mevcut olabilir, validation bypass ediliyor");
-        // Validation bypass - direkt buy işlemine geç
+        console.log("🚨 RPC ERROR - Trying direct buy operation:", result.error);
+        console.log("🎯 Listing ID might exist, bypassing validation");
+        // Validation bypass - proceed to direct buy operation
       } else if (!result.result || result.result === '0x' || result.result === '0x0000000000000000000000000000000000000000000000000000000000000000') {
         alert(`❌ This listing does not exist on the blockchain.
 

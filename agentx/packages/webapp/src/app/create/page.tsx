@@ -718,15 +718,15 @@ export default function CreatePage() {
     // Reset retry count
     setMintRetryAttempts(0);
     
-    console.log("🚨 MINT SUCCESS - setTimeout başlatılıyor...");
+    console.log("🚨 MINT SUCCESS - starting setTimeout...");
     console.log("🔍 agentContractAddress:", agentContractAddress);
     console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
-    console.log("🔍 GERÇEK TOKEN ID:", realTokenId);
-    console.log("🚨 TOKEN ID DEĞİŞTİRİLDİ: timestamp yerine 1 kullanılıyor!");
+    console.log("🔍 REAL TOKEN ID:", realTokenId);
+    console.log("🚨 TOKEN ID CHANGED: using 1 instead of timestamp!");
     
     // List on marketplace after mint - GERÇEK TOKEN ID GEÇ!
     setTimeout(async () => {
-      console.log("🚨 TIMEOUT ÇALIŞTI - handleMarketplaceListing çağrılacak!");
+      console.log("🚨 TIMEOUT EXECUTED - calling handleMarketplaceListing!");
       await handleMarketplaceListing(realTokenId);
     }, 2000);
   };
@@ -735,7 +735,7 @@ export default function CreatePage() {
   const handleMarketplaceListing = async (tokenId?: string) => {
     const finalTokenId = tokenId || mintedTokenId;
     
-    console.log("🚨 MARKETPLACE LISTING BAŞLADI - handleMarketplaceListing çağrıldı!");
+    console.log("🚨 MARKETPLACE LISTING STARTED - handleMarketplaceListing called!");
     console.log("🔍 agentContractAddress:", agentContractAddress);
     console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
     console.log("🔍 finalTokenId:", finalTokenId);
@@ -744,7 +744,7 @@ export default function CreatePage() {
     
     if (!agentContractAddress || !MARKETPLACE_ADDRESS || !finalTokenId) {
       console.error("❌ Missing required data for real marketplace listing");
-      console.log("❌ Eksik veriler - handleAgentSave'e geçiyor");
+      console.log("❌ Missing data - proceeding to handleAgentSave");
       handleAgentSave(); // Fallback to save without listing
       return;
     }
@@ -756,14 +756,14 @@ export default function CreatePage() {
       console.log("🎯 Token ID:", finalTokenId);
       console.log("🎯 Price:", price, "0G");
       console.log("🎯 Marketplace:", MARKETPLACE_ADDRESS);
-      console.log("🚨 writeApprovalAsync fonksiyonu çağrılacak...");
+      console.log("🚨 calling writeApprovalAsync function...");
       console.log("🔍 writeApprovalAsync:", typeof writeApprovalAsync, writeApprovalAsync);
 
-      // ✅ STEP 1: First approve marketplace to transfer NFT (MetaMask AÇILACAK!)
+      // ✅ STEP 1: First approve marketplace to transfer NFT (MetaMask WILL OPEN!)
       updateProgress("🔄 Step 1: Approving marketplace (MetaMask WILL open)...");
       console.log("🔓 Requesting approval transaction...");
       
-      console.log("🚨 writeApprovalAsync çağrılıyor...");
+      console.log("🚨 calling writeApprovalAsync...");
       const approveHash = await writeApprovalAsync({
         address: agentContractAddress as `0x${string}`,
         abi: [
@@ -789,11 +789,11 @@ export default function CreatePage() {
       // Wait for approval to be mined
       await new Promise(resolve => setTimeout(resolve, 5000));
 
-      // ✅ STEP 2: Create marketplace listing (MetaMask YİNE AÇILACAK!)
+      // ✅ STEP 2: Create marketplace listing (MetaMask WILL OPEN AGAIN!)
       updateProgress("🔄 Step 2: Creating marketplace listing (MetaMask WILL open again)...");
       console.log("🏪 Requesting marketplace listing transaction...");
       
-      console.log("🔍 LIST TRANSACTION PARAMETRELERI:");
+      console.log("🔍 LIST TRANSACTION PARAMETERS:");
       console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
       console.log("🔍 agentContractAddress:", agentContractAddress);
       console.log("🔍 finalTokenId:", finalTokenId);
@@ -850,7 +850,7 @@ Saving agent without marketplace listing...`);
   const getRealListingIdFromTransaction = async (txHash: string) => {
     try {
       updateProgress("🔍 Getting real listing ID from blockchain...");
-      console.log("🚨 getRealListingIdFromTransaction BAŞLADI!");
+      console.log("🚨 getRealListingIdFromTransaction STARTED!");
       console.log("🔍 Extracting listing ID from transaction:", txHash);
       console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
       
@@ -882,7 +882,7 @@ Saving agent without marketplace listing...`);
         receiptResult = await response.json();
         
         if (!receiptResult.result) {
-          console.log(`⏳ Receipt henüz hazır değil, 3 saniye bekleyip tekrar deniyorum...`);
+          console.log(`⏳ Receipt not ready yet, waiting 3 seconds and retrying...`);
           await new Promise(resolve => setTimeout(resolve, 3000));
           retryCount++;
         }
@@ -913,19 +913,19 @@ Saving agent without marketplace listing...`);
       }
       
       if (realListingId === 0) {
-        console.log("❌ REAL LISTING ID ALINAMADI - FALLBACK KULLANILIYOR!");
-        console.log("❌ Bu demek oluyor ki:");
-        console.log("❌ 1. Transaction receipt alınamadı");
-        console.log("❌ 2. Marketplace logs bulunamadı");
-        console.log("❌ 3. Event parsing başarısız");
+        console.log("❌ REAL LISTING ID NOT OBTAINED - USING FALLBACK!");
+        console.log("❌ This means:");
+        console.log("❌ 1. Transaction receipt could not be retrieved");
+        console.log("❌ 2. Marketplace logs not found");
+        console.log("❌ 3. Event parsing failed");
         
         // Fallback listing ID
         realListingId = Math.floor(Date.now() / 1000) % 10000 + 1;
         console.log(`🔄 Using fallback listing ID: ${realListingId}`);
-        console.log("🚨 BU YÜZDEN BUY İŞLEMİ BAŞARISIZ!");
+        console.log("🚨 THEREFORE BUY OPERATION WILL FAIL!");
       } else {
-        console.log("✅ GERÇEK LISTING ID BAŞARILI!");
-        console.log("✅ Bu buy işlemi çalışmalı!");
+        console.log("✅ REAL LISTING ID SUCCESS!");
+        console.log("✅ This buy operation should work!");
       }
       
       // Store real listing ID
