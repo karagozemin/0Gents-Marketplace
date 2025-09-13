@@ -413,13 +413,23 @@ Please refresh the page or create a new agent.`);
                 <CardContent>
                   <div className="flex gap-4">
                     {agent.social?.x && (
-                      <Button variant="outline" size="sm" className="border-blue-400/50 text-blue-300 bg-blue-500/10">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-blue-400/50 text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 cursor-pointer"
+                        onClick={() => window.open(agent.social?.x, '_blank', 'noopener,noreferrer')}
+                      >
                         <Twitter className="w-4 h-4 mr-2" />
                         Twitter
                       </Button>
                     )}
                     {agent.social?.website && (
-                      <Button variant="outline" size="sm" className="border-green-400/50 text-green-300 bg-green-500/10">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-green-400/50 text-green-300 bg-green-500/10 hover:bg-green-500/20 cursor-pointer"
+                        onClick={() => window.open(agent.social?.website, '_blank', 'noopener,noreferrer')}
+                      >
                         <Globe className="w-4 h-4 mr-2" />
                         Website
                       </Button>
