@@ -75,7 +75,7 @@ export default function CreatePage() {
     {
       id: 'contract',
       title: 'Smart Contract Deployment',
-      description: 'Creating agent contract on 0G Network',
+      description: 'Creating INFT contract on 0G Network',
       status: 'pending',
       estimatedTime: '60s',
       txHash: '',
@@ -84,7 +84,7 @@ export default function CreatePage() {
     {
       id: 'minting',
       title: 'NFT Minting',
-      description: 'Minting your AI Agent NFT',
+      description: 'Minting your AI INFT',
       status: 'pending',
       estimatedTime: '45s',
       txHash: '',
@@ -272,7 +272,7 @@ export default function CreatePage() {
 
     try {
       // Step 1: Upload metadata to 0G Storage
-      updateProgress("🔄 Step 1: Creating AI Agent with 0G Storage integration...");
+      updateProgress("🔄 Step 1: Creating AI INFT with 0G Storage integration...");
       updateModalProgress('preparing', 'in_progress');
       
       const metadata: AgentMetadata = {
@@ -1144,14 +1144,14 @@ Saving agent without marketplace listing...`);
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 mb-6">
             <Sparkles className="w-5 h-5 text-purple-400" />
-            <span className="text-purple-300 text-sm font-medium">Create AI Agent INFT</span>
+            <span className="text-purple-300 text-sm font-medium">Create AI INFT</span>
           </div>
           
           <h1 className="text-5xl font-bold text-white mb-4">
-            Mint Your AI Agent
+            Mint Your AI INFT
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Transform your AI agent into an intelligent NFT on the 0G Network. 
+            Transform your AI concept into an intelligent NFT on the 0G Network. 
             Create, own, and monetize your digital intelligence.
           </p>
         </div>
@@ -1252,7 +1252,7 @@ Saving agent without marketplace listing...`);
               <CardContent className="space-y-4">
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
-                    Agent Name *
+                    INFT Name *
                   </label>
                   <Input
                     value={name}
@@ -1386,7 +1386,7 @@ Saving agent without marketplace listing...`);
                   />
                   <div>
                     <h3 className="text-xl font-bold text-white mb-2">
-                      {name || "Agent Name"}
+                      {name || "INFT Name"}
                     </h3>
                     <p className="text-gray-300 mb-3">
                       {desc || "Agent description will appear here..."}

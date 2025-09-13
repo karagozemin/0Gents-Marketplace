@@ -227,7 +227,7 @@ export default function HomePage() {
             <span className="text-white">Marketplace</span>
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Create, explore and trade intelligent NFT Agents on the 0G Network. 
+            Create, explore and trade intelligent INFTs on the 0G Network. 
             The future of AI-powered digital assets.
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -242,10 +242,10 @@ export default function HomePage() {
               }}
             >
               <Zap className="w-5 h-5 mr-2" />
-              Explore Agents
+              Explore INFTs
             </Button>
             <Button size="lg" className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 px-8 py-3 cursor-pointer backdrop-blur-sm" asChild>
-              <a href="/create">Create Agent</a>
+              <a href="/create">Create INFT</a>
             </Button>
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function HomePage() {
       {/* Stats Section */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
-          { label: "Total Agents", value: "1,247", icon: Users, color: "text-purple-400" },
+          { label: "Total INFTs", value: "1,247", icon: Users, color: "text-purple-400" },
           { label: "Total Volume", value: "142.7 0G", icon: TrendingUp, color: "text-blue-400" },
           { label: "Active Traders", value: "8,329", icon: Star, color: "text-pink-400" },
           { label: "Floor Price", value: "0.012 0G", icon: Zap, color: "text-green-400" }
@@ -272,7 +272,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Star className="w-6 h-6 text-yellow-400" />
-            <h2 className="text-2xl font-bold text-white">Featured Agents</h2>
+            <h2 className="text-2xl font-bold text-white">Featured INFTs</h2>
             <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-400/30">
               Hot
             </Badge>
@@ -319,7 +319,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 border border-purple-500/30 p-12 text-center">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative z-10">
-          <h3 className="text-3xl font-bold text-white mb-4">Ready to Create Your AI Agent?</h3>
+          <h3 className="text-3xl font-bold text-white mb-4">Ready to Create Your INFT?</h3>
           <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
             Join thousands of creators building the next generation of intelligent digital assets on 0G Network.
           </p>
