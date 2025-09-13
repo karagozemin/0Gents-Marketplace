@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   try {
     const agentData = await request.json();
     
-    console.log('📝 Creating unified agent:', agentData.name);
+    console.log('Creating unified INFT:', agentData.name);
     
     // Generate unique ID
     const timestamp = Date.now();
@@ -85,21 +85,21 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('❌ Supabase save failed:', error);
+        console.error('Supabase save failed:', error);
         // Continue with memory storage as fallback
       } else {
-        console.log('✅ Agent saved to Supabase:', data.name);
+        console.log('INFT saved to Supabase:', data.name);
       }
     } catch (supabaseError) {
-      console.error('❌ Supabase connection failed:', supabaseError);
+      console.error('Supabase connection failed:', supabaseError);
       // Continue with memory storage as fallback
     }
     
     // 🔄 FALLBACK: Add to memory storage (for immediate access)
     unifiedAgents.unshift(newAgent);
     
-    console.log(`✅ Unified agent created: ${newAgent.name}`);
-    console.log(`📊 Total unified agents: ${unifiedAgents.length}`);
+    console.log(`Unified INFT created: ${newAgent.name}`);
+    console.log(`Total unified INFTs: ${unifiedAgents.length}`);
     
     return NextResponse.json({ 
       success: true, 
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('❌ Failed to create unified agent:', error);
+    console.error('Failed to create unified INFT:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Failed to create agent' 
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
         // Transform Supabase data to UnifiedAgent format
         filteredAgents = data.map(transformDBToUnifiedAgent);
 
-        console.log(`✅ Loaded ${filteredAgents.length} agents from Supabase`);
+        console.log(`Loaded ${filteredAgents.length} INFTs from Supabase`);
         
         // Update memory cache with fresh data
         unifiedAgents = [...filteredAgents];
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    console.log(`📋 Returning ${filteredAgents.length} unified agents`);
+    console.log(`Returning ${filteredAgents.length} unified INFTs`);
     
     return NextResponse.json({ 
       success: true, 
@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('❌ Failed to get unified agents:', error);
+    console.error('Failed to get unified INFTs:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Failed to get agents' 
@@ -268,7 +268,7 @@ export async function PUT(request: NextRequest) {
         unifiedAgents[agentIndex] = updatedAgent;
       }
 
-      console.log(`✅ Agent updated in Supabase: ${updatedAgent.name}`);
+      console.log(`INFT updated in Supabase: ${updatedAgent.name}`);
       
       return NextResponse.json({ 
         success: true, 
@@ -312,7 +312,7 @@ export async function PUT(request: NextRequest) {
       
       unifiedAgents[agentIndex] = updatedAgent;
       
-      console.log(`✅ Agent updated in memory (fallback): ${updatedAgent.name}`);
+      console.log(`INFT updated in memory (fallback): ${updatedAgent.name}`);
       
       return NextResponse.json({ 
         success: true, 
@@ -321,7 +321,7 @@ export async function PUT(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('❌ Failed to update unified agent:', error);
+    console.error('Failed to update unified INFT:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Failed to update agent' 
@@ -357,12 +357,12 @@ export async function DELETE(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('❌ Supabase delete/sold failed:', error);
+        console.error('Supabase delete/sold failed:', error);
       } else {
-        console.log(`✅ Agent marked as sold in Supabase: ${data.name}`);
+        console.log(`INFT marked as sold in Supabase: ${data.name}`);
       }
     } catch (supabaseError) {
-      console.error('❌ Supabase connection failed:', supabaseError);
+      console.error('Supabase connection failed:', supabaseError);
     }
 
     // 🔄 FALLBACK: Update in memory
@@ -370,7 +370,7 @@ export async function DELETE(request: NextRequest) {
     if (agentIndex !== -1) {
       unifiedAgents[agentIndex].active = false;
       unifiedAgents[agentIndex].currentOwner = buyerAddress || 'sold';
-      console.log(`✅ Agent marked as sold in memory: ${unifiedAgents[agentIndex].name}`);
+      console.log(`INFT marked as sold in memory: ${unifiedAgents[agentIndex].name}`);
     }
     
     return NextResponse.json({ 
@@ -379,7 +379,7 @@ export async function DELETE(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('❌ Failed to mark agent as sold:', error);
+    console.error('Failed to mark INFT as sold:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Failed to mark agent as sold' 

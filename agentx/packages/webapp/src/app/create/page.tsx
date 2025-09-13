@@ -36,7 +36,7 @@ export default function CreatePage() {
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [isProcessComplete, setIsProcessComplete] = useState(false);
   
-  // ✅ RPC HATA ÇÖZÜMÜ: Retry states (create flow'unu bozmadan)
+  // RPC error handling: Retry states (create flow'unu bozmadan)
   const [mintRetryAttempts, setMintRetryAttempts] = useState(0);
   const [listRetryAttempts, setListRetryAttempts] = useState(0);
   const [circuitBreakerRetryCount, setCircuitBreakerRetryCount] = useState(0);
@@ -44,7 +44,7 @@ export default function CreatePage() {
   const MAX_RETRY_ATTEMPTS = 3;
   const MAX_CIRCUIT_BREAKER_RETRIES = 2;
   
-  // ✅ ENHANCED: Progress Steps Configuration with new features - proper typing
+  // Progress Steps Configuration with proper typing
   interface ProgressStepLocal {
     id: string;
     title: string;
@@ -139,7 +139,7 @@ export default function CreatePage() {
 
   // ✅ RPC HATA ÇÖZÜMÜ: Alternative transaction verification
   const verifyTransactionManually = async (hash: string, type: 'mint' | 'list'): Promise<boolean> => {
-    console.log(`🔍 Manual verification for ${type} transaction: ${hash}`);
+    console.log(`Manual verification for ${type} transaction: ${hash}`);
     
     for (let attempt = 1; attempt <= 5; attempt++) {
       try {
@@ -167,7 +167,7 @@ export default function CreatePage() {
             const result = await response.json();
             
             if (result.result && result.result.status === '0x1') {
-              console.log(`✅ ${type} transaction verified successfully!`);
+              console.log(`${type} transaction verified successfully!`);
               return true;
             }
           } catch (rpcError) {
@@ -240,7 +240,7 @@ export default function CreatePage() {
   const handleCreate = async () => {
     // ✅ DOUBLE-CLICK PROTECTION: Prevent duplicate creation
     if (isCreating) {
-      console.log("🛡️ Creation already in progress, ignoring duplicate request");
+      console.log("Creation already in progress, ignoring duplicate request");
       return;
     }
 
@@ -272,7 +272,7 @@ export default function CreatePage() {
 
     try {
       // Step 1: Upload metadata to 0G Storage
-      updateProgress("🔄 Step 1: Creating AI INFT with 0G Storage integration...");
+      updateProgress("Step 1: Creating AI INFT with 0G Storage integration...");
       updateModalProgress('preparing', 'in_progress');
       
       const metadata: AgentMetadata = {
@@ -300,7 +300,7 @@ export default function CreatePage() {
         
         if (uploadResult.success && uploadResult.hash) {
           setStorageUri(uploadResult.hash);
-          updateProgress("✅ Step 2: Agent metadata uploaded to 0G Storage successfully!");
+          updateProgress("Step 2: Agent metadata uploaded to 0G Storage successfully!");
           updateModalProgress('preparing', 'completed');
           updateModalProgress('blockchain', 'in_progress');
         } else {
@@ -308,7 +308,7 @@ export default function CreatePage() {
         }
       } catch (uploadError) {
         console.error("Upload error:", uploadError);
-        updateProgress("⚠️ Step 2: Using fallback storage (0G Storage upload failed)");
+        updateProgress("Step 2: Using fallback storage (0G Storage upload failed)");
         updateModalProgress('preparing', 'completed');
         updateModalProgress('blockchain', 'in_progress');
         setStorageUri("fallback-storage-uri");
@@ -351,12 +351,12 @@ export default function CreatePage() {
         gas: BigInt(3000000), // Increased gas limit for 0G network
       });
 
-      updateProgress("✅ Step 3: Agent Contract creation submitted - waiting for confirmation...");
+      updateProgress("Step 3: INFT Contract creation submitted - waiting for confirmation...");
       updateModalProgress('contract', 'completed', {
         txHash: createHash || '',
         explorerLink: createHash ? `https://chainscan-newton.0g.ai/tx/${createHash}` : ''
       });
-      console.log("✅ Step 3: Agent Contract creation submitted");
+      console.log("Step 3: Agent Contract creation submitted");
       
     } catch (error) {
       console.error("Agent creation error:", error);
@@ -366,7 +366,7 @@ export default function CreatePage() {
       if (errorMessage.toLowerCase().includes('circuit breaker is open')) {
         if (circuitBreakerRetryCount < MAX_CIRCUIT_BREAKER_RETRIES) {
           console.warn(`🔄 Circuit breaker detected, implementing retry mechanism... (${circuitBreakerRetryCount + 1}/${MAX_CIRCUIT_BREAKER_RETRIES})`);
-          updateProgress(`⚠️ Network congestion detected. Retrying in 30 seconds... (${circuitBreakerRetryCount + 1}/${MAX_CIRCUIT_BREAKER_RETRIES})`);
+          updateProgress(`Network congestion detected. Retrying in 30 seconds... (${circuitBreakerRetryCount + 1}/${MAX_CIRCUIT_BREAKER_RETRIES})`);
           
           // Update current step to retrying
           const currentStep = steps.find(s => s.status === 'in_progress');
@@ -397,7 +397,7 @@ export default function CreatePage() {
         } else {
           // Max retries reached for circuit breaker
           console.error('❌ Circuit breaker max retries reached');
-          updateProgress(`❌ Network congestion persists after ${MAX_CIRCUIT_BREAKER_RETRIES} attempts. Please try again later.`);
+          updateProgress(`Network congestion persists after ${MAX_CIRCUIT_BREAKER_RETRIES} attempts. Please try again later.`);
           
           const currentStep = steps.find(s => s.status === 'in_progress');
           if (currentStep) {
@@ -413,7 +413,7 @@ export default function CreatePage() {
         }
       }
       
-      updateProgress(`❌ Failed to create agent: ${errorMessage}`);
+      updateProgress(`Failed to create INFT: ${errorMessage}`);
       
       // Update current step to error
       const currentStep = steps.find(s => s.status === 'in_progress');
@@ -451,13 +451,13 @@ export default function CreatePage() {
   // Handle successful agent contract creation - Extract contract address
   useEffect(() => {
     if (isCreateSuccess && createHash && !agentContractAddress) {
-      updateProgress("🎉 Agent Contract created successfully!");
-      console.log("🎉 Agent Contract created on 0G Network!");
+      updateProgress("INFT Contract created successfully!");
+      console.log("Agent Contract created on 0G Network!");
       
       // Extract agent contract address from transaction receipt
       const extractContractAddress = async () => {
         try {
-          updateProgress("🔍 Extracting new Agent Contract address...");
+          updateProgress("Extracting new INFT Contract address...");
           
           const receipt = await fetch(`https://evmrpc-testnet.0g.ai/`, {
             method: 'POST',
@@ -474,7 +474,7 @@ export default function CreatePage() {
           console.log("Transaction receipt:", result);
           
           if (result.result && result.result.logs && result.result.logs.length > 0) {
-            console.log("🔍 All transaction logs:", result.result.logs);
+            console.log("All transaction logs:", result.result.logs);
             console.log("🏭 Looking for Factory address:", FACTORY_ADDRESS);
             
             // Parse AgentContractCreated event - look for any log from Factory with topics
@@ -487,7 +487,7 @@ export default function CreatePage() {
             if (factoryLogs.length > 0) {
               // Debug all Factory logs in detail
               factoryLogs.forEach((log: any, index: number) => {
-                console.log(`🔍 Factory log ${index}:`, {
+                console.log(`Factory log ${index}:`, {
                   address: log.address,
                   topics: log.topics,
                   data: log.data,
@@ -499,7 +499,7 @@ export default function CreatePage() {
               // AgentContractCreated event signature: keccak256("AgentContractCreated(address,address,string,uint256)")
               const expectedEventSignature = "0x85f0dfa9fd3e33e38f73b68fc46905218786e8b028cf1b07fa0ed436b53b0227";
               
-              console.log("🎯 Looking for event signature:", expectedEventSignature);
+              console.log("Looking for event signature:", expectedEventSignature);
               
               // Try exact event signature first
               let log = factoryLogs.find((log: any) => 
@@ -510,7 +510,7 @@ export default function CreatePage() {
               
               // If exact signature doesn't work, try any Factory log with topics
               if (!log) {
-                console.log("⚠️ Exact signature not found, trying any Factory log with 2+ topics");
+                console.log("Exact signature not found, trying any Factory log with 2+ topics");
                 log = factoryLogs.find((log: any) => 
                   log.topics && log.topics.length >= 2
                 );
@@ -533,12 +533,12 @@ export default function CreatePage() {
                   contractAddress = topic; // Use as is if different format
                 }
                 
-                console.log("🎯 Extracted Agent Contract Address:", contractAddress);
+                console.log("Extracted INFT Contract Address:", contractAddress);
                 
                 // Validate address format
                 if (contractAddress.length === 42 && contractAddress.startsWith('0x')) {
                   setAgentContractAddress(contractAddress);
-                  updateProgress("✅ Agent Contract address extracted: " + contractAddress);
+                  updateProgress("INFT Contract address extracted: " + contractAddress);
                   return;
                 } else {
                   console.error("❌ Invalid contract address format:", contractAddress);
@@ -570,12 +570,12 @@ export default function CreatePage() {
             
             if (totalResult.result && totalResult.result !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
               const totalAgents = parseInt(totalResult.result, 16);
-              console.log("📊 Total agents in Factory:", totalAgents);
+              console.log("Total INFTs in Factory:", totalAgents);
               
               if (totalAgents > 0) {
                 // Get the latest agent (index = totalAgents - 1)
                 const latestIndex = totalAgents - 1;
-                console.log("🔍 Getting agent at index:", latestIndex);
+                console.log("Getting INFT at index:", latestIndex);
                 
                 const latestResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
                   method: 'POST',
@@ -596,11 +596,11 @@ export default function CreatePage() {
                 
                 if (latestResult.result && latestResult.result !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
                   const contractAddress = '0x' + latestResult.result.slice(-40);
-                  console.log("🎯 Factory fallback - Latest Agent Contract:", contractAddress);
+                  console.log("Factory fallback - Latest INFT Contract:", contractAddress);
                   
                   if (contractAddress.length === 42 && contractAddress !== '0x0000000000000000000000000000000000000000') {
                     setAgentContractAddress(contractAddress);
-                    updateProgress("✅ Agent Contract address found via Factory fallback: " + contractAddress);
+                    updateProgress("INFT Contract address found via Factory fallback: " + contractAddress);
                     return;
                   } else {
                     console.error("❌ Invalid contract address from Factory:", contractAddress);
@@ -619,14 +619,14 @@ export default function CreatePage() {
             
           } catch (fallbackError) {
             console.error("❌ Factory fallback error:", fallbackError);
-            updateProgress("❌ Failed to get agent contract address - both event parsing and Factory queries failed");
+            updateProgress("Failed to get INFT contract address - both event parsing and Factory queries failed");
             alert("❌ Agent creation failed: Could not extract contract address. Please try again.");
             setIsCreating(false);
             setTimeout(() => setShowProgressModal(false), 3000);
           }
         } catch (error) {
           console.error("❌ Contract address extraction error:", error);
-          updateProgress("❌ Failed to extract contract address");
+          updateProgress("Failed to extract contract address");
         }
       };
       
@@ -653,7 +653,7 @@ export default function CreatePage() {
         
       } catch (error) {
         console.error("Mint error:", error);
-        updateProgress("❌ Failed to mint NFT in agent contract");
+        updateProgress("Failed to mint NFT in INFT contract");
         setIsCreating(false);
       }
     }
@@ -672,7 +672,7 @@ export default function CreatePage() {
       console.warn(`⚠️ Mint transaction not detected by wagmi, attempting manual verification... (${mintRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`);
       
       setIsManualVerifying(true);
-      updateProgress(`🔍 Verifying mint transaction manually (attempt ${mintRetryAttempts + 1})...`);
+      updateProgress(`Verifying mint transaction manually (attempt ${mintRetryAttempts + 1})...`);
       updateModalProgress('minting', 'retrying', {
         txHash: mintHash,
         explorerLink: `https://chainscan-newton.0g.ai/tx/${mintHash}`,
@@ -688,7 +688,7 @@ export default function CreatePage() {
           handleMintSuccess();
         } else {
           setMintRetryAttempts(prev => prev + 1);
-          updateProgress(`⚠️ Mint verification failed, retrying... (${mintRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`);
+          updateProgress(`Mint verification failed, retrying... (${mintRetryAttempts + 1}/${MAX_RETRY_ATTEMPTS})`);
         }
         
         setIsManualVerifying(false);
@@ -696,20 +696,20 @@ export default function CreatePage() {
     } else if (mintHash && mintRetryAttempts >= MAX_RETRY_ATTEMPTS && !createdAgent) {
       // ✅ Max retry reached - force proceed with warning
       console.warn('⚠️ Max retry reached, forcing mint success flow');
-      updateProgress('⚠️ Transaction likely successful but unverified - proceeding...');
+      updateProgress('Transaction likely successful but unverified - proceeding...');
       handleMintSuccess();
     }
   }, [isMintSuccess, mintHash, createdAgent, agentContractAddress, mintRetryAttempts, isMintLoading]);
 
   // ✅ ENHANCED: Separate mint success handler with transaction details
   const handleMintSuccess = () => {
-    updateProgress("🎉 NFT minted successfully! Listing on marketplace...");
+    updateProgress("NFT minted successfully! Listing on marketplace...");
     updateModalProgress('minting', 'completed', {
       txHash: mintHash || '',
       explorerLink: mintHash ? `https://chainscan-newton.0g.ai/tx/${mintHash}` : ''
     });
     updateModalProgress('marketplace', 'in_progress');
-    console.log("🎉 AI Agent NFT successfully minted!");
+    console.log("AI INFT successfully minted!");
     
     // ✅ GERÇEK TOKEN ID = 1 (AgentNFT contract'ında _nextTokenId = 1)
     const realTokenId = "1"; // AgentNFT her zaman token ID 1 ile mint ediyor
@@ -744,7 +744,7 @@ export default function CreatePage() {
     
     if (!agentContractAddress || !MARKETPLACE_ADDRESS || !finalTokenId) {
       console.error("❌ Missing required data for real marketplace listing");
-      console.log("❌ Missing data - proceeding to handleAgentSave");
+      console.log("Missing data - proceeding to handleINFTSave");
       handleAgentSave(); // Fallback to save without listing
       return;
     }
@@ -752,7 +752,7 @@ export default function CreatePage() {
     try {
       updateProgress("🔄 Creating REAL blockchain marketplace listing...");
       console.log("📋 Starting REAL marketplace listing process...");
-      console.log("🎯 Agent Contract:", agentContractAddress);
+      console.log("INFT Contract:", agentContractAddress);
       console.log("🎯 Token ID:", finalTokenId);
       console.log("🎯 Price:", price, "0G");
       console.log("🎯 Marketplace:", MARKETPLACE_ADDRESS);
@@ -784,7 +784,7 @@ export default function CreatePage() {
       });
 
       console.log("✅ Approval transaction confirmed:", approveHash);
-      updateProgress("✅ Approval confirmed! Now creating listing...");
+      updateProgress("Approval confirmed! Now creating listing...");
       
       // Wait for approval to be mined
       await new Promise(resolve => setTimeout(resolve, 5000));
@@ -815,7 +815,7 @@ export default function CreatePage() {
       console.log("🔍 LIST TRANSACTION HASH:", listingHash);
 
       console.log("🎉 REAL marketplace listing created:", listingHash);
-      updateProgress("✅ REAL marketplace listing created successfully!");
+      updateProgress("REAL marketplace listing created successfully!");
       
       // Store the listing hash
       (window as any).currentListingHash = listingHash;
@@ -825,7 +825,7 @@ export default function CreatePage() {
 
     } catch (error) {
       console.error("❌ Marketplace listing failed:", error);
-      updateProgress("⚠️ Marketplace listing failed, saving agent data...");
+      updateProgress("Marketplace listing failed, saving INFT data...");
       
       alert(`❌ Marketplace listing failed: ${error instanceof Error ? error.message : error}
 
@@ -849,7 +849,7 @@ Saving agent without marketplace listing...`);
   // ✅ NEW: Get real listing ID from transaction
   const getRealListingIdFromTransaction = async (txHash: string) => {
     try {
-      updateProgress("🔍 Getting real listing ID from blockchain...");
+      updateProgress("Getting real listing ID from blockchain...");
       console.log("🚨 getRealListingIdFromTransaction STARTED!");
       console.log("🔍 Extracting listing ID from transaction:", txHash);
       console.log("🔍 MARKETPLACE_ADDRESS:", MARKETPLACE_ADDRESS);
@@ -906,7 +906,7 @@ Saving agent without marketplace listing...`);
         if (marketplaceLogs.length > 0 && marketplaceLogs[0].topics?.[1]) {
           realListingId = parseInt(marketplaceLogs[0].topics[1], 16);
           console.log(`🎯 REAL listing ID extracted: ${realListingId}`);
-          updateProgress(`✅ Real blockchain listing ID: ${realListingId}`);
+          updateProgress(`Real blockchain listing ID: ${realListingId}`);
         } else {
           console.log("❌ No marketplace logs or missing topics[1]");
         }
@@ -1010,7 +1010,7 @@ Saving agent without marketplace listing...`);
     // const blockchainAgent: BlockchainAgent = { ... };
     // saveGlobalAgent(blockchainAgent);
     
-    updateProgress("✅ INFT created and listed successfully! Now available for purchase.");
+    updateProgress("INFT created and listed successfully! Now available for purchase.");
     updateModalProgress('marketplace', 'completed');
     setProgressPercentage(100);
     

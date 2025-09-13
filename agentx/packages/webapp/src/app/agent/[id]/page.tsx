@@ -30,7 +30,7 @@ export default function AgentDetail() {
   useEffect(() => {
     async function loadAgent() {
       try {
-        console.log(`🔍 Loading agent details for ID: ${id}`);
+        console.log(`Loading INFT details for ID: ${id}`);
         
         // Try to load from unified system first
         const response = await fetch('/api/agents');
@@ -46,13 +46,13 @@ export default function AgentDetail() {
               price: foundAgent.price,
               listingId: foundAgent.listingId || 0
             });
-            console.log('✅ Agent loaded from unified system:', foundAgent.name);
+            console.log('INFT loaded from unified system:', foundAgent.name);
           } else {
-            console.log('❌ Agent not found in unified system');
+            console.log('INFT not found in unified system');
           }
         }
       } catch (error) {
-        console.error('❌ Failed to load agent:', error);
+        console.error('Failed to load INFT:', error);
       } finally {
         setIsLoading(false);
       }
@@ -100,7 +100,7 @@ export default function AgentDetail() {
           id: 1
         })
       });
-
+      
       const result = await response.json();
 
       console.log("🔍 Blockchain validation result:", result);
@@ -194,13 +194,13 @@ Please refresh the page or create a new agent.`);
       .then(response => response.json())
       .then(result => {
         if (result.success) {
-          console.log('✅ Agent marked as sold in database');
+          console.log('INFT marked as sold in database');
         } else {
-          console.error('❌ Failed to mark agent as sold:', result.error);
+          console.error('Failed to mark INFT as sold:', result.error);
         }
       })
       .catch(error => {
-        console.error('❌ Failed to update agent status:', error);
+        console.error('Failed to update INFT status:', error);
       });
 
       setShowConfetti(true);
@@ -261,8 +261,8 @@ Please refresh the page or create a new agent.`);
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
                     src={agent.image} 
-                    alt={agent.name} 
-                    className="w-full h-full object-cover" 
+                    alt={agent.name}
+                    className="w-full h-full object-cover"
                   />
                 </div>
               </CardContent>
@@ -282,24 +282,24 @@ Please refresh the page or create a new agent.`);
                 <div>
                   <h1 className="text-4xl font-bold text-white mb-2">{agent.name}</h1>
                   <p className="text-lg text-gray-400">by {agent.creator?.slice(0, 6)}...{agent.creator?.slice(-4)}</p>
-                </div>
+                  </div>
                 <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10 text-lg px-4 py-2">
-                  {agent.priceEth} 0G
-                </Badge>
-              </div>
+                        {agent.priceEth} 0G
+                      </Badge>
+                    </div>
 
               <div className="flex gap-2">
                 <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-400/50">
-                  {agent.category}
-                </Badge>
+                        {agent.category}
+                      </Badge>
                 {agent.trending && (
                   <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-400/50">
                     <TrendingUp className="w-3 h-3 mr-1" />
                     Trending
                   </Badge>
                 )}
-              </div>
-            </div>
+                    </div>
+                  </div>
 
             {/* Description */}
             <Card className="gradient-card border-white/10">
@@ -334,7 +334,7 @@ Please refresh the page or create a new agent.`);
                   <p className="text-sm text-gray-400">Status</p>
                 </CardContent>
               </Card>
-            </div>
+          </div>
 
             {/* Actions */}
             <div className="space-y-4">
@@ -401,16 +401,16 @@ Please refresh the page or create a new agent.`);
                     </>
                   )}
                 </Button>
-              )}
-            </div>
+                        )}
+                      </div>
 
             {/* Social Links */}
             {(agent.social?.x || agent.social?.website) && (
-              <Card className="gradient-card border-white/10">
-                <CardHeader>
+                  <Card className="gradient-card border-white/10">
+                    <CardHeader>
                   <CardTitle className="text-white">Links</CardTitle>
-                </CardHeader>
-                <CardContent>
+                    </CardHeader>
+                    <CardContent>
                   <div className="flex gap-4">
                     {agent.social?.x && (
                       <Button 
@@ -433,10 +433,10 @@ Please refresh the page or create a new agent.`);
                         <Globe className="w-4 h-4 mr-2" />
                         Website
                       </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
             )}
           </motion.div>
         </div>

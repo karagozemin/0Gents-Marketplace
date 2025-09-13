@@ -78,7 +78,7 @@ export default function HomePage() {
   // 🎯 UNIFIED AGENT LOADING - Tek merkezi sistem
   useEffect(() => {
     async function loadAllAgents() {
-      console.log('🔄 Loading agents from unified system...');
+      console.log('Loading INFTs from unified system...');
       const agents: any[] = [];
       
       // 🚀 ÖNCELİK 1: Unified System'den yükle
@@ -86,7 +86,7 @@ export default function HomePage() {
         const unifiedResult = await getAllUnifiedAgents({ active: true });
         if (unifiedResult.success && unifiedResult.agents) {
           const unifiedAgents = unifiedResult.agents.map(agent => {
-            console.log('🔍 DEBUG: Agent from unified system:', {
+            console.log('DEBUG: INFT from unified system:', {
               name: agent.name,
               listingId: agent.listingId,
               listingIdType: typeof agent.listingId,
@@ -118,7 +118,7 @@ export default function HomePage() {
             };
           });
           agents.push(...unifiedAgents);
-          console.log(`🎯 Loaded ${unifiedAgents.length} agents from unified system`);
+          console.log(`Loaded ${unifiedAgents.length} INFTs from unified system`);
         }
       } catch (error) {
         console.error('❌ Failed to load from unified system:', error);
@@ -126,12 +126,12 @@ export default function HomePage() {
       
       // ✅ Sadece unified system kullan
       if (agents.length === 0) {
-        console.log('⚠️ No agents found in unified system');
+        console.log('No INFTs found in unified system');
       }
       
       // 2. ✅ LOCAL AGENTS DEVRE DIŞI - Sadece server/unified system kullan
       // Local agents artık gösterilmiyor, duplicate önlemek için
-      console.log('📱 Local agents disabled - only showing unified system agents');
+      console.log('Local INFTs disabled - only showing unified system INFTs');
       
       // 3. Load from Factory contract (slow, blockchain creations)
       try {

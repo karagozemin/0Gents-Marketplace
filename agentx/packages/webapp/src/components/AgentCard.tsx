@@ -163,17 +163,17 @@ export function AgentCard({
     .then(response => response.json())
     .then(result => {
       if (result.success) {
-        console.log('✅ Agent marked as sold in database');
+        console.log('INFT marked as sold in database');
         // Refresh the page after successful purchase and database update
         setTimeout(() => {
           window.location.reload();
         }, 2000);
       } else {
-        console.error('❌ Failed to mark agent as sold:', result.error);
+        console.error('Failed to mark INFT as sold:', result.error);
       }
     })
     .catch(error => {
-      console.error('❌ Failed to update agent status:', error);
+      console.error('Failed to update INFT status:', error);
       // Don't fail the entire purchase for this
     });
 
