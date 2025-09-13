@@ -149,6 +149,34 @@ export function AgentCard({
       });
     }
 
+    // 🚀 NEW: Mark agent as sold in database after successful purchase
+    fetch('/api/agents', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        agentId: id,
+        buyerAddress: address
+      }),
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        console.log('✅ Agent marked as sold in database');
+        // Refresh the page after successful purchase and database update
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        console.error('❌ Failed to mark agent as sold:', result.error);
+      }
+    })
+    .catch(error => {
+      console.error('❌ Failed to update agent status:', error);
+      // Don't fail the entire purchase for this
+    });
+
     return (
       <motion.div
         whileHover={{ y: -8, scale: 1.02 }}

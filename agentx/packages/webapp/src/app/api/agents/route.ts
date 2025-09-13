@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabase, transformDBToUnifiedAgent, transformUnifiedAgentToDB } from '@/lib/supabase';
 
 // 🎯 UNIFIED AGENT INTERFACE - Central agent storage
 export interface UnifiedAgent {
@@ -30,8 +31,8 @@ export interface UnifiedAgent {
   trending?: boolean;          // Trending status
 }
 
-// 🏪 UNIFIED AGENT STORAGE - Cross-user visibility
-// Memory-based storage (should use database in production)
+// 🏪 HYBRID STORAGE - Memory + Supabase for reliability
+// Memory-based storage (fallback + fast access)
 let unifiedAgents: UnifiedAgent[] = [];
 
 /**
@@ -74,7 +75,27 @@ export async function POST(request: NextRequest) {
       trending: false
     };
     
-    // Add to unified storage
+    // 🚀 PRIORITY 1: Save to Supabase (persistent storage)
+    try {
+      const dbData = transformUnifiedAgentToDB(newAgent);
+      const { data, error } = await supabase
+        .from('unified_agents')
+        .insert(dbData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase save failed:', error);
+        // Continue with memory storage as fallback
+      } else {
+        console.log('✅ Agent saved to Supabase:', data.name);
+      }
+    } catch (supabaseError) {
+      console.error('❌ Supabase connection failed:', supabaseError);
+      // Continue with memory storage as fallback
+    }
+    
+    // 🔄 FALLBACK: Add to memory storage (for immediate access)
     unifiedAgents.unshift(newAgent);
     
     console.log(`✅ Unified agent created: ${newAgent.name}`);
@@ -111,37 +132,70 @@ export async function GET(request: NextRequest) {
     const active = searchParams.get('active');
     const category = searchParams.get('category');
     
-    let filteredAgents = [...unifiedAgents];
-    
-    // Filter by creator
-    if (creator) {
-      filteredAgents = filteredAgents.filter(agent => 
-        agent.creator.toLowerCase() === creator.toLowerCase()
-      );
-      console.log(`🔍 Filtered by creator ${creator}: ${filteredAgents.length} agents`);
-    }
-    
-    // Filter by current owner
-    if (owner) {
-      filteredAgents = filteredAgents.filter(agent => 
-        agent.currentOwner.toLowerCase() === owner.toLowerCase()
-      );
-      console.log(`🔍 Filtered by owner ${owner}: ${filteredAgents.length} agents`);
-    }
-    
-    // Filter by active status
-    if (active !== null) {
-      const isActive = active === 'true';
-      filteredAgents = filteredAgents.filter(agent => agent.active === isActive);
-      console.log(`🔍 Filtered by active=${isActive}: ${filteredAgents.length} agents`);
-    }
-    
-    // Filter by category
-    if (category) {
-      filteredAgents = filteredAgents.filter(agent => 
-        agent.category.toLowerCase() === category.toLowerCase()
-      );
-      console.log(`🔍 Filtered by category ${category}: ${filteredAgents.length} agents`);
+    let filteredAgents: UnifiedAgent[] = [];
+
+    // 🚀 PRIORITY 1: Try to load from Supabase
+    try {
+      let query = supabase
+        .from('unified_agents')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Apply filters
+      if (creator) {
+        query = query.eq('creator', creator);
+      }
+      if (owner) {
+        query = query.eq('current_owner', owner);
+      }
+      if (active !== null) {
+        query = query.eq('active', active === 'true');
+      }
+      if (category) {
+        query = query.ilike('category', category);
+      }
+
+      const { data, error } = await query;
+
+      if (!error && data) {
+        // Transform Supabase data to UnifiedAgent format
+        filteredAgents = data.map(transformDBToUnifiedAgent);
+
+        console.log(`✅ Loaded ${filteredAgents.length} agents from Supabase`);
+        
+        // Update memory cache with fresh data
+        unifiedAgents = [...filteredAgents];
+        
+      } else {
+        console.error('❌ Supabase query failed:', error);
+        throw new Error('Supabase failed, using fallback');
+      }
+    } catch (supabaseError) {
+      console.error('❌ Supabase connection failed, using memory fallback:', supabaseError);
+      
+      // 🔄 FALLBACK: Use memory storage
+      filteredAgents = [...unifiedAgents];
+      
+      // Apply filters to memory data
+      if (creator) {
+        filteredAgents = filteredAgents.filter(agent => 
+          agent.creator.toLowerCase() === creator.toLowerCase()
+        );
+      }
+      if (owner) {
+        filteredAgents = filteredAgents.filter(agent => 
+          agent.currentOwner.toLowerCase() === owner.toLowerCase()
+        );
+      }
+      if (active !== null) {
+        const isActive = active === 'true';
+        filteredAgents = filteredAgents.filter(agent => agent.active === isActive);
+      }
+      if (category) {
+        filteredAgents = filteredAgents.filter(agent => 
+          agent.category.toLowerCase() === category.toLowerCase()
+        );
+      }
     }
     
     console.log(`📋 Returning ${filteredAgents.length} unified agents`);
@@ -177,46 +231,94 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Find agent
-    const agentIndex = unifiedAgents.findIndex(agent => agent.id === id);
-    if (agentIndex === -1) {
+    // 🚀 PRIORITY 1: Update in Supabase
+    try {
+      const { data, error } = await supabase
+        .from('unified_agents')
+        .update({
+          name: updates.name,
+          description: updates.description,
+          image: updates.image,
+          category: updates.category,
+          price: updates.price,
+          active: updates.active,
+          social: updates.social,
+          capabilities: updates.capabilities,
+          // Don't allow updating critical fields
+        })
+        .eq('id', id)
+        .eq('creator', userAddress) // Only creator can update
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase update failed:', error);
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Only creator can edit this agent or agent not found' 
+        }, { status: 403 });
+      }
+
+      // Transform back to UnifiedAgent
+      const updatedAgent = transformDBToUnifiedAgent(data);
+
+      // Update memory cache
+      const agentIndex = unifiedAgents.findIndex(agent => agent.id === id);
+      if (agentIndex !== -1) {
+        unifiedAgents[agentIndex] = updatedAgent;
+      }
+
+      console.log(`✅ Agent updated in Supabase: ${updatedAgent.name}`);
+      
       return NextResponse.json({ 
-        success: false, 
-        error: 'Agent not found' 
-      }, { status: 404 });
-    }
-    
-    const agent = unifiedAgents[agentIndex];
-    
-    // Check permission - only creator can edit
-    if (agent.creator.toLowerCase() !== userAddress.toLowerCase()) {
+        success: true, 
+        agent: updatedAgent 
+      });
+
+    } catch (supabaseError) {
+      console.error('❌ Supabase update failed:', supabaseError);
+      
+      // 🔄 FALLBACK: Update in memory
+      const agentIndex = unifiedAgents.findIndex(agent => agent.id === id);
+      if (agentIndex === -1) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Agent not found' 
+        }, { status: 404 });
+      }
+      
+      const agent = unifiedAgents[agentIndex];
+      
+      // Check permission - only creator can edit
+      if (agent.creator.toLowerCase() !== userAddress.toLowerCase()) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Only creator can edit this agent' 
+        }, { status: 403 });
+      }
+      
+      // Update agent
+      const updatedAgent = {
+        ...agent,
+        ...updates,
+        // Protect critical fields
+        id: agent.id,
+        creator: agent.creator,
+        tokenId: agent.tokenId,
+        agentContractAddress: agent.agentContractAddress,
+        txHash: agent.txHash,
+        createdAt: agent.createdAt
+      };
+      
+      unifiedAgents[agentIndex] = updatedAgent;
+      
+      console.log(`✅ Agent updated in memory (fallback): ${updatedAgent.name}`);
+      
       return NextResponse.json({ 
-        success: false, 
-        error: 'Only creator can edit this agent' 
-      }, { status: 403 });
+        success: true, 
+        agent: updatedAgent 
+      });
     }
-    
-    // Update agent
-    const updatedAgent = {
-      ...agent,
-      ...updates,
-      // Protect critical fields
-      id: agent.id,
-      creator: agent.creator,
-      tokenId: agent.tokenId,
-      agentContractAddress: agent.agentContractAddress,
-      txHash: agent.txHash,
-      createdAt: agent.createdAt
-    };
-    
-    unifiedAgents[agentIndex] = updatedAgent;
-    
-    console.log(`✅ Agent updated by creator: ${updatedAgent.name}`);
-    
-    return NextResponse.json({ 
-      success: true, 
-      agent: updatedAgent 
-    });
     
   } catch (error) {
     console.error('❌ Failed to update unified agent:', error);
@@ -228,13 +330,59 @@ export async function PUT(request: NextRequest) {
 }
 
 /**
- * DELETE /api/agents - Development endpoint to clear all agents
+ * DELETE /api/agents - Mark agent as sold (set active=false)
+ * Body: { agentId: string, buyerAddress: string }
  */
-export async function DELETE() {
-  unifiedAgents = [];
-  console.log('🗑️ All unified agents cleared');
-  return NextResponse.json({ 
-    success: true, 
-    message: 'All unified agents cleared' 
-  });
+export async function DELETE(request: NextRequest) {
+  try {
+    const { agentId, buyerAddress } = await request.json();
+    
+    if (!agentId) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Missing agentId' 
+      }, { status: 400 });
+    }
+
+    // 🚀 PRIORITY 1: Update in Supabase (mark as sold)
+    try {
+      const { data, error } = await supabase
+        .from('unified_agents')
+        .update({
+          active: false,
+          current_owner: buyerAddress || 'sold'
+        })
+        .eq('id', agentId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase delete/sold failed:', error);
+      } else {
+        console.log(`✅ Agent marked as sold in Supabase: ${data.name}`);
+      }
+    } catch (supabaseError) {
+      console.error('❌ Supabase connection failed:', supabaseError);
+    }
+
+    // 🔄 FALLBACK: Update in memory
+    const agentIndex = unifiedAgents.findIndex(agent => agent.id === agentId);
+    if (agentIndex !== -1) {
+      unifiedAgents[agentIndex].active = false;
+      unifiedAgents[agentIndex].currentOwner = buyerAddress || 'sold';
+      console.log(`✅ Agent marked as sold in memory: ${unifiedAgents[agentIndex].name}`);
+    }
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Agent marked as sold' 
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to mark agent as sold:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Failed to mark agent as sold' 
+    }, { status: 500 });
+  }
 }
