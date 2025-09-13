@@ -1068,7 +1068,14 @@ Saving agent without marketplace listing...`);
       {/* ✅ ENHANCED: Progress Modal with retry callback */}
       <ProgressModal
         isOpen={showProgressModal}
-        onClose={() => !isCreating && setShowProgressModal(false)}
+        onClose={() => {
+          // Reset all states when modal is closed
+          setIsCreating(false);
+          setShowProgressModal(false);
+          setIsProcessComplete(false);
+          setCurrentStepIndex(0);
+          setProgressPercentage(0);
+        }}
         title={isProcessComplete ? "Listing Successful!" : "Listing in Progress"}
         steps={steps}
         currentStepIndex={currentStepIndex}

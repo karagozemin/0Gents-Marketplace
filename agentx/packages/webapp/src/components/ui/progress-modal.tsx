@@ -53,6 +53,27 @@ export function ProgressModal({
   successData,
   onRetry
 }: ProgressModalProps) {
+  const [showCloseConfirm, setShowCloseConfirm] = React.useState(false);
+
+  const handleCloseClick = () => {
+    if (isSuccess) {
+      // If process is complete, close directly
+      onClose?.();
+    } else {
+      // If process is ongoing, show confirmation
+      setShowCloseConfirm(true);
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setShowCloseConfirm(false);
+    onClose?.();
+  };
+
+  const handleCancelClose = () => {
+    setShowCloseConfirm(false);
+  };
+
   if (!isOpen) return null;
 
   // ✅ Enhanced step icon with new retrying status
@@ -103,6 +124,7 @@ export function ProgressModal({
   };
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-300 p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-500" />
@@ -118,12 +140,12 @@ export function ProgressModal({
               </div>
               <h2 className="text-2xl font-bold text-white tracking-tight">{title}</h2>
             </div>
-            {onClose && !isSuccess && (
+            {onClose && (
               <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700/50 rounded-lg"
+                onClick={handleCloseClick}
+                className="text-gray-400 hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg group cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 group-hover:text-red-400" />
               </button>
             )}
           </div>
@@ -308,5 +330,40 @@ export function ProgressModal({
         </div>
       </div>
     </div>
+
+    {/* ✅ Close Confirmation Dialog - Outside main modal */}
+    {showCloseConfirm && (
+      <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl border border-red-500/30 shadow-2xl p-6 max-w-md mx-4 animate-in slide-in-from-bottom-2 zoom-in-95 duration-300">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Cancel Process?</h3>
+          </div>
+          
+          <p className="text-gray-300 mb-6 leading-relaxed">
+            If you close this window, the NFT creation process will be interrupted and may fail. 
+            Are you sure you want to cancel?
+          </p>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={handleCancelClose}
+              className="flex-1 px-4 py-2 bg-gray-700/50 text-gray-300 rounded-lg hover:bg-gray-700/70 transition-colors font-medium cursor-pointer"
+            >
+              Continue Process
+            </button>
+            <button
+              onClick={handleConfirmClose}
+              className="flex-1 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors font-medium border border-red-500/30 hover:border-red-500/50 cursor-pointer"
+            >
+              Discard & Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
