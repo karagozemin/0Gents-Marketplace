@@ -60,32 +60,32 @@ export function ProgressModal({
     switch (step.status) {
       case 'completed':
         return (
-          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-green-400/30">
-            <CheckCircle className="w-5 h-5 text-white" />
+          <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg ring-1 ring-green-400/30">
+            <CheckCircle className="w-4 h-4 text-white" />
           </div>
         );
       case 'in_progress':
         return (
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-blue-400/30">
-            <Loader2 className="w-5 h-5 text-white animate-spin" />
+          <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg ring-1 ring-blue-400/30">
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
           </div>
         );
       case 'retrying':
         return (
-          <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-yellow-400/30">
-            <RotateCw className="w-5 h-5 text-white animate-spin" />
+          <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg ring-1 ring-yellow-400/30">
+            <RotateCw className="w-4 h-4 text-white animate-spin" />
           </div>
         );
       case 'error':
         return (
-          <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-400/30">
-            <AlertCircle className="w-5 h-5 text-white" />
+          <div className="w-6 h-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg ring-1 ring-red-400/30">
+            <AlertCircle className="w-4 h-4 text-white" />
           </div>
         );
       default:
         return (
-          <div className="w-8 h-8 bg-gray-600/50 rounded-full flex items-center justify-center">
-            <Clock className="w-5 h-5 text-gray-400" />
+          <div className="w-6 h-6 bg-gray-600/50 rounded-full flex items-center justify-center">
+            <Clock className="w-4 h-4 text-gray-400" />
           </div>
         );
     }
@@ -103,15 +103,15 @@ export function ProgressModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-300 p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-500" />
       
-      {/* Modal - ✅ Enhanced width for better content display */}
-      <div className="relative w-full max-w-2xl mx-4 animate-in slide-in-from-bottom-4 zoom-in-95 duration-500">
+      {/* Modal - ✅ Wide but compact for better content display */}
+      <div className="relative w-full max-w-2xl max-h-[90vh] animate-in slide-in-from-bottom-4 zoom-in-95 duration-500">
         <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl border border-gray-600/50 shadow-2xl backdrop-blur-xl transform transition-all duration-300 hover:scale-[1.01]">
           {/* ✅ Enhanced Header with loading indicator */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+          <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center">
                 <Loader2 className={`w-6 h-6 text-white ${!isSuccess ? 'animate-spin' : ''}`} />
@@ -186,7 +186,7 @@ export function ProgressModal({
               )}
 
               {/* ✅ Enhanced Progress Bar with better styling */}
-              <div className="p-6 border-b border-gray-700/50">
+              <div className="p-4 border-b border-gray-700/50">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-base font-semibold text-gray-200">Overall Progress</span>
                   <span className="text-xl font-bold text-white">{Math.round(progress)}%</span>
@@ -204,13 +204,13 @@ export function ProgressModal({
                 </div>
               </div>
 
-              {/* ✅ Enhanced Steps with new features */}
-              <div className="p-6 max-h-96 overflow-y-auto">
-                <div className="space-y-5">
+              {/* ✅ Enhanced Steps with new features - No scroll version */}
+              <div className="p-4">
+                <div className="space-y-2">
                   {steps.map((step, index) => (
                     <div 
                       key={step.id} 
-                      className={`flex items-start gap-4 p-4 rounded-xl transition-all duration-500 ${
+                      className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-500 ${
                         step.status === 'in_progress' || step.status === 'retrying' 
                           ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20' 
                           : step.status === 'completed'
@@ -228,8 +228,8 @@ export function ProgressModal({
 
                       {/* Step Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className={`text-lg font-semibold ${getStepTextColor(step.status)}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className={`text-base font-semibold ${getStepTextColor(step.status)}`}>
                             {step.title}
                           </h4>
                           {/* ✅ NEW: Estimated time display */}
@@ -240,7 +240,7 @@ export function ProgressModal({
                           )}
                         </div>
                         
-                        <p className="text-sm text-gray-300 leading-relaxed mb-3">
+                        <p className="text-sm text-gray-300 leading-relaxed mb-2">
                           {step.description}
                         </p>
 

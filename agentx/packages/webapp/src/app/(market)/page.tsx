@@ -278,13 +278,11 @@ export default function HomePage() {
             </Badge>
           </div>
         </div>
-        <div className="flex gap-6 overflow-x-auto pb-4 snap-x scrollbar-hide">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allAgents.slice(0, 6).map((agent) => {
             console.log('🔍 Featured agent:', { id: agent.id, name: agent.name });
             return (
-              <div key={agent.id} className="snap-start">
-                <AgentWideCard {...agent} tag="Featured" />
-              </div>
+              <AgentCard key={agent.id} {...agent} />
             );
           })}
         </div>

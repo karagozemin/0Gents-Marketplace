@@ -200,12 +200,13 @@ export function AgentCard({
   }
 
   return (
-    <motion.div
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="group"
-    >
-      <Card className="overflow-hidden gradient-card hover:glow-purple transition-all duration-300 border-white/10">
+    <Link href={`/agent/${id}`}>
+      <motion.div
+        whileHover={{ y: -8, scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className="group cursor-pointer"
+      >
+        <Card className="overflow-hidden gradient-card hover:glow-purple transition-all duration-300 border-white/10">
         <CardContent className="p-0">
           {/* Image Section */}
           <div className="relative aspect-[4/3] bg-gradient-to-br from-purple-900/20 via-gray-900 to-blue-900/20 overflow-hidden">
@@ -311,6 +312,7 @@ export function AgentCard({
         </CardContent>
       </Card>
     </motion.div>
+    </Link>
   );
 }
 
