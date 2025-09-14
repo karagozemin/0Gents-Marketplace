@@ -206,7 +206,7 @@ export function AgentCard({
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
         className="group cursor-pointer"
       >
-        <Card className="overflow-hidden gradient-card hover:glow-purple transition-all duration-300 border-white/10">
+        <Card className="overflow-hidden gradient-card hover:glow-purple transition-all duration-300 border-white/10 p-0">
         <CardContent className="p-0">
           {/* Image Section */}
           <div className="relative aspect-[4/3] bg-gradient-to-br from-purple-900/20 via-gray-900 to-blue-900/20 overflow-hidden">
