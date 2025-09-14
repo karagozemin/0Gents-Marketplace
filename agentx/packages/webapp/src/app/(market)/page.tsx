@@ -220,10 +220,10 @@ export default function HomePage() {
         {/* DarkVeil Animated Background */}
         <div className="absolute inset-0">
           <DarkVeil 
-            speed={1.0}
+            speed={2.5}
             hueShift={0}
-            noiseIntensity={0.02}
-            warpAmount={0.2}
+            noiseIntensity={0.03}
+            warpAmount={0.3}
           />
         </div>
         
