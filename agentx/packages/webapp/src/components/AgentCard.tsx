@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -200,11 +199,11 @@ export function AgentCard({
   }
 
   return (
-    <Link href={`/agent/${id}`}>
       <motion.div
         whileHover={{ y: -8, scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
         className="group cursor-pointer"
+        onClick={() => window.location.href = `/agent/${id}`}
       >
         <Card className="overflow-hidden gradient-card hover:glow-purple transition-all duration-300 border-white/10 p-0">
         <CardContent className="p-0">
@@ -226,6 +225,7 @@ export function AgentCard({
                 className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50 cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   setIsLiked(!isLiked);
                 }}
               >
@@ -235,6 +235,10 @@ export function AgentCard({
                 size="sm"
                 variant="ghost"
                 className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50 cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
               >
                 <Eye className="w-4 h-4 text-white" />
               </Button>
@@ -262,12 +266,19 @@ export function AgentCard({
 
             {/* Action Buttons */}
             <div className="flex gap-2">
-              <Link href={`/agent/${id}`} className="flex-1">
-                <Button size="sm" variant="outline" className="w-full border-purple-400/50 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="flex-1 border-purple-400/50 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = `/agent/${id}`;
+                  }}
+                >
                   <Eye className="w-4 h-4 mr-2" />
                   View
                 </Button>
-              </Link>
               
               {listingId && listingId > 0 && owner.toLowerCase() !== address?.toLowerCase() ? (
                 <Button 
@@ -312,7 +323,6 @@ export function AgentCard({
         </CardContent>
       </Card>
     </motion.div>
-    </Link>
   );
 }
 
