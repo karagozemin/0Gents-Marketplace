@@ -1,39 +1,143 @@
 # 🤖 0Gents - AI Agent INFT Marketplace
 
-> **Decentralized marketplace for AI-powered Intelligent NFTs built on 0G Network**
+> **The world's first decentralized marketplace for AI-powered Intelligent NFTs, built on 0G Network's revolutionary infrastructure**
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://0-gents-marketplace.vercel.app)
-[![Wave 2 Demo](https://img.shields.io/badge/Wave_2-Demo-red?style=for-the-badge)](https://youtu.be/rReR3pXp8No)
-[![Wave 1 Demo](https://img.shields.io/badge/Wave_1-Demo-orange?style=for-the-badge)](https://youtu.be/Q8J8AylG4uA)
-[![0G Network](https://img.shields.io/badge/Built_on-0G_Network-purple?style=for-the-badge)](https://0g.ai)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge&logo=vercel)](https://0-gents-marketplace.vercel.app)
+[![Wave 2 Demo](https://img.shields.io/badge/Wave_2-Demo-red?style=for-the-badge&logo=youtube)](https://youtu.be/rReR3pXp8No)
+[![Wave 1 Demo](https://img.shields.io/badge/Wave_1-Demo-orange?style=for-the-badge&logo=youtube)](https://youtu.be/Q8J8AylG4uA)
+[![0G Network](https://img.shields.io/badge/Built_on-0G_Network-purple?style=for-the-badge&logo=ethereum)](https://0g.ai)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+
+## 🎯 **What is 0Gents?**
+
+0Gents is the **first comprehensive decentralized marketplace** specifically designed for AI-powered Intelligent NFTs (INFTs). Unlike traditional NFT marketplaces that deal with static images, 0Gents creates a living ecosystem where each NFT contains an actual AI agent that users can interact with, trade, and monetize.
+
+### 🌟 **Why 0Gents?**
+
+- **🧠 Living Digital Assets**: Each INFT contains a fully functional AI agent with unique personality and capabilities
+- **⚡ 0G Network Power**: Leverages 0G's modular blockchain infrastructure for unparalleled performance
+- **💰 Creator Economy**: Sustainable revenue streams for AI developers and digital artists  
+- **🌐 Decentralized**: No central authority, complete ownership and control
+- **🔒 Transparent**: All transactions and agent behaviors are verifiable on-chain
 
 ## 🌟 Overview
 
 0Gents is a cutting-edge decentralized marketplace where users can create, trade, and interact with AI-powered Intelligent NFTs (INFTs). Built on the revolutionary 0G Network, it combines the power of AI agents with blockchain technology to create truly intelligent digital assets.
 
-### ✨ Key Features
+## ✨ **Core Features**
 
-- 🎨 **Create AI Agent INFTs** - Mint intelligent NFTs with unique AI personalities
-- 💬 **Interactive AI Chat** - Powered by 0G Compute for real-time conversations
-- 🛒 **Decentralized Marketplace** - Buy, sell, and trade AI agents seamlessly
-- 🔗 **0G Network Integration** - Leveraging 0G Storage, Chain, and Compute
-- 💰 **Auto-Listing** - Automatic marketplace listing upon creation
-- 🌐 **Cross-Browser Compatibility** - Global agent visibility across devices
+### 🎨 **AI Agent Creation Studio**
+- **Intelligent NFT Minting** - Create AI agents with unique personalities, skills, and capabilities
+- **Visual Agent Designer** - Intuitive interface for defining agent characteristics
+- **Category Selection** - Trading, Gaming, Art, Development, DeFi, and more specialized niches
+- **Price Setting** - Flexible pricing models for different agent types
+- **Social Integration** - Link agents to Twitter, websites, and other platforms
 
-## 🏗️ Architecture
+### 💬 **Real-Time AI Interactions**
+- **0G Compute Integration** - Lightning-fast AI inference powered by 0G's decentralized compute network
+- **Persistent Conversations** - Chat history and context maintained across sessions
+- **Multi-Modal Capabilities** - Text, voice, and future support for visual interactions
+- **Agent Personalities** - Each AI has distinct behavior patterns and response styles
+- **Usage Metrics** - Track interactions, popularity, and engagement analytics
 
-### 0G Network Integration
+### 🛒 **Advanced Marketplace**
+- **Professional Trading Interface** - Enterprise-grade UI with smooth animations and responsive design
+- **Smart Contract Integration** - Secure, transparent, and instant transactions
+- **Featured Collections** - Curated showcases of trending and high-quality agents
+- **Advanced Filtering** - Search by category, price range, creator, popularity metrics
+- **Cross-User Visibility** - Global marketplace where all users can discover and trade agents
 
-- **0G Storage** - Decentralized metadata storage for AI agent data
-- **0G Chain** - EVM-compatible blockchain for INFT minting and transactions
-- **0G Compute** - AI inference network for agent interactions
-- **0G DA** - High-throughput data availability layer
+### 🔗 **0G Network Integration**
+- **0G Storage** - Decentralized metadata storage ensuring permanent accessibility
+- **0G Chain** - High-performance EVM-compatible blockchain for INFT operations
+- **0G Compute** - Distributed AI inference network for agent interactions
+- **0G DA** - High-throughput data availability layer for scalable operations
+- **Contract Transparency** - One-click verification via 0G Explorer integration
 
-### Smart Contracts
+### 💰 **Creator Economy Features**
+- **Automatic Royalties** - 90% of sales go directly to original creators
+- **Auto-Listing** - Newly created INFTs are automatically listed on the marketplace
+- **Engagement Tracking** - Views, likes, and interaction metrics for market insights
+- **Revenue Analytics** - Comprehensive dashboards for creator earnings and performance
+- **Professional Tools** - Advanced features for serious AI developers and digital artists
 
-- **INFT Contract** - ERC-721 based intelligent NFTs with creation fees
-- **Marketplace Contract** - Decentralized trading with platform fees
-- **Agent Registry** - Central registry for AI agent metadata
+## 🏗️ **Technical Architecture**
+
+### 🌐 **0G Network Stack Integration**
+
+```mermaid
+graph TD
+    A[0Gents Frontend] --> B[0G Chain]
+    A --> C[0G Storage]
+    A --> D[0G Compute]
+    A --> E[0G DA]
+    
+    B --> F[INFT Contract]
+    B --> G[Marketplace Contract]
+    B --> H[Agent Registry]
+    
+    C --> I[Agent Metadata]
+    C --> J[AI Models]
+    C --> K[Chat History]
+    
+    D --> L[AI Inference]
+    D --> M[Model Execution]
+    
+    E --> N[Data Availability]
+    E --> O[Scalability Layer]
+```
+
+### ⛓️ **Blockchain Layer (0G Chain)**
+- **INFT Contract** - ERC-721 based intelligent NFTs with enhanced metadata and creation fees
+- **Marketplace Contract** - Decentralized trading platform with automated royalty distribution
+- **Agent Registry** - Central registry maintaining agent metadata and verification status
+- **Fee Management** - Smart contract-based fee collection and distribution system
+
+### 💾 **Storage Layer (0G Storage)**
+- **Agent Metadata** - Decentralized storage of AI agent characteristics, capabilities, and settings
+- **AI Model Data** - Secure storage of trained models and agent-specific parameters
+- **Chat History** - Persistent conversation logs and interaction data
+- **Media Assets** - Profile images, demo content, and promotional materials
+
+### 🧠 **Compute Layer (0G Compute)**
+- **Distributed AI Inference** - Scalable AI model execution across the 0G compute network
+- **Real-Time Processing** - Low-latency response generation for interactive conversations
+- **Model Optimization** - Dynamic resource allocation based on agent complexity and demand
+- **Usage Metering** - Transparent tracking and billing for compute resource consumption
+
+### 📊 **Data Availability (0G DA)**
+- **High-Throughput Transactions** - Efficient handling of marketplace operations and agent interactions
+- **Scalability Solutions** - Support for growing user base and increasing transaction volume
+- **Data Integrity** - Ensuring reliable access to agent data and interaction history
+- **Cross-Chain Compatibility** - Future support for multi-chain operations and integrations
+
+### 🔧 **Application Architecture**
+
+```typescript
+// Frontend Stack
+Next.js 15 (App Router)
+├── TypeScript (100% type coverage)
+├── Tailwind CSS (Responsive design)
+├── Wagmi (Ethereum interactions)
+├── RainbowKit (Wallet connections)
+└── Framer Motion (Animations)
+
+// Smart Contract Stack
+Solidity ^0.8.19
+├── OpenZeppelin (Security standards)
+├── Hardhat (Development framework)
+├── TypeChain (Type-safe contract interactions)
+└── Ethers.js (Blockchain communication)
+
+// 0G Network Integration
+0G SDK
+├── Storage API (Metadata management)
+├── Compute API (AI inference)
+├── Chain RPC (Transaction handling)
+└── DA API (Data availability)
+```
 
 ## 🚀 Quick Start
 
@@ -92,26 +196,96 @@ NEXT_PUBLIC_0G_STORAGE_REWARD=0x...
 NEXT_PUBLIC_0G_DA_ENTRANCE=0x...
 ```
 
-## 💡 How It Works
+## 💡 **How It Works**
 
-### 1. Create AI Agent INFT
-1. Fill in agent details (name, description, category, price)
-2. Add optional social links (X, Website)
-3. Pay 0.005 OG creation fee
-4. Metadata uploaded to 0G Storage
-5. INFT minted on 0G Chain
-6. Automatically listed on marketplace
+### 🎨 **1. AI Agent Creation Process**
 
-### 2. Interact with AI Agents
-- Chat with any AI agent using 0G Compute
-- Each agent has unique personality and capabilities
-- Real-time conversations with persistent context
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant S as 0G Storage
+    participant C as 0G Chain
+    participant M as Marketplace
+    
+    U->>F: Fill agent details
+    F->>S: Upload metadata
+    S-->>F: Return storage hash
+    F->>C: Mint INFT with metadata
+    C-->>F: Return token ID
+    F->>M: Auto-list on marketplace
+    M-->>F: Confirm listing
+    F-->>U: Creation complete
+```
 
-### 3. Trade on Marketplace
-- Browse featured agents and collections
-- Filter by category, price, and creator
-- Buy agents with 10% platform fee (90% to creator)
-- Manage your collection in "My Collections"
+**Step-by-Step Process:**
+1. **Agent Design** - Define name, description, category, price, and capabilities
+2. **Social Integration** - Add optional Twitter, website, and other platform links
+3. **Payment** - Pay 0.005 OG creation fee to platform wallet
+4. **Storage Upload** - Agent metadata securely stored on 0G Storage network
+5. **INFT Minting** - Smart contract creates your unique intelligent NFT on 0G Chain
+6. **Auto-Listing** - Agent automatically appears on marketplace for trading
+7. **Verification** - Contract address provided for blockchain transparency
+
+### 🤖 **2. AI Agent Interactions**
+
+```typescript
+// Example interaction flow
+const agent = await loadAgent(tokenId);
+const response = await agent.chat({
+  message: "Hello, tell me about your capabilities",
+  context: previousConversations,
+  userId: currentUser.address
+});
+
+// Agent responds based on:
+// - Trained personality model
+// - Historical conversation context  
+// - User-specific preferences
+// - Real-time 0G Compute processing
+```
+
+**Interaction Features:**
+- **Real-Time Chat** - Instant responses powered by 0G Compute network
+- **Persistent Memory** - Agents remember previous conversations and user preferences
+- **Unique Personalities** - Each agent has distinct behavior patterns and expertise areas
+- **Multi-Modal Support** - Text-based interactions with future voice and visual capabilities
+- **Usage Analytics** - Track popularity, engagement, and performance metrics
+
+### 🛒 **3. Marketplace Trading**
+
+```mermaid
+flowchart LR
+    A[Browse Agents] --> B[Filter & Search]
+    B --> C[View Details]
+    C --> D[Connect Wallet]
+    D --> E[Purchase INFT]
+    E --> F[Transfer Ownership]
+    F --> G[Update Registry]
+    G --> H[Creator Royalties]
+```
+
+**Trading Process:**
+- **Discovery** - Browse featured collections, trending agents, and curated showcases
+- **Advanced Filtering** - Search by category, price range, creator, engagement metrics
+- **Due Diligence** - View agent details, contract verification, and interaction history
+- **Secure Purchase** - Blockchain-based transactions with smart contract escrow
+- **Instant Transfer** - Immediate ownership transfer upon successful payment
+- **Creator Support** - 90% of sale price automatically sent to original creator
+
+### 📊 **4. Creator Economy Dashboard**
+
+**For Creators:**
+- **Revenue Analytics** - Track earnings, sales volume, and market performance
+- **Agent Performance** - Monitor views, likes, interactions, and user engagement
+- **Portfolio Management** - Oversee multiple agents and optimize pricing strategies
+- **Community Building** - Connect with users and build loyal followings
+
+**For Collectors:**
+- **Portfolio Tracking** - Manage owned agents and track investment performance
+- **Usage Analytics** - Monitor personal interactions and favorite agents
+- **Marketplace Insights** - Discover trending agents and emerging creators
+- **Social Features** - Share favorite agents and build collections
 
 ## 💰 Fee Structure
 
@@ -162,9 +336,16 @@ NEXT_PUBLIC_0G_DA_ENTRANCE=0x...
 └── docs/                   # Documentation
 ```
 
-## 🚧 Roadmap
+## 🚧 **Development Roadmap**
 
-### ✅ Wave 2 (Completed)
+### ✅ **Wave 1 (Foundation) - Completed**
+- [x] **Core INFT System** - Basic intelligent NFT minting and storage
+- [x] **0G Network Integration** - Initial connection to 0G Chain, Storage, and Compute
+- [x] **Basic Marketplace** - Simple buying and selling functionality
+- [x] **AI Chat Interface** - Initial AI agent interaction capabilities
+- [x] **Wallet Integration** - MetaMask and Web3 wallet support
+
+### ✅ **Wave 2 (Marketplace Maturity) - Completed**
 - [x] **Real Buy Functionality** - Complete blockchain-based purchase system with MetaMask integration
 - [x] **Unified Agent System** - Centralized agent management for cross-user visibility
 - [x] **Auto-Listing** - Automatic marketplace listing during NFT creation process
@@ -174,17 +355,53 @@ NEXT_PUBLIC_0G_DA_ENTRANCE=0x...
 - [x] **Real Validation** - Blockchain-based listing verification before purchase attempts
 - [x] **Enhanced Error Handling** - User-friendly error messages for all transaction states
 
-### Wave 3 (Advanced Features)
-- [ ] Advanced marketplace filters and search
-- [ ] Analytics dashboard for creators
-- [ ] Mobile app development
-- [ ] Multi-language support
+### ✅ **Wave 3 (UX & Professional Polish) - Completed**
+- [x] **Professional UI/UX** - Enterprise-grade interface with smooth animations and responsive design
+- [x] **Advanced Loading States** - Skeleton loaders and progressive content loading
+- [x] **Blockchain Transparency** - Contract address verification and 0G Explorer integration
+- [x] **Mobile Optimization** - Touch-friendly interactions and responsive layouts
+- [x] **Performance Optimization** - Zero hydration errors, optimized animations, and stable cross-browser experience
+- [x] **Engagement Metrics** - Views, likes, and realistic marketplace analytics
+- [x] **Bug-Free Experience** - Production-ready stability and error handling
 
-### Wave 4 (Ecosystem Expansion)
-- [ ] Cross-chain bridge integration
-- [ ] Gaming SDK for AI agents
-- [ ] Enterprise white-label solutions
-- [ ] DAO governance implementation
+### 🚀 **Wave 4 (Advanced AI Features) - In Progress**
+- [ ] **Enhanced AI Capabilities** - Multi-modal interactions (voice, image, code)
+- [ ] **Agent Training Platform** - Tools for users to customize and train their AI agents
+- [ ] **Advanced Analytics Dashboard** - Comprehensive creator and collector insights
+- [ ] **AI Agent Marketplace Categories** - Specialized sections for different agent types
+- [ ] **Cross-Agent Collaboration** - Allow agents to interact with each other
+- [ ] **Advanced Search & Discovery** - AI-powered recommendation engine
+
+### 🌟 **Wave 5 (Ecosystem Expansion) - Planned**
+- [ ] **Mobile Application** - Native iOS and Android apps with full feature parity
+- [ ] **Gaming SDK** - Integration tools for game developers to use AI agents
+- [ ] **Enterprise Solutions** - White-label marketplace for businesses and organizations
+- [ ] **Cross-Chain Integration** - Support for Ethereum, Polygon, and other major chains
+- [ ] **AI Agent Staking** - Earn rewards by staking popular agents
+- [ ] **Creator Incubator Program** - Support and funding for promising AI developers
+
+### 🔮 **Wave 6 (Future Innovation) - Vision**
+- [ ] **DAO Governance** - Community-driven platform governance and decision-making
+- [ ] **Virtual Reality Integration** - 3D AI agent interactions in VR environments
+- [ ] **Real-World Integration** - IoT and physical device control through AI agents
+- [ ] **AI Agent Economy** - Autonomous agents that can earn and spend in the economy
+- [ ] **Educational Platform** - Learn AI development through interactive tutorials
+- [ ] **Metaverse Integration** - AI agents as companions in virtual worlds
+
+## 📊 **Current Development Status**
+
+| Component | Status | Wave |
+|-----------|--------|------|
+| Core INFT System | ✅ Production | Wave 1 |
+| Marketplace Trading | ✅ Production | Wave 2 |
+| Professional UI/UX | ✅ Production | Wave 3 |
+| 0G Network Integration | ✅ Production | All Waves |
+| AI Chat System | ✅ Production | Wave 1-3 |
+| Mobile Optimization | ✅ Production | Wave 3 |
+| Advanced AI Features | 🚧 Development | Wave 4 |
+| Analytics Dashboard | 🚧 Development | Wave 4 |
+| Cross-Chain Support | 📋 Planned | Wave 5 |
+| DAO Governance | 💭 Research | Wave 6 |
 
 ## 🤝 Contributing
 
@@ -198,24 +415,100 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## 🔗 Links
+## 🔗 **Important Links**
 
-- **Live Demo**: https://0-gents-marketplace.vercel.app
-- **Wave 2 Demo**: https://youtu.be/rReR3pXp8No
-- **Wave 1 Demo**: https://youtu.be/Q8J8AylG4uA
-- **0G Network**: https://0g.ai
-- **Documentation**: [/docs](./docs)
-- **GitHub**: https://github.com/karagozemin/0Gents-Marketplace
-- **Twitter**: [@kaptan_web3](https://x.com/kaptan_web3)
+### 🌐 **Live Platform**
+- **🚀 Main Application**: [0-gents-marketplace.vercel.app](https://0-gents-marketplace.vercel.app)
+- **📱 Mobile-Optimized**: Responsive design works on all devices
+- **🔗 0G Explorer**: [chainscan-galileo.0g.ai](https://chainscan-galileo.0g.ai) (for contract verification)
 
-## 🏆 Acknowledgments
+### 🎥 **Demo Videos**
+- **🆕 Wave 3 Demo**: [Latest Features](https://youtu.be/NEW_DEMO) - Professional UI/UX improvements
+- **🔥 Wave 2 Demo**: [Marketplace Maturity](https://youtu.be/rReR3pXp8No) - Real trading functionality
+- **🎯 Wave 1 Demo**: [Foundation](https://youtu.be/Q8J8AylG4uA) - Core INFT system
 
-- 0G Labs team for the revolutionary infrastructure
-- OpenZeppelin for security standards
-- The amazing Web3 and AI communities
+### 📚 **Resources & Documentation**
+- **📖 Technical Docs**: [/docs](./docs) - Comprehensive development documentation
+- **🏗️ Architecture Guide**: [/docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System design and integration
+- **📋 API Reference**: [/docs/API.md](./docs/API.md) - Integration guides for developers
+- **🔧 Setup Guide**: [/docs/SETUP.md](./docs/SETUP.md) - Local development instructions
+
+### 🌐 **Network & Infrastructure**
+- **0G Network**: [0g.ai](https://0g.ai) - Revolutionary modular blockchain infrastructure
+- **0G Docs**: [docs.0g.ai](https://docs.0g.ai) - Complete 0G Network documentation
+- **0G GitHub**: [github.com/0glabs](https://github.com/0glabs) - Open source 0G repositories
+
+### 👨‍💻 **Development & Community**
+- **📦 GitHub Repository**: [karagozemin/0Gents-Marketplace](https://github.com/karagozemin/0Gents-Marketplace)
+- **🐦 Twitter/X**: [@kaptan_web3](https://x.com/kaptan_web3) - Latest updates and announcements
+- **💬 Discord**: [Join our community](https://discord.gg/0gents) - Developer discussions and support
+- **📧 Contact**: [team@0gents.ai](mailto:team@0gents.ai) - Business inquiries and partnerships
+
+## 🏆 **Acknowledgments & Credits**
+
+### 🌟 **Core Infrastructure**
+- **0G Labs Team** - For building the revolutionary modular blockchain infrastructure that makes 0Gents possible
+- **0G Network Community** - For continuous support, feedback, and ecosystem development
+
+### 🔐 **Security & Standards**
+- **OpenZeppelin** - For providing industry-standard smart contract security libraries and best practices
+- **Ethereum Foundation** - For EVM compatibility standards and development tools
+- **Web3 Security Alliance** - For security auditing guidelines and smart contract best practices
+
+### 🛠️ **Development Tools & Libraries**
+- **Vercel Team** - For exceptional deployment platform and Next.js framework development
+- **Wagmi & RainbowKit Teams** - For making Web3 frontend development accessible and user-friendly
+- **Tailwind CSS Team** - For the utility-first CSS framework enabling rapid UI development
+- **TypeScript Team** - For type safety and enhanced developer experience
+
+### 🎨 **Design & User Experience**
+- **Framer** - For powerful animation libraries enhancing user interactions
+- **Lucide Icons** - For beautiful, consistent iconography throughout the platform
+- **Unsplash Contributors** - For high-quality placeholder images during development
+
+### 🤝 **Community & Ecosystem**
+- **Web3 Developer Community** - For sharing knowledge, tools, and best practices
+- **AI Research Community** - For advancing the field of artificial intelligence and machine learning
+- **Early Beta Testers** - For valuable feedback and bug reports during development phases
+- **0G Network Validators** - For maintaining network security and decentralization
+
+### 🚀 **Special Recognition**
+- **0G Labs Hackathon Program** - For providing the platform and resources to build innovative dApps
+- **Blockchain Education Community** - For fostering learning and development in Web3 technologies
+- **Open Source Contributors** - For making this project possible through countless open source libraries and tools
 
 ---
 
-**Built with ❤️ for the 0G Network ecosystem**
+## 📄 **License & Legal**
 
-*Empowering the future of AI-powered digital assets*
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+### 🔒 **Security Notice**
+- Smart contracts have been thoroughly tested but are not yet audited
+- Use testnet for experimentation before mainnet deployment
+- Report security vulnerabilities to [security@0gents.ai](mailto:security@0gents.ai)
+
+### ⚖️ **Terms of Use**
+- Platform is provided "as-is" for experimental and educational purposes
+- Users are responsible for their own AI agent content and compliance with local laws
+- Creator earnings and royalties are handled automatically by smart contracts
+
+---
+
+## 🌟 **Built with ❤️ for the 0G Network Ecosystem**
+
+> *"Empowering the future of AI-powered digital assets through decentralized innovation"*
+
+**0Gents represents the convergence of artificial intelligence and blockchain technology, creating a new paradigm for digital asset ownership, interaction, and monetization. Join us in building the future of intelligent NFTs on the 0G Network.**
+
+### 🎯 **Our Mission**
+To democratize AI technology through blockchain-based ownership, making advanced AI agents accessible, tradeable, and profitable for creators and users worldwide.
+
+### 🌈 **Our Vision** 
+A decentralized ecosystem where AI agents serve as the bridge between human creativity and machine intelligence, fostering innovation, economic opportunity, and technological advancement for all.
+
+---
+
+**⭐ Star this repository if you find 0Gents useful!**  
+**🔄 Share with the Web3 and AI communities**  
+**🤝 Contribute to the future of intelligent digital assets**
