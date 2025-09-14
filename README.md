@@ -7,8 +7,6 @@
 [![Wave 1 Demo](https://img.shields.io/badge/Wave_1-Demo-orange?style=for-the-badge&logo=youtube)](https://youtu.be/Q8J8AylG4uA)
 [![0G Network](https://img.shields.io/badge/Built_on-0G_Network-purple?style=for-the-badge&logo=ethereum)](https://0g.ai)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 
 ## 🎯 **What is 0Gents?**
 
