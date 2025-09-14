@@ -281,7 +281,16 @@ Please refresh the page or create a new agent.`);
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-4xl font-bold text-white mb-2">{agent.name}</h1>
-                  <p className="text-lg text-gray-400">by {agent.creator?.slice(0, 6)}...{agent.creator?.slice(-4)}</p>
+                  <p className="text-lg text-gray-400">
+                    CA:{" "}
+                    <button
+                      onClick={() => window.open(`https://chainscan-galileo.0g.ai/address/${agent.agentContractAddress || agent.creator}`, '_blank')}
+                      className="text-blue-400 hover:text-blue-300 underline transition-colors cursor-pointer inline-flex items-center gap-1"
+                    >
+                      {(agent.agentContractAddress || agent.creator)?.slice(0, 6)}...{(agent.agentContractAddress || agent.creator)?.slice(-4)}
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </p>
                   </div>
                 <Badge variant="outline" className="border-blue-400/50 text-blue-300 bg-blue-500/10 text-lg px-4 py-2">
                         {agent.priceEth} 0G

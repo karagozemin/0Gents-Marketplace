@@ -7,6 +7,8 @@ export type AgentItem = {
   description: string;
   category: string;
   history: Array<{ activity: string; date: string; priceEth?: number }>;
+  views?: number;
+  likes?: number;
 };
 
 export const mockAgents: AgentItem[] = [
@@ -20,6 +22,8 @@ export const mockAgents: AgentItem[] = [
     description: "Analyzes market data and suggests opportunities.",
     category: "Trading",
     history: [{ activity: "Minted", date: "2025-08-18", priceEth: 0.03 }],
+    views: 234,
+    likes: 42,
   },
   {
     id: "3",
@@ -30,6 +34,8 @@ export const mockAgents: AgentItem[] = [
     description: "In-game agent for storytelling and quests.",
     category: "Gaming",
     history: [{ activity: "Minted", date: "2025-08-18", priceEth: 0.015 }],
+    views: 156,
+    likes: 28,
   },
   {
     id: "4",
@@ -40,6 +46,8 @@ export const mockAgents: AgentItem[] = [
     description: "Advanced AI for code review and optimization.",
     category: "Development",
     history: [{ activity: "Minted", date: "2025-08-19", priceEth: 0.035 }],
+    views: 189,
+    likes: 35,
   },
   {
     id: "5",
@@ -50,6 +58,8 @@ export const mockAgents: AgentItem[] = [
     description: "Generates stunning digital artwork and NFTs.",
     category: "Art",
     history: [{ activity: "Minted", date: "2025-08-19", priceEth: 0.06 }],
+    views: 312,
+    likes: 67,
   },
   {
     id: "6",
@@ -60,6 +70,8 @@ export const mockAgents: AgentItem[] = [
     description: "Manages and optimizes social media presence.",
     category: "Marketing",
     history: [{ activity: "Minted", date: "2025-08-20", priceEth: 0.025 }],
+    views: 145,
+    likes: 31,
   },
   {
     id: "7",
@@ -70,6 +82,8 @@ export const mockAgents: AgentItem[] = [
     description: "Processes and analyzes complex datasets.",
     category: "Analytics",
     history: [{ activity: "Minted", date: "2025-08-20", priceEth: 0.04 }],
+    views: 201,
+    likes: 38,
   },
   {
     id: "8",
@@ -80,6 +94,8 @@ export const mockAgents: AgentItem[] = [
     description: "Creates original music and beats using AI.",
     category: "Music",
     history: [{ activity: "Minted", date: "2025-08-21", priceEth: 0.055 }],
+    views: 178,
+    likes: 29,
   },
   {
     id: "9",
@@ -90,6 +106,8 @@ export const mockAgents: AgentItem[] = [
     description: "Personalized workout plans and nutrition advice.",
     category: "Health",
     history: [{ activity: "Minted", date: "2025-08-21", priceEth: 0.028 }],
+    views: 123,
+    likes: 19,
   },
   {
     id: "10",
@@ -100,6 +118,8 @@ export const mockAgents: AgentItem[] = [
     description: "Interactive language learning with AI feedback.",
     category: "Education",
     history: [{ activity: "Minted", date: "2025-08-22", priceEth: 0.035 }],
+    views: 167,
+    likes: 33,
   },
   {
     id: "11",
@@ -110,6 +130,8 @@ export const mockAgents: AgentItem[] = [
     description: "Predicts crypto market trends with high accuracy.",
     category: "DeFi",
     history: [{ activity: "Minted", date: "2025-08-22", priceEth: 0.1 }],
+    views: 423,
+    likes: 89,
   },
   {
     id: "12",
@@ -120,6 +142,8 @@ export const mockAgents: AgentItem[] = [
     description: "All-purpose AI assistant for daily tasks.",
     category: "Productivity",
     history: [{ activity: "Minted", date: "2025-08-23", priceEth: 0.05 }],
+    views: 256,
+    likes: 47,
   },
 ];
 
