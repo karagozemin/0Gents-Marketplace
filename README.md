@@ -164,7 +164,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [https://0-gents-marketplace.vercel.app/](https://0-gents-marketplace.vercel.app/) to view the application.
 
 ## 🔧 Configuration
 
