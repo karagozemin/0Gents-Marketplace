@@ -6,6 +6,7 @@ import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Star, Zap, Users } from "lucide-react";
+import DarkVeil from "@/components/ui/DarkVeil";
 import { useState, useEffect } from "react";
 import { useReadContract } from "wagmi";
 import { INFT_ADDRESS, INFT_ABI, FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI } from "@/lib/contracts";
@@ -214,26 +215,36 @@ export default function HomePage() {
 
   return (
     <div className="space-y-12">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl gradient-0g-subtle border border-purple-500/20 p-16 text-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-blue-600/10"></div>
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl"></div>
+      {/* Hero Section with DarkVeil Background */}
+      <section className="relative overflow-hidden rounded-3xl border border-purple-500/20 h-[600px]">
+        {/* DarkVeil Animated Background */}
+        <div className="absolute inset-0">
+          <DarkVeil 
+            speed={1.0}
+            hueShift={0}
+            noiseIntensity={0.02}
+            warpAmount={0.2}
+          />
+        </div>
         
-        <div className="relative z-10">
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
+        
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center items-center h-full text-center p-16">
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
             <span className="text-gradient">0Gents</span>
             <br />
-            <span className="text-white">Marketplace</span>
+            <span className="text-white drop-shadow-lg">Marketplace</span>
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto drop-shadow-md">
             Create, explore and trade intelligent INFTs on the 0G Network. 
             The future of AI-powered digital assets.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Button 
               size="lg" 
-              className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3 cursor-pointer"
+              className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3 cursor-pointer shadow-lg hover:shadow-xl transition-all"
               onClick={() => {
                 document.getElementById('trending-section')?.scrollIntoView({ 
                   behavior: 'smooth',
@@ -244,7 +255,7 @@ export default function HomePage() {
               <Zap className="w-5 h-5 mr-2" />
               Explore INFTs
             </Button>
-            <Button size="lg" className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 px-8 py-3 cursor-pointer backdrop-blur-sm" asChild>
+            <Button size="lg" className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 px-8 py-3 cursor-pointer backdrop-blur-sm shadow-lg hover:shadow-xl transition-all" asChild>
               <a href="/create">Create INFT</a>
             </Button>
           </div>
