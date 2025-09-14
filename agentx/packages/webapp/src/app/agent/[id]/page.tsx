@@ -243,7 +243,7 @@ Please refresh the page or create a new agent.`);
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900">
       {showConfetti && <Confetti />}
       <Navbar />
       
@@ -255,7 +255,7 @@ Please refresh the page or create a new agent.`);
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Card className="overflow-hidden gradient-card border-white/10">
+            <Card className="overflow-hidden gradient-card border-white/10 p-0">
               <CardContent className="p-0">
                 <div className="aspect-square bg-gradient-to-br from-purple-900/20 via-gray-900 to-blue-900/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -283,13 +283,13 @@ Please refresh the page or create a new agent.`);
                   <h1 className="text-4xl font-bold text-white mb-2">{agent.name}</h1>
                   <p className="text-lg text-gray-400">by {agent.creator?.slice(0, 6)}...{agent.creator?.slice(-4)}</p>
                   </div>
-                <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10 text-lg px-4 py-2">
+                <Badge variant="outline" className="border-blue-400/50 text-blue-300 bg-blue-500/10 text-lg px-4 py-2">
                         {agent.priceEth} 0G
                       </Badge>
                     </div>
 
               <div className="flex gap-2">
-                <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-400/50">
+                <Badge variant="secondary" className="bg-slate-500/20 text-slate-300 border-slate-400/50">
                         {agent.category}
                       </Badge>
                 {agent.trending && (
@@ -315,7 +315,7 @@ Please refresh the page or create a new agent.`);
             <div className="grid grid-cols-3 gap-4">
               <Card className="gradient-card border-white/10">
                 <CardContent className="p-4 text-center">
-                  <Eye className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                  <Eye className="w-6 h-6 text-blue-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">{agent.views || 0}</p>
                   <p className="text-sm text-gray-400">Views</p>
                 </CardContent>
@@ -342,7 +342,7 @@ Please refresh the page or create a new agent.`);
                 <Button
                   variant="outline"
                   size="lg"
-                  className="flex-1 border-purple-400/50 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20"
+                  className="flex-1 border-gray-400/50 text-gray-300 bg-gray-500/10 hover:bg-gray-500/20"
                   onClick={() => setIsLiked(!isLiked)}
                 >
                   <Heart className={`w-5 h-5 mr-2 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
@@ -351,7 +351,7 @@ Please refresh the page or create a new agent.`);
                 <Button
                   variant="outline"
                   size="lg"
-                  className="flex-1 border-purple-400/50 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20"
+                  className="flex-1 border-gray-400/50 text-gray-300 bg-gray-500/10 hover:bg-gray-500/20"
                 >
                   <Eye className="w-5 h-5 mr-2" />
                   Watch
