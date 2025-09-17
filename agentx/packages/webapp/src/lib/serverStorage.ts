@@ -1,6 +1,8 @@
 // Server-side only 0G Storage implementation
 // This will be used in API routes to avoid client-side Node.js module issues
 
+import { ZERO_G_STORAGE_FLOW } from "./contracts";
+
 export interface AgentMetadata {
   name: string;
   description: string;
@@ -34,7 +36,7 @@ async function getZgSDK() {
   const { Blob, Indexer } = await import('@0glabs/0g-ts-sdk');
   const { ethers } = await import('ethers');
   
-  return { Blob, Indexer, ethers };
+  return { ZgBlob: Blob, Indexer, ethers };
 }
 
 export async function uploadAgentMetadataServer(metadata: AgentMetadata, retryCount = 0): Promise<StorageResult> {
@@ -69,7 +71,7 @@ export async function uploadAgentMetadataServer(metadata: AgentMetadata, retryCo
       }
     }
     
-    const { Blob, Indexer, ethers } = await getZgSDK();
+    const { ZgBlob, Indexer, ethers } = await getZgSDK();
     const OG_INDEXER_URL = process.env.NEXT_PUBLIC_0G_INDEXER_URL || 'https://indexer-storage-testnet-turbo.0g.ai';
     const OG_PRIVATE_KEY = process.env.PRIVATE_KEY || process.env.NEXT_PUBLIC_0G_PRIVATE_KEY || '';
     
@@ -93,10 +95,10 @@ export async function uploadAgentMetadataServer(metadata: AgentMetadata, retryCo
     const jsonData = JSON.stringify(metadata, null, 2);
     console.log('📝 Metadata JSON size:', jsonData.length, 'bytes');
     
-    // Create File from string data
+    // Create 0G File from Blob (based on 0G SDK docs)
     const blob = new globalThis.Blob([jsonData], { type: 'application/json' });
-    const file = new Blob(blob as any);
-    console.log('📁 Created File object');
+    const file = new ZgBlob(blob as any);
+    console.log('📁 Created 0G File object');
     
     // Generate Merkle tree for verification
     const [tree, treeErr] = await file.merkleTree();
@@ -117,7 +119,14 @@ export async function uploadAgentMetadataServer(metadata: AgentMetadata, retryCo
     
     console.log('✅ Upload successful! Transaction:', tx);
     
-    // File cleanup handled automatically
+    // Close the file if close method exists
+    try {
+      if (typeof (file as any).close === 'function') {
+        await (file as any).close();
+      }
+    } catch (closeError) {
+      console.log('Note: File close not needed or failed (this is normal)');
+    }
     
     const result: StorageResult = {
       success: true,
@@ -168,7 +177,7 @@ export async function testStorageConnectionServer(): Promise<{ success: boolean;
     
     // First test SDK import
     try {
-      const { Blob, Indexer, ethers } = await getZgSDK();
+      const { ZgBlob, Indexer, ethers } = await getZgSDK();
       console.log('✅ 0G SDK imported successfully');
     } catch (sdkError) {
       console.error('❌ 0G SDK import failed:', sdkError);

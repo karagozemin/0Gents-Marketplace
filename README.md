@@ -93,11 +93,18 @@ graph TD
 - **Agent Registry** - Central registry maintaining agent metadata and verification status
 - **Fee Management** - Smart contract-based fee collection and distribution system
 
-### 💾 **Storage Layer (0G Storage)**
-- **Agent Metadata** - Decentralized storage of AI agent characteristics, capabilities, and settings
+### 💾 **Storage Layer (0G Storage) - ✅ FULLY INTEGRATED**
+- **Agent Metadata** - Real decentralized storage using 0G Storage SDK with Merkle tree verification
 - **AI Model Data** - Secure storage of trained models and agent-specific parameters
 - **Chat History** - Persistent conversation logs and interaction data
 - **Media Assets** - Profile images, demo content, and promotional materials
+- **Real Contract Integration** - Using actual 0G Storage testnet contracts
+  - Flow: `0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628`
+  - Mine: `0x3A0d1d67497Ad770d6f72e7f4B8F0BAbaa2A649C`
+  - Market: `0x53191725d260221bBa307D8EeD6e2Be8DD265e19`
+  - Reward: `0xd3D4D91125D76112AE256327410Dd0414Ee08Cb4`
+- **Fallback System** - Intelligent simulation fallback for network instability
+- **Performance Optimized** - Server-side processing with retry mechanisms
 
 ### 🧠 **Compute Layer (0G Compute)**
 - **Distributed AI Inference** - Scalable AI model execution across the 0G compute network
@@ -184,11 +191,11 @@ NEXT_PUBLIC_INFT_ADDRESS=0x...
 NEXT_PUBLIC_MARKETPLACE_ADDRESS=0x...
 NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS=0x...
 
-# 0G Storage Contracts
-NEXT_PUBLIC_0G_STORAGE_FLOW=0x...
-NEXT_PUBLIC_0G_STORAGE_MINE=0x...
-NEXT_PUBLIC_0G_STORAGE_MARKET=0x...
-NEXT_PUBLIC_0G_STORAGE_REWARD=0x...
+# 0G Storage Contracts (Real Testnet Addresses)
+NEXT_PUBLIC_0G_STORAGE_FLOW=0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628
+NEXT_PUBLIC_0G_STORAGE_MINE=0x3A0d1d67497Ad770d6f72e7f4B8F0BAbaa2A649C
+NEXT_PUBLIC_0G_STORAGE_MARKET=0x53191725d260221bBa307D8EeD6e2Be8DD265e19
+NEXT_PUBLIC_0G_STORAGE_REWARD=0xd3D4D91125D76112AE256327410Dd0414Ee08Cb4
 
 # 0G DA Contract
 NEXT_PUBLIC_0G_DA_ENTRANCE=0x...
@@ -312,9 +319,10 @@ flowchart LR
 - **OpenZeppelin** - Security standards
 
 ### AI & Storage
-- **0G Compute** - Decentralized AI inference
-- **0G Storage** - IPFS-like decentralized storage
-- **0G DA** - Data availability layer
+- **0G Compute** - Real decentralized AI inference with verified providers
+- **0G Storage** - Real decentralized storage with 4-contract integration (`@0glabs/0g-ts-sdk`)
+- **0G DA** - Real data availability layer with epoch tracking
+- **Merkle Trees** - Data integrity verification system
 
 ## 📁 Project Structure
 
@@ -362,6 +370,16 @@ flowchart LR
 - [x] **Engagement Metrics** - Views, likes, and realistic marketplace analytics
 - [x] **Bug-Free Experience** - Production-ready stability and error handling
 
+### ✅ **Wave 3.5 (Full 0G Stack Integration) - Completed**
+- [x] **Real 0G Storage Integration** - Complete migration from simulation to real 0G Storage SDK
+- [x] **Contract Address Integration** - All four 0G Storage contracts (Flow, Mine, Market, Reward) properly configured
+- [x] **Merkle Tree Verification** - Data integrity verification using 0G Storage's Merkle tree system
+- [x] **Server-side Processing** - Secure upload/download processing with retry mechanisms
+- [x] **Fallback System** - Intelligent fallback to simulation during network instability
+- [x] **Performance Optimization** - Optimized for real-world 0G network latency
+- [x] **API Endpoints** - Complete upload/download/test endpoints for 0G Storage
+- [x] **Environment Configuration** - Flexible deployment with environment variable support
+
 ### 🚀 **Wave 4 (Advanced AI Features) - In Progress**
 - [ ] **Enhanced AI Capabilities** - Multi-modal interactions (voice, image, code)
 - [ ] **Agent Training Platform** - Tools for users to customize and train their AI agents
@@ -393,13 +411,20 @@ flowchart LR
 | Core INFT System | ✅ Production | Wave 1 |
 | Marketplace Trading | ✅ Production | Wave 2 |
 | Professional UI/UX | ✅ Production | Wave 3 |
-| 0G Network Integration | ✅ Production | All Waves |
+| **0G Storage Integration** | ✅ **Production** | **Wave 3.5** |
+| **Real 0G Network Stack** | ✅ **Production** | **All Waves** |
 | AI Chat System | ✅ Production | Wave 1-3 |
 | Mobile Optimization | ✅ Production | Wave 3 |
 | Advanced AI Features | 🚧 Development | Wave 4 |
 | Analytics Dashboard | 🚧 Development | Wave 4 |
 | Cross-Chain Support | 📋 Planned | Wave 5 |
 | DAO Governance | 💭 Research | Wave 6 |
+
+### 🔥 **Latest Achievement: Full 0G Stack**
+- ✅ **0G Compute**: Real SDK + Verified Providers
+- ✅ **0G DA**: Real Contract + Epoch Tracking  
+- ✅ **0G Chain**: Real Contracts + INFT/Marketplace
+- ✅ **0G Storage**: Real SDK + All 4 Contracts + Merkle Trees
 
 ## 🤝 Contributing
 

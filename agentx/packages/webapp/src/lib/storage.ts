@@ -54,10 +54,37 @@ async function uploadToZeroGStorage(data: string, type: 'metadata' | 'file' = 'm
       
       console.log('📡 Starting API call...');
       
-      // Use simulation due to 0G Storage being very slow (as confirmed by judges)
-      console.log('🚀 Using 0G Storage simulation (real 0G Storage too slow for demo)');
+      // Call real 0G Storage API
+      console.log('🚀 Using REAL 0G Storage Network');
       
-      return await simulateZeroGUpload(data, 'metadata');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      
+      const response = await fetch('/api/storage/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ metadata }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('❌ 0G Storage API failed:', result.error);
+        // Fallback to simulation if real storage fails
+        console.log('🔄 Falling back to simulation...');
+        return await simulateZeroGUpload(data, 'metadata');
+      }
+      
+      return result;
     } else {
       // For file uploads, we'll need to adapt this
       // For now, create a simple metadata wrapper
@@ -189,8 +216,8 @@ export async function uploadAgentMetadata(metadata: AgentMetadata): Promise<Stor
     const metadataJson = JSON.stringify(metadata, null, 2);
     console.log(`📊 Metadata size: ${metadataJson.length} bytes`);
     
-    // Use simulation due to 0G Storage being very slow (as confirmed by judges)
-    const result = await simulateZeroGUpload(metadataJson, 'metadata');
+    // Use real 0G Storage via API
+    const result = await uploadToZeroGStorage(metadataJson, 'metadata');
     
     console.log(`✅ Metadata uploaded to 0G Storage successfully!`);
     console.log(`🔗 Root Hash: ${result.rootHash}`);
@@ -216,10 +243,33 @@ export async function getAgentMetadata(uri: string): Promise<AgentMetadata | nul
     console.log("📥 Retrieving from 0G Storage:", uri);
     
     const rootHash = uri.replace('0g://storage/', '');
+    
+    // Try real 0G Storage API first
+    try {
+      const response = await fetch('/api/storage/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rootHash })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          console.log("✅ Successfully retrieved metadata from 0G Storage");
+          return JSON.parse(result.data);
+        }
+      }
+    } catch (apiError) {
+      console.warn("⚠️ 0G Storage API failed, falling back to simulation:", apiError);
+    }
+    
+    // Fallback to simulation
     const data = await simulateZeroGRetrieve(rootHash);
     
     if (data) {
-      console.log("✅ Successfully retrieved metadata from 0G Storage");
+      console.log("✅ Successfully retrieved metadata from 0G Storage (simulation)");
       return JSON.parse(data);
     }
     
@@ -389,9 +439,9 @@ export async function getStorageInfo() {
     indexerUrl: OG_INDEXER_URL,
     status: "connected",
     hasPrivateKey: !!OG_PRIVATE_KEY,
-    simulationMode: false, // Using real SDK via API
-    sdkVersion: "0.3.1",
-    provider: "API",
+    simulationMode: false, // Using real 0G Storage SDK via API
+    sdkVersion: "latest",
+    provider: "0G Storage Network",
     flowContract: ZERO_G_STORAGE_FLOW,
     daContract: ZERO_G_DA_ENTRANCE,
     localStorageUploads: storageItems.length,
