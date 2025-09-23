@@ -114,7 +114,7 @@ export function MintINFT() {
         abi: INFT_ABI,
         functionName: "mint",
         args: [storageResult.uri!],
-        value: parseEther("0.005"), // 0.005 OG creation fee
+        value: parseEther("0.005"), // 0.005 A0GI creation fee
       });
 
       setTxHash(hash);

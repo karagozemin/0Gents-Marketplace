@@ -12,7 +12,7 @@ const ogRpcUrl = process.env.NEXT_PUBLIC_0G_RPC_URL;
 const ogGalileo = defineChain({
   id: 16601,
   name: "0G-Galileo-Testnet",
-  nativeCurrency: { name: "OG", symbol: "OG", decimals: 18 },
+  nativeCurrency: { name: "A0GI", symbol: "A0GI", decimals: 18 },
   rpcUrls: ogRpcUrl
     ? {
         default: { http: [ogRpcUrl] },

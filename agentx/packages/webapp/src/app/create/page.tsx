@@ -429,7 +429,7 @@ export default function CreatePage() {
       if (errorMessage.includes("User rejected") || errorMessage.includes("user rejected")) {
         userFriendlyMessage = "Transaction was cancelled. You can try again anytime.";
       } else if (errorMessage.includes("insufficient funds")) {
-        userFriendlyMessage = "Insufficient funds. Please add more 0G tokens to your wallet and try again.";
+        userFriendlyMessage = "Insufficient funds. Please add more A0GI tokens to your wallet and try again.";
       } else if (errorMessage.includes("network") || errorMessage.includes("connection")) {
         userFriendlyMessage = "Network error. Please refresh the page and try again.";
       }
@@ -439,7 +439,7 @@ export default function CreatePage() {
 💡 If the problem persists:
 • Refresh the page and try again
 • Check your wallet connection
-• Ensure you have enough 0G tokens`);
+• Ensure you have enough A0GI tokens`);
       setIsCreating(false);
       setTimeout(() => setShowProgressModal(false), 3000);
     }
@@ -1417,7 +1417,7 @@ Saving agent without marketplace listing...`);
                   </div>
                   <div className="flex justify-between text-gray-300">
                     <span>Factory Creation Fee</span>
-                    <span>0.01 OG</span>
+                    <span>0.01 A0GI</span>
                   </div>
                   <div className="flex justify-between text-gray-300">
                     <span>NFT Mint Fee</span>
@@ -1425,12 +1425,12 @@ Saving agent without marketplace listing...`);
                   </div>
                   <div className="flex justify-between text-gray-300">
                     <span>Network Fee</span>
-                    <span>~0.001 OG</span>
+                    <span>~0.001 A0GI</span>
                   </div>
                   <hr className="border-gray-700" />
                   <div className="flex justify-between text-white font-semibold">
                     <span>Total Estimated</span>
-                    <span>~0.011 OG</span>
+                    <span>~0.011 A0GI</span>
                   </div>
                 </div>
               </CardContent>

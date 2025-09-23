@@ -196,7 +196,7 @@ export default function BuyTestPage() {
             <div className="text-gray-300 space-y-2 text-sm">
               <p>1. Enter a listing ID and validate it first</p>
               <p>2. If validation shows exists=true and active=true, you can test the buy</p>
-              <p>3. Make sure you have enough 0G tokens in your wallet</p>
+              <p>3. Make sure you have enough A0GI tokens in your wallet</p>
               <p>4. Use the quick test buttons to test common listing IDs</p>
               <p>5. Check console for detailed error messages</p>
             </div>

@@ -226,7 +226,7 @@ sequenceDiagram
 **Step-by-Step Process:**
 1. **Agent Design** - Define name, description, category, price, and capabilities
 2. **Social Integration** - Add optional Twitter, website, and other platform links
-3. **Payment** - Pay 0.005 OG creation fee to platform wallet
+3. **Payment** - Pay 0.005 A0GI creation fee to platform wallet
 4. **Storage Upload** - Agent metadata securely stored on 0G Storage network
 5. **INFT Minting** - Smart contract creates your unique intelligent NFT on 0G Chain
 6. **Auto-Listing** - Agent automatically appears on marketplace for trading
@@ -296,10 +296,10 @@ flowchart LR
 
 | Operation | Fee | Recipient |
 |-----------|-----|-----------|
-| Creation Fee | 0.005 OG | Platform Wallet |
+| Creation Fee | 0.005 A0GI | Platform Wallet |
 | Platform Fee | 10% of sale | Platform Wallet |
 | Creator Earnings | 90% of sale | Original Creator |
-| Network Fees | ~0.001 OG | 0G Network |
+| Network Fees | ~0.001 A0GI | 0G Network |
 
 *All fees are configurable by administrators*
 
