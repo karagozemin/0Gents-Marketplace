@@ -32,7 +32,6 @@ export interface AgentNFTFactoryInterface extends Interface {
       | "creatorAgents"
       | "getAgentAt"
       | "getCreatorAgents"
-      | "getMarketplace"
       | "getTotalAgents"
       | "marketplace"
       | "owner"
@@ -65,10 +64,6 @@ export interface AgentNFTFactoryInterface extends Interface {
   encodeFunctionData(
     functionFragment: "getCreatorAgents",
     values: [AddressLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getMarketplace",
-    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getTotalAgents",
@@ -104,10 +99,6 @@ export interface AgentNFTFactoryInterface extends Interface {
   decodeFunctionResult(functionFragment: "getAgentAt", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getCreatorAgents",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getMarketplace",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -229,8 +220,6 @@ export interface AgentNFTFactory extends BaseContract {
     "view"
   >;
 
-  getMarketplace: TypedContractMethod<[], [string], "view">;
-
   getTotalAgents: TypedContractMethod<[], [bigint], "view">;
 
   marketplace: TypedContractMethod<[], [string], "view">;
@@ -287,9 +276,6 @@ export interface AgentNFTFactory extends BaseContract {
   getFunction(
     nameOrSignature: "getCreatorAgents"
   ): TypedContractMethod<[creator: AddressLike], [string[]], "view">;
-  getFunction(
-    nameOrSignature: "getMarketplace"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "getTotalAgents"
   ): TypedContractMethod<[], [bigint], "view">;

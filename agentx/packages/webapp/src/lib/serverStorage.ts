@@ -157,7 +157,7 @@ export async function uploadAgentMetadataServer(metadata: AgentMetadata, retryCo
       const uploadPromise = indexer.upload(file, OG_RPC_URL, signer as any);
       
       // Create timeout promise with progressive timeout (shorter on retries)
-      const timeoutDuration = Math.max(30000, 60000 - (retryCount * 15000)); // 60s, 45s, 30s
+      const timeoutDuration = Math.max(10000, 20000 - (retryCount * 5000)); // 20s, 15s, 10s
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => {
           reject(new Error(`Upload timeout after ${timeoutDuration/1000} seconds (attempt ${retryCount + 1})`));
