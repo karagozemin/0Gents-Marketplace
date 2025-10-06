@@ -10,7 +10,7 @@ export async function GET() {
     // Different 0G network endpoints to test
     const ENDPOINTS = [
       'https://evmrpc-testnet.0g.ai',
-      'https://quick-alien-shard.0g-galileo.quiknode.pro/34a3bedc56c56595f5f1053c6b159043c837ca6a/',
+      'https://evmrpc-testnet.0g.ai/',
       'https://rpc-testnet.0g.ai'
     ];
     

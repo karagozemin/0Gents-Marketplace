@@ -21,54 +21,35 @@ import type {
   TypedLogDescription,
   TypedListener,
   TypedContractMethod,
-} from "../../common";
+} from "../common";
 
-export interface AgentNFTFactoryInterface extends Interface {
+export interface SimpleFactoryInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "allAgents"
       | "createAgent"
       | "creationFee"
-      | "creatorAgents"
       | "getAgentAt"
-      | "getCreatorAgents"
-      | "getMarketplace"
       | "getTotalAgents"
       | "marketplace"
       | "owner"
       | "updateCreationFee"
-      | "updateMarketplace"
   ): FunctionFragment;
 
-  getEvent(nameOrSignatureOrTopic: "AgentContractCreated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "AgentCreated"): EventFragment;
 
   encodeFunctionData(
     functionFragment: "allAgents",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "createAgent",
-    values: [string, string, string, string, string, string[], BigNumberish]
-  ): string;
+  encodeFunctionData(functionFragment: "createAgent", values: [string]): string;
   encodeFunctionData(
     functionFragment: "creationFee",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "creatorAgents",
-    values: [AddressLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getAgentAt",
     values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getCreatorAgents",
-    values: [AddressLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getMarketplace",
-    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getTotalAgents",
@@ -83,10 +64,6 @@ export interface AgentNFTFactoryInterface extends Interface {
     functionFragment: "updateCreationFee",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "updateMarketplace",
-    values: [AddressLike]
-  ): string;
 
   decodeFunctionResult(functionFragment: "allAgents", data: BytesLike): Result;
   decodeFunctionResult(
@@ -97,19 +74,7 @@ export interface AgentNFTFactoryInterface extends Interface {
     functionFragment: "creationFee",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "creatorAgents",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "getAgentAt", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getCreatorAgents",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getMarketplace",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "getTotalAgents",
     data: BytesLike
@@ -123,30 +88,14 @@ export interface AgentNFTFactoryInterface extends Interface {
     functionFragment: "updateCreationFee",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "updateMarketplace",
-    data: BytesLike
-  ): Result;
 }
 
-export namespace AgentContractCreatedEvent {
-  export type InputTuple = [
-    agentContract: AddressLike,
-    creator: AddressLike,
-    agentName: string,
-    price: BigNumberish
-  ];
-  export type OutputTuple = [
-    agentContract: string,
-    creator: string,
-    agentName: string,
-    price: bigint
-  ];
+export namespace AgentCreatedEvent {
+  export type InputTuple = [creator: AddressLike, name: string];
+  export type OutputTuple = [creator: string, name: string];
   export interface OutputObject {
-    agentContract: string;
     creator: string;
-    agentName: string;
-    price: bigint;
+    name: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -154,11 +103,11 @@ export namespace AgentContractCreatedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface AgentNFTFactory extends BaseContract {
-  connect(runner?: ContractRunner | null): AgentNFTFactory;
+export interface SimpleFactory extends BaseContract {
+  connect(runner?: ContractRunner | null): SimpleFactory;
   waitForDeployment(): Promise<this>;
 
-  interface: AgentNFTFactoryInterface;
+  interface: SimpleFactoryInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -199,37 +148,11 @@ export interface AgentNFTFactory extends BaseContract {
 
   allAgents: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-  createAgent: TypedContractMethod<
-    [
-      agentName_: string,
-      agentDescription_: string,
-      agentCategory_: string,
-      computeModel_: string,
-      storageHash_: string,
-      capabilities_: string[],
-      price_: BigNumberish
-    ],
-    [string],
-    "payable"
-  >;
+  createAgent: TypedContractMethod<[agentName_: string], [bigint], "payable">;
 
   creationFee: TypedContractMethod<[], [bigint], "view">;
 
-  creatorAgents: TypedContractMethod<
-    [arg0: AddressLike, arg1: BigNumberish],
-    [string],
-    "view"
-  >;
-
   getAgentAt: TypedContractMethod<[index: BigNumberish], [string], "view">;
-
-  getCreatorAgents: TypedContractMethod<
-    [creator: AddressLike],
-    [string[]],
-    "view"
-  >;
-
-  getMarketplace: TypedContractMethod<[], [string], "view">;
 
   getTotalAgents: TypedContractMethod<[], [bigint], "view">;
 
@@ -243,12 +166,6 @@ export interface AgentNFTFactory extends BaseContract {
     "nonpayable"
   >;
 
-  updateMarketplace: TypedContractMethod<
-    [newMarketplace: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -258,38 +175,13 @@ export interface AgentNFTFactory extends BaseContract {
   ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
     nameOrSignature: "createAgent"
-  ): TypedContractMethod<
-    [
-      agentName_: string,
-      agentDescription_: string,
-      agentCategory_: string,
-      computeModel_: string,
-      storageHash_: string,
-      capabilities_: string[],
-      price_: BigNumberish
-    ],
-    [string],
-    "payable"
-  >;
+  ): TypedContractMethod<[agentName_: string], [bigint], "payable">;
   getFunction(
     nameOrSignature: "creationFee"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "creatorAgents"
-  ): TypedContractMethod<
-    [arg0: AddressLike, arg1: BigNumberish],
-    [string],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "getAgentAt"
   ): TypedContractMethod<[index: BigNumberish], [string], "view">;
-  getFunction(
-    nameOrSignature: "getCreatorAgents"
-  ): TypedContractMethod<[creator: AddressLike], [string[]], "view">;
-  getFunction(
-    nameOrSignature: "getMarketplace"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "getTotalAgents"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -302,28 +194,25 @@ export interface AgentNFTFactory extends BaseContract {
   getFunction(
     nameOrSignature: "updateCreationFee"
   ): TypedContractMethod<[newFee: BigNumberish], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "updateMarketplace"
-  ): TypedContractMethod<[newMarketplace: AddressLike], [void], "nonpayable">;
 
   getEvent(
-    key: "AgentContractCreated"
+    key: "AgentCreated"
   ): TypedContractEvent<
-    AgentContractCreatedEvent.InputTuple,
-    AgentContractCreatedEvent.OutputTuple,
-    AgentContractCreatedEvent.OutputObject
+    AgentCreatedEvent.InputTuple,
+    AgentCreatedEvent.OutputTuple,
+    AgentCreatedEvent.OutputObject
   >;
 
   filters: {
-    "AgentContractCreated(address,address,string,uint256)": TypedContractEvent<
-      AgentContractCreatedEvent.InputTuple,
-      AgentContractCreatedEvent.OutputTuple,
-      AgentContractCreatedEvent.OutputObject
+    "AgentCreated(address,string)": TypedContractEvent<
+      AgentCreatedEvent.InputTuple,
+      AgentCreatedEvent.OutputTuple,
+      AgentCreatedEvent.OutputObject
     >;
-    AgentContractCreated: TypedContractEvent<
-      AgentContractCreatedEvent.InputTuple,
-      AgentContractCreatedEvent.OutputTuple,
-      AgentContractCreatedEvent.OutputObject
+    AgentCreated: TypedContractEvent<
+      AgentCreatedEvent.InputTuple,
+      AgentCreatedEvent.OutputTuple,
+      AgentCreatedEvent.OutputObject
     >;
   };
 }

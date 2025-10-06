@@ -7,33 +7,47 @@ import { defineChain } from "viem";
 import { RainbowKitProvider, getDefaultConfig, darkTheme } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 
-// 0G Galileo Testnet (id: 16601)
-const ogRpcUrl = process.env.NEXT_PUBLIC_0G_RPC_URL;
+// 0G Galileo Testnet (id: 16602) - Official Network Configuration
+const ogRpcUrl = process.env.NEXT_PUBLIC_0G_RPC_URL || "https://evmrpc-testnet.0g.ai";
 const ogGalileo = defineChain({
-  id: 16601,
-  name: "0G-Galileo-Testnet",
-  nativeCurrency: { name: "A0GI", symbol: "A0GI", decimals: 18 },
-  rpcUrls: ogRpcUrl
-    ? {
-        default: { http: [ogRpcUrl] },
-        public: { http: [ogRpcUrl] },
-      }
-    : {
-        default: { http: [] },
-        public: { http: [] },
-      },
+  id: 16602,
+  name: "0G-Testnet-Galileo",
+  nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+  rpcUrls: {
+    default: { http: [ogRpcUrl] },
+    public: { http: ["https://evmrpc-testnet.0g.ai"] },
+  },
   blockExplorers: {
     default: { name: "0G Chainscan", url: "https://chainscan-galileo.0g.ai" },
   },
   testnet: true,
 });
 
+// 0G Aristotle Mainnet - Ready for future deployment
+const ogMainnet = defineChain({
+  id: 16600, // Mainnet chain ID (to be confirmed)
+  name: "0G-Aristotle-Mainnet",
+  nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://evmrpc.0g.ai"] },
+    public: { http: ["https://evmrpc.0g.ai"] },
+  },
+  blockExplorers: {
+    default: { name: "0G Chainscan", url: "https://chainscan.0g.ai" },
+  },
+  testnet: false,
+});
+
+// Use testnet for now, but ready to switch to mainnet
+const isMainnet = process.env.NEXT_PUBLIC_USE_MAINNET === "true";
+const activeChain = isMainnet ? ogMainnet : ogGalileo;
+
 const wagmiConfig = getDefaultConfig({
   appName: "AgentX",
   projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || "demo-project-id",
-  chains: [ogGalileo] as const,
+  chains: [activeChain] as const,
   transports: {
-    [ogGalileo.id]: http("https://evmrpc-testnet.0g.ai"), // ZORLA AYNI RPC
+    [activeChain.id]: http(activeChain.rpcUrls.default.http[0]),
   },
 });
 
@@ -42,7 +56,7 @@ export default function Providers({ children }: PropsWithChildren) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme()} initialChain={ogGalileo}>
+        <RainbowKitProvider theme={darkTheme()} initialChain={activeChain}>
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>

@@ -7,4 +7,5 @@ export type { AgentRegistry } from "./AgentRegistry";
 export type { EnhancedINFT } from "./EnhancedINFT";
 export type { INFT } from "./INFT";
 export type { Marketplace } from "./Marketplace";
+export type { SimpleFactory } from "./SimpleFactory";
 export type { SimpleINFT } from "./SimpleINFT";

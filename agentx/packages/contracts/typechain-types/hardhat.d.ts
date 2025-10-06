@@ -94,6 +94,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Marketplace__factory>;
     getContractFactory(
+      name: "SimpleFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SimpleFactory__factory>;
+    getContractFactory(
       name: "SimpleINFT",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SimpleINFT__factory>;
@@ -199,6 +203,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Marketplace>;
     getContractAt(
+      name: "SimpleFactory",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SimpleFactory>;
+    getContractAt(
       name: "SimpleINFT",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -285,6 +294,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Marketplace>;
     deployContract(
+      name: "SimpleFactory",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SimpleFactory>;
+    deployContract(
       name: "SimpleINFT",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SimpleINFT>;
@@ -389,6 +402,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Marketplace>;
+    deployContract(
+      name: "SimpleFactory",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SimpleFactory>;
     deployContract(
       name: "SimpleINFT",
       args: any[],

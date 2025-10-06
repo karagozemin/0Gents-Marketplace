@@ -14,23 +14,23 @@ export async function GET() {
       {
         name: '0G EVM Testnet',
         rpcUrl: 'https://evmrpc-testnet.0g.ai',
-        chainId: 16600
+        chainId: 16602
       },
       {
         name: '0G QuickNode',
-        rpcUrl: 'https://quick-alien-shard.0g-galileo.quiknode.pro/34a3bedc56c56595f5f1053c6b159043c837ca6a/',
-        chainId: 16600
+        rpcUrl: 'https://evmrpc-testnet.0g.ai/',
+        chainId: 16602
       },
       // Try some other potential endpoints
       {
         name: '0G Mainnet (if exists)',
         rpcUrl: 'https://evmrpc.0g.ai',
-        chainId: 16601
+        chainId: 16602
       },
       {
         name: '0G Alternative',
         rpcUrl: 'https://rpc.0g.ai',
-        chainId: 16600
+        chainId: 16602
       }
     ];
     

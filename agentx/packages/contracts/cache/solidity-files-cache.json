@@ -920,8 +920,8 @@
       ]
     },
     "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/AgentNFTFactory.sol": {
-      "lastModificationDate": 1756307335794,
-      "contentHash": "30ade0fe44096c6116753d59f8eee801",
+      "lastModificationDate": 1759000828554,
+      "contentHash": "703ac0479b6eebac6fe3339dc8503cbe",
       "sourceName": "contracts/AgentNFTFactory.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -959,6 +959,42 @@
       "artifacts": [
         "AgentNFT",
         "AgentNFTFactory"
+      ]
+    },
+    "/Users/eminkaragoz/Desktop/projects/0Gents/agentx/packages/contracts/contracts/SimpleFactory.sol": {
+      "lastModificationDate": 1758981150368,
+      "contentHash": "eb8727cdc53970cbac8b8ded29d77f20",
+      "sourceName": "contracts/SimpleFactory.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SimpleFactory"
       ]
     }
   }

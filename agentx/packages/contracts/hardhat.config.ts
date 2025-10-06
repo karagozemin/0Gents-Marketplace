@@ -19,9 +19,18 @@ const config: HardhatUserConfig = {
   },
   networks: {
     og_galileo: {
-      chainId: 16601,
-      url: OG_RPC_URL || "http://127.0.0.1:8545",
+      chainId: 16602, // Galileo testnet
+      url: OG_RPC_URL || "https://evmrpc-testnet.0g.ai",
       accounts,
+      gasPrice: 3000000000, // 3 gwei
+      gas: 5000000,
+    },
+    og_mainnet: {
+      chainId: 16600, // Aristotle mainnet (to be confirmed)
+      url: process.env.OG_MAINNET_RPC_URL || "https://evmrpc.0g.ai",
+      accounts,
+      gasPrice: 3000000000, // 3 gwei
+      gas: 5000000,
     },
     sepolia: {
       chainId: 11155111,

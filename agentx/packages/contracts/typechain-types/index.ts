@@ -46,5 +46,7 @@ export type { INFT } from "./contracts/INFT";
 export { INFT__factory } from "./factories/contracts/INFT__factory";
 export type { Marketplace } from "./contracts/Marketplace";
 export { Marketplace__factory } from "./factories/contracts/Marketplace__factory";
+export type { SimpleFactory } from "./contracts/SimpleFactory";
+export { SimpleFactory__factory } from "./factories/contracts/SimpleFactory__factory";
 export type { SimpleINFT } from "./contracts/SimpleINFT";
 export { SimpleINFT__factory } from "./factories/contracts/SimpleINFT__factory";

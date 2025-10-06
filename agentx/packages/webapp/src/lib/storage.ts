@@ -40,6 +40,7 @@ export type StorageResult = {
 
 // 0G Storage configuration
 const OG_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
+// Using old indexer only for 0G Storage as recommended by team during storage nodes sync
 const OG_INDEXER_URL = process.env.NEXT_PUBLIC_0G_INDEXER_URL || 'https://indexer-storage-testnet-turbo.0g.ai';
 const OG_PRIVATE_KEY = process.env.NEXT_PUBLIC_0G_PRIVATE_KEY || '';
 
@@ -58,7 +59,7 @@ async function uploadToZeroGStorage(data: string, type: 'metadata' | 'file' = 'm
       console.log('🚀 Using REAL 0G Storage Network');
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // Increased to 120s timeout
       
       const response = await fetch('/api/storage/upload', {
         method: 'POST',
@@ -100,7 +101,7 @@ async function uploadToZeroGStorage(data: string, type: 'metadata' | 'file' = 'm
       };
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // Increased to 120s timeout
       
       const response = await fetch('/api/storage/upload', {
         method: 'POST',
@@ -128,11 +129,13 @@ async function uploadToZeroGStorage(data: string, type: 'metadata' | 'file' = 'm
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error('❌ 0G Storage API timeout after 60 seconds');
-      throw new Error('0G Storage upload timed out after 60 seconds. Please try again.');
+      console.error('❌ 0G Storage API timeout after 120 seconds');
+      console.log('🔄 Falling back to simulation due to timeout...');
+      return await simulateZeroGUpload(data, type);
     } else {
       console.error('❌ 0G Storage API error:', error);
-      throw error;
+      console.log('🔄 Falling back to simulation due to API error...');
+      return await simulateZeroGUpload(data, type);
     }
   }
 }

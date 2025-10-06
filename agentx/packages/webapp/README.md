@@ -22,7 +22,7 @@ npm run dev
 ## 0G Galileo Testnet
 
 - Network Name: `0G-Galileo-Testnet`
-- Chain ID: `16601`
+- Chain ID: `16602`
 - Symbol: `OG`
 - Block Explorer: `https://chainscan-galileo.0g.ai`
 - Faucet: `https://faucet.0g.ai`

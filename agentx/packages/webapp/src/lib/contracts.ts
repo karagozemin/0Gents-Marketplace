@@ -1,13 +1,16 @@
-// 0G Galileo Testnet Configuration
-export const ZERO_G_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 16601;
-export const ZERO_G_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL;
-export const ZERO_G_EXPLORER = process.env.NEXT_PUBLIC_0G_EXPLORER;
+// 0G Galileo Testnet Configuration - Official Network Details
+export const ZERO_G_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 16602;
+export const ZERO_G_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
+export const ZERO_G_EXPLORER = process.env.NEXT_PUBLIC_0G_EXPLORER || 'https://chainscan-galileo.0g.ai';
+export const ZERO_G_FAUCET = 'https://faucet.0g.ai';
+export const ZERO_G_TOKEN_SYMBOL = '0G';
+export const ZERO_G_NETWORK_NAME = '0G-Testnet-Galileo';
 
 // Contract Addresses
 export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
 export const INFT_ADDRESS = process.env.NEXT_PUBLIC_INFT_ADDRESS || "0xbD5C5a4947497f531a156DE720E04065362783ff"; // Enhanced INFT with mint()
-export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0xF36ae1c0eCfd2d9ecb56Adb402751Bdca1Cbe429"; // Factory Marketplace
-export const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS || "0x7FC62946f03f42c721ae0237998c45b64872aD26"; // Agent NFT Factory
+export const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0xf039Be71A812955FfB063f16B7edd70B5d6C06De"; // New Galileo Testnet Marketplace
+export const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS || "0xA650bE328653b41a33cBD0A70b3B9Feab12a6AF0"; // New Galileo Testnet Factory
 
 // 0G Storage Contract Addresses (Real Testnet Addresses)
 export const ZERO_G_STORAGE_FLOW = process.env.NEXT_PUBLIC_0G_STORAGE_FLOW || "0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628";

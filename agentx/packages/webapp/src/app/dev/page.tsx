@@ -117,7 +117,7 @@ export default function Home() {
     }
   };
 
-  const wrongNetwork = mounted && chainId !== 16601;
+  const wrongNetwork = mounted && chainId !== 16602;
 
   return (
     <div className="min-h-screen max-w-6xl mx-auto p-6 flex flex-col gap-6">
@@ -134,7 +134,7 @@ export default function Home() {
 
       {wrongNetwork && (
         <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-700 px-3 py-2 text-sm">
-          Please switch to 0G-Galileo-Testnet (chainId 16601) from your wallet.
+          Please switch to 0G-Galileo-Testnet (chainId 16602) from your wallet.
         </div>
       )}
       

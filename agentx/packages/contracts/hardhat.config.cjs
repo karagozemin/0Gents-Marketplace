@@ -18,7 +18,7 @@ const config = {
   },
   networks: {
     og_galileo: {
-      chainId: 16601,
+      chainId: 16602,
       url: OG_RPC_URL || "http://127.0.0.1:8545",
       accounts,
       timeout: 120000,
