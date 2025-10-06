@@ -117,7 +117,7 @@ export default function CreatePage() {
       
       const uploadPromise = uploadAgentMetadata(metadata);
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Storage upload timeout (30 seconds) - using fallback')), 30000)
+        setTimeout(() => reject(new Error('Storage upload timeout (5 seconds) - using fallback')), 5000)
       );
 
       let uploadResult;
