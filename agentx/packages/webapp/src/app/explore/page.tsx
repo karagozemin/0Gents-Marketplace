@@ -3,6 +3,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import { AgentCard } from "@/components/AgentCard";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { AdvancedFilters, type FilterOptions } from "@/components/AdvancedFilters";
+import { AgentComparison } from "@/components/AgentComparison";
 import { mockAgents, type AgentItem } from "@/lib/mock";
 import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { useReadContract } from "wagmi";
@@ -21,7 +23,9 @@ import {
   ArrowUpDown,
   Sparkles,
   Users,
-  Activity
+  Activity,
+  GitCompare,
+  X
 } from "lucide-react";
 
 type SortOption = "price_low" | "price_high" | "newest" | "popular" | "trending";
@@ -88,6 +92,14 @@ export default function ExplorePage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [allAgents, setAllAgents] = useState<AgentItem[]>([]);
   const [blockchainAgents, setBlockchainAgents] = useState<AgentItem[]>([]);
+  const [comparisonAgents, setComparisonAgents] = useState<AgentItem[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({
+    search: "",
+    categories: [],
+    priceRange: { min: 0, max: 10 },
+    sortBy: "recent"
+  });
 
   // Get total agents from Factory contract
   const { data: totalAgents } = useReadContract({
@@ -213,41 +225,75 @@ export default function ExplorePage() {
     return ["all", ...cats];
   }, [allAgents]);
 
-  // Filter and sort agents
+  // Handle filter changes from AdvancedFilters component
+  const handleFilterChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+  };
+
+  // Toggle agent for comparison
+  const toggleComparison = (agent: AgentItem) => {
+    setComparisonAgents(prev => {
+      const exists = prev.find(a => a.id === agent.id);
+      if (exists) {
+        return prev.filter(a => a.id !== agent.id);
+      } else if (prev.length < 4) { // Max 4 agents for comparison
+        return [...prev, agent];
+      }
+      return prev;
+    });
+  };
+
+  // Filter and sort agents with new advanced filters
   const filteredAgents = useMemo(() => {
     let filtered = allAgents.filter(agent => {
-      const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          agent.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || agent.category === selectedCategory;
-      const matchesPrice = agent.priceEth >= priceRange[0] && agent.priceEth <= priceRange[1];
+      // Advanced search
+      const matchesSearch = !filters.search || 
+        agent.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        agent.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+        agent.owner.toLowerCase().includes(filters.search.toLowerCase());
+      
+      // Category filter
+      const matchesCategory = filters.categories.length === 0 || 
+        filters.categories.includes(agent.category);
+      
+      // Price range filter
+      const matchesPrice = agent.priceEth >= filters.priceRange.min && 
+        agent.priceEth <= filters.priceRange.max;
       
       return matchesSearch && matchesCategory && matchesPrice;
     });
 
-    // Sort agents
-    switch (sortBy) {
-      case "price_low":
+    // Advanced sorting
+    switch (filters.sortBy) {
+      case "price-low":
         filtered.sort((a, b) => a.priceEth - b.priceEth);
         break;
-      case "price_high":
+      case "price-high":
         filtered.sort((a, b) => b.priceEth - a.priceEth);
         break;
-      case "newest":
-        filtered.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+      case "recent":
+        filtered.sort((a, b) => {
+          const aTime = parseInt(a.id.replace(/\D/g, '')) || 0;
+          const bTime = parseInt(b.id.replace(/\D/g, '')) || 0;
+          return bTime - aTime;
+        });
         break;
-      case "popular":
-        // Mock popularity based on ID (lower ID = more popular)
-        filtered.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      case "likes":
+        filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
         break;
       case "trending":
       default:
-        // Mock trending based on random factor
-        filtered.sort(() => Math.random() - 0.5);
+        // Sort by trending flag first, then by views
+        filtered.sort((a, b) => {
+          if (a.trending && !b.trending) return -1;
+          if (!a.trending && b.trending) return 1;
+          return (b.views || 0) - (a.views || 0);
+        });
         break;
     }
 
     return filtered;
-  }, [searchQuery, selectedCategory, priceRange, sortBy, allAgents]);
+  }, [filters, allAgents]);
 
   const stats = useMemo(() => ({
     totalAgents: allAgents.length,
@@ -303,7 +349,49 @@ export default function ExplorePage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+        {/* Advanced Filters */}
+        <AdvancedFilters 
+          onFilterChange={handleFilterChange}
+          totalResults={filteredAgents.length}
+        />
+
+        {/* Comparison Bar */}
+        {comparisonAgents.length > 0 && (
+          <Card className="gradient-card border-purple-400/50 mt-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <GitCompare className="w-5 h-5 text-purple-400" />
+                  <span className="text-white font-semibold">
+                    {comparisonAgents.length} {comparisonAgents.length === 1 ? 'agent' : 'agents'} selected
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    className="gradient-0g hover:opacity-90 text-white font-medium"
+                    onClick={() => setShowComparison(true)}
+                    disabled={comparisonAgents.length < 2}
+                  >
+                    <GitCompare className="w-4 h-4 mr-2" />
+                    Compare
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-gray-400/50 text-gray-300"
+                    onClick={() => setComparisonAgents([])}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 mt-8">
           {/* Filters Sidebar */}
           <aside className="space-y-6">
             <Card className="gradient-card border-white/10">
@@ -499,6 +587,14 @@ export default function ExplorePage() {
         </div>
       </div>
       <Footer />
+
+      {/* Comparison Modal */}
+      {showComparison && comparisonAgents.length >= 2 && (
+        <AgentComparison
+          agents={comparisonAgents}
+          onClose={() => setShowComparison(false)}
+        />
+      )}
     </div>
   );
 }

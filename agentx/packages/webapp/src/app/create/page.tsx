@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2, ShoppingCart } from "lucide-react";
+import { Sparkles, Upload, Zap, Eye, Info, Wallet, Share2, ShoppingCart, LayoutGrid } from "lucide-react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI, AGENT_NFT_ABI, INFT_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI, ZERO_G_CHAIN_ID } from "@/lib/contracts";
 import { uploadAgentMetadata, type AgentMetadata } from "@/lib/storage";
@@ -14,8 +14,10 @@ import { saveUnifiedAgent } from "@/lib/unifiedAgents";
 import { saveListingToServer } from "@/lib/marketplaceListings";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { CreateWizard } from "@/components/CreateWizard";
 
 export default function CreatePage() {
+  const [useWizard, setUseWizard] = useState(true); // Toggle between wizard and classic
   const [image, setImage] = useState("");
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -23,6 +25,8 @@ export default function CreatePage() {
   const [category, setCategory] = useState("");
   const [xHandle, setXHandle] = useState("");
   const [website, setWebsite] = useState("");
+  const [aiModel, setAiModel] = useState("gpt-4");
+  const [capabilities, setCapabilities] = useState<string[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [createdAgent, setCreatedAgent] = useState<any>(null);
@@ -62,6 +66,23 @@ export default function CreatePage() {
   const updateProgress = (step: string) => {
     setCurrentStep(step);
     setProgressSteps(prev => [...prev, step]);
+  };
+
+  // Handle wizard completion
+  const handleWizardComplete = async (wizardData: any) => {
+    // Update all states from wizard data
+    setName(wizardData.name);
+    setDesc(wizardData.description);
+    setImage(wizardData.image);
+    setCategory(wizardData.category);
+    setPrice(wizardData.price);
+    setXHandle(wizardData.xHandle);
+    setWebsite(wizardData.website);
+    setAiModel(wizardData.aiModel);
+    setCapabilities(wizardData.capabilities);
+    
+    // Trigger creation
+    await handleCreate();
   };
 
   const handleCreate = async () => {
@@ -985,12 +1006,42 @@ export default function CreatePage() {
             <Sparkles className="w-8 h-8 text-purple-400" />
             <h1 className="text-4xl font-bold text-gradient">Create INFT</h1>
           </div>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
             Mint your intelligent NFT agent on the 0G Network and join the future of AI-powered digital assets.
           </p>
+          
+          {/* Mode Toggle */}
+          <div className="flex items-center justify-center gap-2 p-1 bg-white/5 rounded-lg w-fit mx-auto border border-white/10">
+            <Button
+              variant={useWizard ? "default" : "ghost"}
+              size="sm"
+              className={useWizard ? "gradient-0g" : "hover:bg-white/10 text-gray-400"}
+              onClick={() => setUseWizard(true)}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Wizard Mode
+            </Button>
+            <Button
+              variant={!useWizard ? "default" : "ghost"}
+              size="sm"
+              className={!useWizard ? "gradient-0g" : "hover:bg-white/10 text-gray-400"}
+              onClick={() => setUseWizard(false)}
+            >
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Classic Mode
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Wizard Mode */}
+        {useWizard ? (
+          <CreateWizard 
+            onComplete={handleWizardComplete}
+            isCreating={isCreating || isCreateLoading || isMintLoading || isApproveLoading || isListLoading}
+          />
+        ) : (
+          // Classic Mode
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Creation Form */}
           <div className="space-y-8">
             <Card className="gradient-card border-white/10">
@@ -1324,6 +1375,7 @@ export default function CreatePage() {
             </Card>
           </div>
         </div>
+        )}
       </div>
       </div>
       <Footer />

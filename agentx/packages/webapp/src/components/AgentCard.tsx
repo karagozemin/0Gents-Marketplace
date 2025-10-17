@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Heart, Eye, Zap, ShoppingCart } from "lucide-react";
+import { Heart, Eye, Zap, ShoppingCart, TrendingUp, Star, Activity } from "lucide-react";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/lib/contracts";
@@ -18,7 +18,10 @@ export function AgentCard({
   priceEth, 
   category, 
   listingId,
-  tokenId 
+  tokenId,
+  views,
+  likes,
+  trending
 }: {
   id: string; 
   name: string; 
@@ -28,8 +31,12 @@ export function AgentCard({
   category: string;
   listingId?: number;
   tokenId?: string;
+  views?: number;
+  likes?: number;
+  trending?: boolean;
 }) {
   const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(likes || 0);
   const [isBuying, setIsBuying] = useState(false);
   const { isConnected, address } = useAccount();
   const { writeContract: buyNFT, data: buyHash, error: buyError } = useWriteContract();
@@ -205,16 +212,33 @@ export function AgentCard({
         className="group cursor-pointer"
         onClick={() => window.location.href = `/agent/${id}`}
       >
-        <Card className="overflow-hidden gradient-card hover:glow-purple transition-all duration-300 border-white/10 p-0">
+        <Card className="overflow-hidden gradient-card hover:glow-purple-lg transition-all duration-500 border-white/10 p-0 relative">
         <CardContent className="p-0">
           {/* Image Section */}
           <div className="relative aspect-[4/3] bg-gradient-to-br from-purple-900/20 via-gray-900 to-blue-900/20 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            {/* Trending Badge */}
+            {trending && (
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="absolute top-3 left-3 z-20"
+              >
+                <Badge variant="secondary" className="bg-gradient-to-r from-orange-500 to-pink-500 text-white border-none text-xs font-bold shadow-lg">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  Trending
+                </Badge>
+              </motion.div>
+            )}
+            
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+            
+            {/* Image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src={image} 
               alt={name} 
-              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
             />
             
             {/* Hover Actions */}
@@ -222,98 +246,109 @@ export function AgentCard({
               <Button
                 size="sm"
                 variant="ghost"
-                className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50 cursor-pointer"
+                className="w-9 h-9 p-0 bg-black/60 backdrop-blur-md hover:bg-red-500/70 border border-white/10 cursor-pointer transition-all duration-200"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setIsLiked(!isLiked);
+                  setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
                 }}
               >
                 <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-8 h-8 p-0 bg-black/50 backdrop-blur-sm hover:bg-purple-500/50 cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              >
-                <Eye className="w-4 h-4 text-white" />
-              </Button>
             </div>
 
-            {/* Category Badge */}
-            <div className="absolute top-3 left-3">
-              <Badge variant="secondary" className="bg-purple-500/80 text-white border-none text-xs">
-                {category}
-              </Badge>
+            {/* Stats Overlay - Bottom */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="flex items-center justify-between text-xs text-white/80">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    {views || 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Heart className="w-3 h-3" />
+                    {likesCount}
+                  </span>
+                </div>
+                <Badge variant="outline" className="border-white/30 text-white text-[10px] bg-white/10">
+                  {category}
+                </Badge>
+              </div>
             </div>
           </div>
 
           {/* Content Section */}
-          <div className="p-4 space-y-3">
+          <div className="p-5 space-y-4 bg-gradient-to-b from-transparent to-black/20">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-white truncate group-hover:text-purple-300 transition-colors">{name}</h3>
-                <Badge variant="outline" className="border-purple-400/50 text-purple-300 bg-purple-500/10">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-bold text-white text-lg truncate group-hover:text-purple-300 transition-colors flex-1">
+                  {name}
+                </h3>
+                <Badge variant="outline" className="border-purple-400/60 text-purple-300 bg-purple-500/20 font-semibold text-sm px-2.5 py-0.5 whitespace-nowrap">
                   {priceEth} 0G
                 </Badge>
               </div>
-              <p className="text-sm text-gray-400 truncate">by {owner}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-400 truncate">by {owner}</p>
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <Activity className="w-3 h-3" />
+                  <span>Active</span>
+                </div>
+              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="flex-1 border-purple-400/50 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.location.href = `/agent/${id}`;
-                  }}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
-                </Button>
-              
+            <div className="flex gap-2 pt-2">
               {listingId && listingId > 0 && owner.toLowerCase() !== address?.toLowerCase() ? (
-                <Button 
-                  size="sm" 
-                  className="flex-1 gradient-0g hover:opacity-90 text-white font-medium cursor-pointer"
-                  onClick={handleBuyNow}
-                  disabled={isBuying || isBuyLoading}
-                >
-                  {isBuying || isBuyLoading ? (
-                    <>
-                      <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white/20 border-t-white"></div>
-                      Buying...
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Buy Now
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1 border-purple-400/50 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-400/70 transition-all"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.location.href = `/agent/${id}`;
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-1.5" />
+                    View
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="flex-[1.5] gradient-0g hover:opacity-90 text-white font-semibold cursor-pointer shadow-lg hover:shadow-purple-500/50 transition-all"
+                    onClick={handleBuyNow}
+                    disabled={isBuying || isBuyLoading}
+                  >
+                    {isBuying || isBuyLoading ? (
+                      <>
+                        <div className="w-4 h-4 mr-1.5 animate-spin rounded-full border-2 border-white/20 border-t-white"></div>
+                        Buying...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-4 h-4 mr-1.5" />
+                        Buy Now
+                      </>
+                    )}
+                  </Button>
+                </>
               ) : (
                 <Button 
                   size="sm" 
-                  className="flex-1 gradient-0g hover:opacity-90 text-white font-medium"
+                  className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white font-medium opacity-60 cursor-not-allowed"
                   disabled
                 >
                   {owner.toLowerCase() === address?.toLowerCase() ? (
                     <>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Owned
+                      <Star className="w-4 h-4 mr-1.5 fill-yellow-400 text-yellow-400" />
+                      You Own This
                     </>
                   ) : (
                     <>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Not Listed
+                      <Zap className="w-4 h-4 mr-1.5" />
+                      Not Available
                     </>
                   )}
                 </Button>
