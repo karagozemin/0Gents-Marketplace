@@ -85,7 +85,6 @@ async function getAgentDetails(agentAddress: string) {
 }
 
 export default function ExplorePage() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
   const [sortBy, setSortBy] = useState<SortOption>("trending");
@@ -225,7 +224,7 @@ export default function ExplorePage() {
     const urlParams = new URLSearchParams(window.location.search);
     const searchParam = urlParams.get('search');
     if (searchParam) {
-      setSearchQuery(searchParam);
+      setFilters(prev => ({ ...prev, search: searchParam }));
     }
   }, []);
 
@@ -322,10 +321,10 @@ export default function ExplorePage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-8 h-8 text-purple-400" />
-            <h1 className="text-4xl font-bold text-gradient">Explore AI Agents</h1>
+            <h1 className="text-4xl font-bold text-gradient">Explore AI INFTs</h1>
           </div>
           <p className="text-xl text-gray-300">
-            Discover and interact with intelligent NFT agents on the 0G Network
+            Discover and interact with Intelligent NFTs on the 0G Network
           </p>
         </div>
 
@@ -335,7 +334,7 @@ export default function ExplorePage() {
             <CardContent className="p-4 text-center">
               <Users className="w-6 h-6 text-purple-400 mx-auto mb-2" />
               <p className="text-2xl font-bold text-white">{stats.totalAgents}</p>
-              <p className="text-gray-400 text-sm">Total Agents</p>
+              <p className="text-gray-400 text-sm">Total INFTs</p>
             </CardContent>
           </Card>
           <Card className="gradient-card border-white/10">
@@ -375,7 +374,7 @@ export default function ExplorePage() {
                 <div className="flex items-center gap-3">
                   <GitCompare className="w-5 h-5 text-purple-400" />
                   <span className="text-white font-semibold">
-                    {comparisonAgents.length} {comparisonAgents.length === 1 ? 'agent' : 'agents'} selected
+                    {comparisonAgents.length} {comparisonAgents.length === 1 ? 'INFT' : 'INFTs'} selected
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -420,9 +419,9 @@ export default function ExplorePage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
-                      placeholder="Search agents..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search AI INFTs..."
+                      value={filters.search}
+                      onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                       className="pl-10 bg-white/5 border-white/10 focus:border-purple-400/50 text-white"
                     />
                   </div>
@@ -573,7 +572,7 @@ export default function ExplorePage() {
                   </p>
                   <Button
                     onClick={() => {
-                      setSearchQuery("");
+                      setFilters({ ...filters, search: "", categories: [], priceRange: { min: 0, max: 10 }, sortBy: "recent" });
                       setSelectedCategory("all");
                       setPriceRange([0, 1]);
                     }}

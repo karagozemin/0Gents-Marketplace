@@ -7,30 +7,55 @@ import { Search, Sparkles, X, Menu } from "lucide-react";
 import { Input } from "./ui/input";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { mockAgents } from "@/lib/mock";
+import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
+import { type AgentItem } from "@/lib/mock";
 
 export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchResults, setSearchResults] = useState<typeof mockAgents>([]);
+  const [searchResults, setSearchResults] = useState<AgentItem[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Search functionality
+  // Search functionality - Use real INFTs
   useEffect(() => {
-    if (searchQuery.trim()) {
-      const filtered = mockAgents.filter(agent => 
-        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.category.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 8);
-      setSearchResults(filtered);
-      setIsSearchOpen(true);
-    } else {
-      setSearchResults([]);
-      setIsSearchOpen(false);
+    async function searchINFTs() {
+      if (searchQuery.trim()) {
+        try {
+          const unifiedResult = await getAllUnifiedAgents({ active: true });
+          if (unifiedResult.success && unifiedResult.agents) {
+            const filtered = unifiedResult.agents
+              .filter(agent => 
+                agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                agent.category.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .slice(0, 8)
+              .map(agent => ({
+                id: agent.id,
+                name: agent.name,
+                description: agent.description,
+                image: agent.image,
+                category: agent.category,
+                owner: `${agent.creator.slice(0, 6)}...${agent.creator.slice(-4)}`,
+                priceEth: parseFloat(agent.price) || 0.01,
+                history: [{ activity: "Created", date: agent.createdAt }]
+              }));
+            setSearchResults(filtered);
+            setIsSearchOpen(true);
+          }
+        } catch (error) {
+          console.error('Search failed:', error);
+          setSearchResults([]);
+        }
+      } else {
+        setSearchResults([]);
+        setIsSearchOpen(false);
+      }
     }
+    
+    searchINFTs();
   }, [searchQuery]);
 
   // Close search on outside click

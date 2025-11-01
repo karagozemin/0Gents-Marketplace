@@ -82,7 +82,7 @@ export function AdvancedFilters({ onFilterChange, totalResults }: AdvancedFilter
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
-            placeholder="Search agents by name, category, or creator..."
+            placeholder="Search INFTs by name, category, or creator..."
             value={filters.search}
             onChange={(e) => updateFilters({ search: e.target.value })}
             className="pl-10 bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500"

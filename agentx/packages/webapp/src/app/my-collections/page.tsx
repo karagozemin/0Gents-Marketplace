@@ -241,7 +241,7 @@ export default function MyCollectionsPage() {
   };
 
   const deleteAgent = (agentId: string) => {
-    if (!confirm("Are you sure you want to delete this agent? This action cannot be undone.")) {
+    if (!confirm("Are you sure you want to delete this INFT? This action cannot be undone.")) {
       return;
     }
 
@@ -270,7 +270,7 @@ export default function MyCollectionsPage() {
               <Wallet className="w-16 h-16 mx-auto mb-6 text-purple-400" />
               <h1 className="text-3xl font-bold text-white mb-4">Connect Your Wallet</h1>
               <p className="text-gray-300 mb-8">
-                Please connect your wallet to view and manage your AI Agent collections.
+                Please connect your wallet to view and manage your Intelligent NFT collections.
               </p>
               <ConnectButton />
             </div>
@@ -290,7 +290,7 @@ export default function MyCollectionsPage() {
           <div>
             <h1 className="text-4xl font-bold text-gradient mb-2">My Collections</h1>
             <p className="text-gray-300">
-              Manage your AI Agent NFTs created on the 0G Network
+              Manage your Intelligent NFTs (INFTs) created on the 0G Network
             </p>
           </div>
           
@@ -313,7 +313,7 @@ export default function MyCollectionsPage() {
               onClick={() => window.location.href = '/create'}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create New Agent
+              Create New INFT
             </Button>
           </div>
         </div>
@@ -349,17 +349,17 @@ export default function MyCollectionsPage() {
               <div className="w-20 h-20 mx-auto mb-6 bg-purple-500/20 rounded-full flex items-center justify-center">
                 <Plus className="w-10 h-10 text-purple-400" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">No Agents Created Yet</h3>
+              <h3 className="text-2xl font-bold text-white mb-4">No INFTs Created Yet</h3>
               <p className="text-gray-300 mb-8 max-w-md mx-auto">
-                Start building your AI Agent collection on the 0G Network. 
-                Create your first intelligent NFT today!
+                Start building your Intelligent NFT collection on the 0G Network. 
+                Create your first INFT today!
               </p>
               <Button 
                 className="gradient-0g px-8 py-3 cursor-pointer"
                 onClick={() => window.location.href = '/create'}
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Create Your First Agent
+                Create Your First INFT
               </Button>
             </CardContent>
           </Card>
@@ -370,7 +370,7 @@ export default function MyCollectionsPage() {
               <div>
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                   <Plus className="w-6 h-6 text-purple-400" />
-                  Created Agents ({myAgents.length})
+                  Created INFTs ({myAgents.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {myAgents.map((agent) => (
@@ -526,7 +526,7 @@ export default function MyCollectionsPage() {
               <div>
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                   <ShoppingCart className="w-6 h-6 text-green-400" />
-                  Purchased Agents ({ownedNFTs.length})
+                  Purchased INFTs ({ownedNFTs.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {ownedNFTs.map((agent) => (
