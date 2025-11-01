@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdvancedFilters, type FilterOptions } from "@/components/AdvancedFilters";
 import { AgentComparison } from "@/components/AgentComparison";
-import { mockAgents, type AgentItem } from "@/lib/mock";
+import { type AgentItem } from "@/lib/mock";
 import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { useReadContract } from "wagmi";
 import { FACTORY_ADDRESS, FACTORY_ABI } from "@/lib/contracts";
@@ -43,7 +43,7 @@ async function getAgentDetails(agentAddress: string) {
     ];
     
     const results = await Promise.all(calls.map(async (call) => {
-      const response = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+      const response = await fetch(`https://evmrpc.0g.ai/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,7 +103,7 @@ export default function ExplorePage() {
 
   // Get total agents from Factory contract
   const { data: totalAgents } = useReadContract({
-    address: FACTORY_ADDRESS,
+    address: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: 'getTotalAgents',
   });
@@ -141,11 +141,11 @@ export default function ExplorePage() {
       
       // 2. Load from Factory contract (slow, all creations) - Skip if Factory fails
       try {
-        if (totalAgents && totalAgents > 0n) {
+        if (totalAgents && totalAgents > BigInt(0)) {
           console.log(`🔗 Loading ${totalAgents.toString()} agents from Factory contract...`);
           
           for (let i = 0; i < Number(totalAgents); i++) {
-            const agentResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+            const agentResponse = await fetch(`https://evmrpc.0g.ai/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -193,7 +193,8 @@ export default function ExplorePage() {
           console.log(`🔗 Loaded blockchain agents successfully`);
         }
       } catch (error) {
-        console.error('❌ Factory loading failed, using localStorage only:', error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('❌ Factory loading failed, using localStorage only:', errorMessage);
       }
       
       setBlockchainAgents(agents);
@@ -203,11 +204,20 @@ export default function ExplorePage() {
     loadAllAgents();
   }, [totalAgents]);
 
-  // Initialize with mock agents and combine with blockchain agents
+  // Use only blockchain/unified agents (no mock data)
   useEffect(() => {
-    const combined = [...blockchainAgents, ...mockAgents];
-    setAllAgents(combined);
-    console.log(`🌐 Total agents: ${blockchainAgents.length} blockchain + ${mockAgents.length} mock = ${combined.length}`);
+    // Sort by creation date (newest first)
+    const sortedAgents = [...blockchainAgents].sort((a, b) => {
+      const dateA = (a as any).createdAt || a.history?.[0]?.date || '';
+      const dateB = (b as any).createdAt || b.history?.[0]?.date || '';
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
+    
+    setAllAgents(sortedAgents);
+    console.log(`🌐 Total agents: ${sortedAgents.length} real INFTs (no mock)`);
   }, [blockchainAgents]);
 
   // Handle URL search parameter
@@ -285,8 +295,10 @@ export default function ExplorePage() {
       default:
         // Sort by trending flag first, then by views
         filtered.sort((a, b) => {
-          if (a.trending && !b.trending) return -1;
-          if (!a.trending && b.trending) return 1;
+          const aTrending = (a as any).trending || false;
+          const bTrending = (b as any).trending || false;
+          if (aTrending && !bTrending) return -1;
+          if (!aTrending && bTrending) return 1;
           return (b.views || 0) - (a.views || 0);
         });
         break;
@@ -555,7 +567,7 @@ export default function ExplorePage() {
               <Card className="gradient-card border-white/10">
                 <CardContent className="p-12 text-center">
                   <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No agents found</h3>
+                  <h3 className="text-xl font-semibold text-white mb-2">No INFT found</h3>
                   <p className="text-gray-400 mb-4">
                     Try adjusting your search criteria or filters
                   </p>

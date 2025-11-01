@@ -179,7 +179,7 @@ export function Navbar() {
                   ) : (
                     <div className="p-6 text-center bg-gray-900">
                       <Search className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-300">No agents found</p>
+                      <p className="text-sm text-gray-300">No INFT found</p>
                       <p className="text-xs text-gray-400 mt-1">Try a different search term</p>
                     </div>
                   )}
