@@ -337,61 +337,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 rounded-3xl p-12 border border-purple-500/20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">How It Works</h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">
-            Three simple steps to create and monetize your Intelligent NFTs
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {[
-            {
-              step: "1",
-              title: "Create Your INFT",
-              description: "Design and configure your Intelligent NFT with AI capabilities and pricing",
-              icon: Star
-            },
-            {
-              step: "2",
-              title: "List on Marketplace",
-              description: "Automatically listed after creation with your chosen price and details",
-              icon: TrendingUp
-            },
-            {
-              step: "3",
-              title: "Earn from Sales",
-              description: "Receive payments instantly when collectors buy your INFTs",
-              icon: Zap
-            }
-          ].map((step, index) => (
-            <div key={index} className="relative">
-              <div className="bg-black/40 rounded-xl p-8 border border-white/10 hover:border-purple-500/30 transition-all text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-2xl font-bold mb-4">
-                  {step.step}
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-3">{step.title}</h3>
-                <p className="text-gray-400 text-sm">{step.description}</p>
-              </div>
-              {index < 2 && (
-                <ArrowRight className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2 w-8 h-8 text-purple-400/50" />
-              )}
-            </div>
-          ))}
-        </div>
-        
-        <div className="text-center mt-12">
-          <Button size="lg" className="gradient-0g hover:opacity-90 text-white font-semibold px-10 py-4" asChild>
-            <a href="/create">
-              Get Started Now
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </a>
-          </Button>
-        </div>
-      </section>
-
       {/* Featured Section */}
       <section id="featured-section" className="space-y-6 scroll-mt-24">
         <div className="flex items-center justify-between">
@@ -453,6 +398,61 @@ export default function HomePage() {
               </Button>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 rounded-3xl p-12 border border-purple-500/20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white mb-4">How It Works</h2>
+          <p className="text-gray-300 max-w-2xl mx-auto">
+            Three simple steps to create and monetize your Intelligent NFTs
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {[
+            {
+              step: "1",
+              title: "Create Your INFT",
+              description: "Design and configure your Intelligent NFT with AI capabilities and pricing",
+              icon: Star
+            },
+            {
+              step: "2",
+              title: "List on Marketplace",
+              description: "Automatically listed after creation with your chosen price and details",
+              icon: TrendingUp
+            },
+            {
+              step: "3",
+              title: "Earn from Sales",
+              description: "Receive payments instantly when collectors buy your INFTs",
+              icon: Zap
+            }
+          ].map((step, index) => (
+            <div key={index} className="relative">
+              <div className="bg-black/40 rounded-xl p-8 border border-white/10 hover:border-purple-500/30 transition-all text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-2xl font-bold mb-4">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">{step.title}</h3>
+                <p className="text-gray-400 text-sm">{step.description}</p>
+              </div>
+              {index < 2 && (
+                <ArrowRight className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2 w-8 h-8 text-purple-400/50" />
+              )}
+            </div>
+          ))}
+        </div>
+        
+        <div className="text-center mt-12">
+          <Button size="lg" className="gradient-0g hover:opacity-90 text-white font-semibold px-10 py-4" asChild>
+            <a href="/create">
+              Get Started Now
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </a>
+          </Button>
         </div>
       </section>
 

@@ -204,3 +204,22 @@ html, body {
     background-attachment: fixed;
   }
 }
+
+/* Fix text selection highlight for inputs and textareas - OUTSIDE layer for higher priority */
+input::selection,
+input[type="text"]::selection,
+input[data-slot="input"]::selection,
+input.input-text-selection::selection,
+textarea::selection {
+  background-color: rgb(139, 92, 246) !important; /* purple-500 */
+  color: white !important;
+}
+
+input::-moz-selection,
+input[type="text"]::-moz-selection,
+input[data-slot="input"]::-moz-selection,
+input.input-text-selection::-moz-selection,
+textarea::-moz-selection {
+  background-color: rgb(139, 92, 246) !important; /* purple-500 */
+  color: white !important;
+}
