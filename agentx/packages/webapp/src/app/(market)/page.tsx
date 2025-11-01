@@ -199,13 +199,24 @@ export default function HomePage() {
     }
   }, [totalAgents, mounted]);
 
-  // Combine all agents
+  // Combine all agents - Sort by creation date (newest first)
   useEffect(() => {
     setMounted(true);
     
-          // ✅ Featured: Sadece gerçek agents, Trending: Mock agents de dahil
-      setAllAgents(blockchainAgents);
-      console.log(`🌐 Featured agents: ${blockchainAgents.length} real agents (no mock in featured)`);
+    // Sort agents by createdAt (newest first)
+    const sortedAgents = [...blockchainAgents].sort((a, b) => {
+      const dateA = a.createdAt || a.history?.[0]?.date || '';
+      const dateB = b.createdAt || b.history?.[0]?.date || '';
+      // If no dates, keep original order (assume last added = newest)
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1; // a has no date, put it last
+      if (!dateB) return -1; // b has no date, put it last
+      // Compare dates (newest first)
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
+    
+    setAllAgents(sortedAgents);
+    console.log(`🌐 Sorted ${sortedAgents.length} agents (newest first)`);
   }, [blockchainAgents]);
 
   if (!mounted) {
@@ -350,8 +361,8 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allAgents.length > 0 ? (
-            // Show last 3 INFTs (most recently created)
-            allAgents.slice(-3).reverse().map((agent) => {
+            // Show first 3 INFTs (most recently created - already sorted newest first)
+            allAgents.slice(0, 3).map((agent) => {
               console.log('🔍 Featured agent:', { id: agent.id, name: agent.name });
               return (
                 <AgentCard key={agent.id} {...agent} />
@@ -385,9 +396,9 @@ export default function HomePage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {/* ✅ Show ALL INFTs (including featured ones) */}
+          {/* ✅ Show ALL INFTs (already sorted newest first) */}
           {allAgents.length > 0 ? (
-            allAgents.slice().reverse().map((agent) => (
+            allAgents.map((agent) => (
               <AgentCard key={agent.id} {...agent} />
             ))
           ) : (
@@ -458,23 +469,6 @@ export default function HomePage() {
             <a href="/create">
               Get Started Now
               <ArrowRight className="w-5 h-5 ml-2" />
-            </a>
-          </Button>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 border border-purple-500/30 p-12 text-center">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10">
-          <h3 className="text-3xl font-bold text-white mb-4">Ready to Create Your INFT?</h3>
-          <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of creators building the next generation of intelligent digital assets on 0G Network.
-          </p>
-          <Button size="lg" className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3" asChild>
-            <a href="/create">
-              <Zap className="w-5 h-5 mr-2" />
-              Start Creating
             </a>
           </Button>
         </div>
