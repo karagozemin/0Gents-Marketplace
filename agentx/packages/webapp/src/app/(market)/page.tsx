@@ -234,7 +234,7 @@ export default function HomePage() {
           {/* MAINNET LIVE Badge */}
           <Badge className="mb-6 bg-green-500/20 text-green-300 border-green-400/50 px-6 py-2 text-sm font-semibold animate-pulse">
             <Rocket className="w-4 h-4 mr-2 inline" />
-            🚀 LIVE ON 0G MAINNET
+            💎 LIVE ON 0G MAINNET
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-4">
@@ -337,28 +337,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Section */}
+      {/* Featured Section - Show only latest 3 INFTs */}
       <section id="featured-section" className="space-y-6 scroll-mt-24">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Star className="w-6 h-6 text-yellow-400" />
             <h2 className="text-2xl font-bold text-white">Featured INFTs</h2>
             <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-400/30">
-              Hot
+              Latest
             </Badge>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allAgents.slice(0, 6).map((agent) => {
-            console.log('🔍 Featured agent:', { id: agent.id, name: agent.name });
-            return (
-              <AgentCard key={agent.id} {...agent} />
-            );
-          })}
+          {allAgents.length > 0 ? (
+            // Show last 3 INFTs (most recently created)
+            allAgents.slice(-3).reverse().map((agent) => {
+              console.log('🔍 Featured agent:', { id: agent.id, name: agent.name });
+              return (
+                <AgentCard key={agent.id} {...agent} />
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-400">No featured INFTs yet</p>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Trending Section */}
+      {/* Trending Section - Show all INFTs (including featured ones) */}
       <section id="trending-section" className="space-y-6 scroll-mt-24">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -378,9 +385,9 @@ export default function HomePage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {/* ✅ Only show real INFTs from blockchain/unified system */}
+          {/* ✅ Show ALL INFTs (including featured ones) */}
           {allAgents.length > 0 ? (
-            allAgents.map((agent) => (
+            allAgents.slice().reverse().map((agent) => (
               <AgentCard key={agent.id} {...agent} />
             ))
           ) : (
