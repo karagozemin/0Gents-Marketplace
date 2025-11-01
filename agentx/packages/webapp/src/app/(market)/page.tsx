@@ -1,11 +1,10 @@
 "use client";
 import { AgentCard } from "@/components/AgentCard";
 import { AgentWideCard } from "@/components/AgentWideCard";
-import { mockAgents } from "@/lib/mock";
 import { getAllUnifiedAgents } from "@/lib/unifiedAgents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Star, Zap, Users } from "lucide-react";
+import { TrendingUp, Star, Zap, Users, Rocket, Shield, Database, Code2, ArrowRight, CheckCircle2 } from "lucide-react";
 import DarkVeil from "@/components/ui/DarkVeil";
 import { useState, useEffect } from "react";
 import { useReadContract } from "wagmi";
@@ -23,7 +22,7 @@ async function getAgentDetails(agentAddress: string) {
     ];
     
     const results = await Promise.all(calls.map(async (call) => {
-      const response = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+      const response = await fetch(`https://evmrpc.0g.ai/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -140,7 +139,7 @@ export default function HomePage() {
           console.log(`🔗 Loading ${totalAgents.toString()} agents from Factory contract...`);
           
           for (let i = 0; i < Number(totalAgents); i++) {
-            const agentResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+            const agentResponse = await fetch(`https://evmrpc.0g.ai/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -216,7 +215,7 @@ export default function HomePage() {
   return (
     <div className="space-y-12">
       {/* Hero Section with DarkVeil Background */}
-      <section className="relative overflow-hidden rounded-3xl border border-purple-500/20 h-[600px]">
+      <section className="relative overflow-hidden rounded-3xl border border-purple-500/20 h-[650px]">
         {/* DarkVeil Animated Background */}
         <div className="absolute inset-0">
           <DarkVeil 
@@ -232,16 +231,28 @@ export default function HomePage() {
         
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center p-16">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="text-gradient">0Gents</span>
+          {/* MAINNET LIVE Badge */}
+          <Badge className="mb-6 bg-green-500/20 text-green-300 border-green-400/50 px-6 py-2 text-sm font-semibold animate-pulse">
+            <Rocket className="w-4 h-4 mr-2 inline" />
+            🚀 LIVE ON 0G MAINNET
+          </Badge>
+          
+          <h1 className="text-5xl md:text-7xl font-bold mb-4">
+            <span className="text-gradient">First Intelligent NFT</span>
             <br />
             <span className="text-white drop-shadow-lg">Marketplace</span>
           </h1>
-          <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto drop-shadow-md">
-            Create, explore and trade intelligent INFTs on the 0G Network. 
-            The future of AI-powered digital assets.
+          
+          <p className="text-lg text-purple-300 mb-4 font-semibold drop-shadow-md">
+            Built on 0G Network • Lightning Fast • Ultra Low Fees
           </p>
-          <div className="flex items-center justify-center gap-4">
+          
+          <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto drop-shadow-md">
+            Create, trade, and own AI-powered Intelligent NFTs (INFTs). 
+            Powered by 0G's revolutionary decentralized infrastructure.
+          </p>
+          
+          <div className="flex items-center justify-center gap-4 flex-wrap">
             <Button 
               size="lg" 
               className="gradient-0g hover:opacity-90 text-white font-semibold px-8 py-3 cursor-pointer shadow-lg hover:shadow-xl transition-all"
@@ -256,7 +267,10 @@ export default function HomePage() {
               Explore INFTs
             </Button>
             <Button size="lg" className="bg-black/80 text-white border border-purple-400/50 hover:bg-black/90 hover:border-purple-400/70 px-8 py-3 cursor-pointer backdrop-blur-sm shadow-lg hover:shadow-xl transition-all" asChild>
-              <a href="/create">Create INFT</a>
+              <a href="/create">
+                <Star className="w-5 h-5 mr-2" />
+                Create INFT
+              </a>
             </Button>
           </div>
         </div>
@@ -265,10 +279,10 @@ export default function HomePage() {
       {/* Stats Section */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
-          { label: "Total INFTs", value: "1,247", icon: Users, color: "text-purple-400" },
-          { label: "Total Volume", value: "142.7 0G", icon: TrendingUp, color: "text-blue-400" },
-          { label: "Active Traders", value: "8,329", icon: Star, color: "text-pink-400" },
-          { label: "Floor Price", value: "0.012 0G", icon: Zap, color: "text-green-400" }
+          { label: "INFTs Created", value: totalAgents ? totalAgents.toString() : "...", icon: Users, color: "text-purple-400" },
+          { label: "Network", value: "0G Mainnet", icon: Rocket, color: "text-green-400" },
+          { label: "Active Listings", value: allAgents.length.toString(), icon: TrendingUp, color: "text-blue-400" },
+          { label: "Creation Fee", value: "0.01 0G", icon: Zap, color: "text-yellow-400" }
         ].map((stat, index) => (
           <div key={index} className="gradient-card rounded-2xl p-6 text-center group hover:glow-purple transition-all duration-300">
             <stat.icon className={`w-8 h-8 mx-auto mb-3 ${stat.color}`} />
@@ -276,6 +290,106 @@ export default function HomePage() {
             <div className="text-sm text-gray-400">{stat.label}</div>
           </div>
         ))}
+      </section>
+
+      {/* Why 0Gents Section */}
+      <section className="gradient-card rounded-3xl p-12 border border-purple-500/20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white mb-4">Why Choose 0Gents?</h2>
+          <p className="text-gray-300 max-w-2xl mx-auto">
+            The first and only Intelligent NFT marketplace leveraging 0G Network's revolutionary technology
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            {
+              icon: Rocket,
+              title: "0G Network Powered",
+              description: "Lightning-fast transactions with minimal fees on 0G Mainnet",
+              color: "text-green-400"
+            },
+            {
+              icon: Database,
+              title: "Decentralized Storage",
+              description: "INFT data stored permanently on 0G Storage network",
+              color: "text-blue-400"
+            },
+            {
+              icon: Shield,
+              title: "True Ownership",
+              description: "Your INFTs, your data, secured on-chain forever",
+              color: "text-purple-400"
+            },
+            {
+              icon: Code2,
+              title: "AI-Powered NFTs",
+              description: "Not just art - functional AI agents inside each INFT",
+              color: "text-pink-400"
+            }
+          ].map((feature, index) => (
+            <div key={index} className="bg-black/40 rounded-xl p-6 border border-white/5 hover:border-purple-500/30 transition-all group">
+              <feature.icon className={`w-10 h-10 mb-4 ${feature.color} group-hover:scale-110 transition-transform`} />
+              <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+              <p className="text-sm text-gray-400">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 rounded-3xl p-12 border border-purple-500/20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white mb-4">How It Works</h2>
+          <p className="text-gray-300 max-w-2xl mx-auto">
+            Three simple steps to create and monetize your Intelligent NFTs
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {[
+            {
+              step: "1",
+              title: "Create Your INFT",
+              description: "Design and configure your Intelligent NFT with AI capabilities and pricing",
+              icon: Star
+            },
+            {
+              step: "2",
+              title: "List on Marketplace",
+              description: "Automatically listed after creation with your chosen price and details",
+              icon: TrendingUp
+            },
+            {
+              step: "3",
+              title: "Earn from Sales",
+              description: "Receive payments instantly when collectors buy your INFTs",
+              icon: Zap
+            }
+          ].map((step, index) => (
+            <div key={index} className="relative">
+              <div className="bg-black/40 rounded-xl p-8 border border-white/10 hover:border-purple-500/30 transition-all text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-2xl font-bold mb-4">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">{step.title}</h3>
+                <p className="text-gray-400 text-sm">{step.description}</p>
+              </div>
+              {index < 2 && (
+                <ArrowRight className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2 w-8 h-8 text-purple-400/50" />
+              )}
+            </div>
+          ))}
+        </div>
+        
+        <div className="text-center mt-12">
+          <Button size="lg" className="gradient-0g hover:opacity-90 text-white font-semibold px-10 py-4" asChild>
+            <a href="/create">
+              Get Started Now
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </a>
+          </Button>
+        </div>
       </section>
 
       {/* Featured Section */}
@@ -319,10 +433,26 @@ export default function HomePage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {/* ✅ Trending: Gerçek agents + mock agents */}
-          {[...allAgents, ...mockAgents].map((agent) => (
-            <AgentCard key={agent.id} {...agent} />
-          ))}
+          {/* ✅ Only show real INFTs from blockchain/unified system */}
+          {allAgents.length > 0 ? (
+            allAgents.map((agent) => (
+              <AgentCard key={agent.id} {...agent} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-16">
+              <div className="text-gray-400 mb-4">
+                <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-xl mb-2">No INFTs listed yet</p>
+                <p className="text-sm">Be the first to create an Intelligent NFT on 0G Mainnet!</p>
+              </div>
+              <Button className="mt-6 gradient-0g" asChild>
+                <a href="/create">
+                  <Star className="w-4 h-4 mr-2" />
+                  Create First INFT
+                </a>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

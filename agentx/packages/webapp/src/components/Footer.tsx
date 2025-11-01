@@ -77,7 +77,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-sm text-gray-400">
-            © 2024 0Gents. Built on 0G Network.
+            © 2025 0Gents. Built on 0G Network.
           </span>
           <div className="flex gap-6 text-sm">
             <Link href="/privacy" className="text-gray-400 hover:text-purple-300 transition-colors">

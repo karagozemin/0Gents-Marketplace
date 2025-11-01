@@ -98,6 +98,7 @@ export default function CreatePage() {
 
   // Handle wizard completion
   const handleWizardComplete = async (wizardData: any) => {
+    // Wizard already validates all fields, so we can skip validation here
     // Update all states from wizard data
     setName(wizardData.name);
     setDesc(wizardData.description);
@@ -109,10 +110,11 @@ export default function CreatePage() {
     setAiModel(wizardData.aiModel);
     setCapabilities(wizardData.capabilities);
     
-    // Trigger creation
-    await handleCreate();
+    // Trigger creation directly without validation (wizard already validated)
+    await handleCreateDirect(wizardData);
   };
 
+  // Handle creation from non-wizard form (with validation)
   const handleCreate = async () => {
     if (!isConnected) {
       alert("Please connect your wallet first");
@@ -129,6 +131,30 @@ export default function CreatePage() {
       return;
     }
 
+    // Create wizardData-like object from state
+    const formData = {
+      name,
+      description: desc,
+      image,
+      category,
+      price,
+      xHandle,
+      website,
+      aiModel,
+      capabilities
+    };
+
+    // Use the same creation flow
+    await handleCreateDirect(formData);
+  };
+
+  // Direct creation from wizard (no validation needed - wizard validates)
+  const handleCreateDirect = async (wizardData: any) => {
+    if (!isConnected) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
     setIsCreating(true);
     setCurrentStep("");
     setProgressSteps([]);
@@ -137,21 +163,29 @@ export default function CreatePage() {
       // Step 1: Create metadata object for 0G Storage
       updateProgress("🎯 Step 1: Preparing agent metadata...");
       const metadata: AgentMetadata = {
-        name,
-        description: desc,
-        image: image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
-        category: category || "General",
+        name: wizardData.name,
+        description: wizardData.description,
+        image: wizardData.image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center",
+        category: wizardData.category || "General",
         creator: address || "",
-        price,
-        capabilities: [
-          "Natural Language Processing",
-          "Task Automation",
-          category || "General Purpose"
-        ],
-        skills: category ? [category.toLowerCase()] : ["general"],
+        price: wizardData.price,
+        capabilities: wizardData.capabilities.map((cap: string) => {
+          const capMap: Record<string, string> = {
+            nlp: "Natural Language Processing",
+            automation: "Task Automation",
+            analysis: "Data Analysis",
+            creative: "Creative Generation",
+            coding: "Code Generation",
+            research: "Research & Insights",
+            trading: "Trading Signals",
+            social: "Social Media"
+          };
+          return capMap[cap] || cap;
+        }),
+        skills: wizardData.category ? [wizardData.category.toLowerCase()] : ["general"],
         social: {
-          x: xHandle ? `https://x.com/${xHandle.replace('@', '')}` : undefined,
-          website: website || undefined
+          x: wizardData.xHandle ? `https://x.com/${wizardData.xHandle.replace('@', '')}` : undefined,
+          website: wizardData.website || undefined
         },
         created: new Date().toISOString(),
         updated: new Date().toISOString()
@@ -198,20 +232,28 @@ export default function CreatePage() {
       updateProgress("🎯 Step 3: Creating Agent Contract...");
       console.log("🎯 Step 3: Creating Agent Contract via Factory...");
       
-      const capabilities = [
-        "Natural Language Processing",
-        "Task Automation",
-        "0G Network Integration"
-      ];
+      const capabilitiesForContract = wizardData.capabilities.map((cap: string) => {
+        const capMap: Record<string, string> = {
+          nlp: "Natural Language Processing",
+          automation: "Task Automation",
+          analysis: "Data Analysis",
+          creative: "Creative Generation",
+          coding: "Code Generation",
+          research: "Research & Insights",
+          trading: "Trading Signals",
+          social: "Social Media"
+        };
+        return capMap[cap] || cap;
+      }).slice(0, 3); // Take first 3 capabilities
       
       const finalArgs: [string, string, string, string, string, string[], bigint] = [
-        name.trim(),
-        desc.trim(),
-        (category || "General").trim(),
-        "gpt-4",
+        wizardData.name.trim(),
+        wizardData.description.trim(),
+        (wizardData.category || "General").trim(),
+        wizardData.aiModel || "gpt-4",
         uploadResult.hash || "dummy-hash",
-        capabilities,
-        parseEther(price || "0.075")
+        capabilitiesForContract,
+        parseEther(wizardData.price || "0.075")
       ];
       
       // Validate arguments
