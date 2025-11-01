@@ -1,10 +1,16 @@
-// 0G Galileo Testnet Configuration - Official Network Details
-export const ZERO_G_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 16602;
-export const ZERO_G_RPC_URL = process.env.NEXT_PUBLIC_0G_RPC_URL || 'https://evmrpc-testnet.0g.ai';
-export const ZERO_G_EXPLORER = process.env.NEXT_PUBLIC_0G_EXPLORER || 'https://chainscan-galileo.0g.ai';
+// 0G Network Configuration - Supports both Testnet and Mainnet
+const USE_MAINNET = process.env.NEXT_PUBLIC_USE_MAINNET === 'true';
+
+export const ZERO_G_CHAIN_ID = USE_MAINNET ? 16661 : 16602; // Mainnet: 16661, Testnet: 16602
+export const ZERO_G_RPC_URL = USE_MAINNET 
+  ? 'https://evmrpc.0g.ai'  // Mainnet
+  : 'https://evmrpc-testnet.0g.ai'; // Testnet
+export const ZERO_G_EXPLORER = USE_MAINNET
+  ? 'https://chainscan.0g.ai' // Mainnet
+  : 'https://chainscan-galileo.0g.ai'; // Testnet
 export const ZERO_G_FAUCET = 'https://faucet.0g.ai';
 export const ZERO_G_TOKEN_SYMBOL = '0G';
-export const ZERO_G_NETWORK_NAME = '0G-Testnet-Galileo';
+export const ZERO_G_NETWORK_NAME = USE_MAINNET ? '0G-Mainnet' : '0G-Testnet-Galileo';
 
 // Contract Addresses
 export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
@@ -19,11 +25,17 @@ console.log("🔍 Environment check:", {
   MARKETPLACE_ADDRESS: MARKETPLACE_ADDRESS
 });
 
-// 0G Storage Contract Addresses (Real Testnet Addresses)
-export const ZERO_G_STORAGE_FLOW = process.env.NEXT_PUBLIC_0G_STORAGE_FLOW || "0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628";
-export const ZERO_G_STORAGE_MINE = process.env.NEXT_PUBLIC_0G_STORAGE_MINE || "0x3A0d1d67497Ad770d6f72e7f4B8F0BAbaa2A649C";
-export const ZERO_G_STORAGE_MARKET = process.env.NEXT_PUBLIC_0G_STORAGE_MARKET || "0x53191725d260221bBa307D8EeD6e2Be8DD265e19";
-export const ZERO_G_STORAGE_REWARD = process.env.NEXT_PUBLIC_0G_STORAGE_REWARD || "0xd3D4D91125D76112AE256327410Dd0414Ee08Cb4";
+// 0G Storage Contract Addresses (Mainnet/Testnet)
+export const ZERO_G_STORAGE_FLOW = USE_MAINNET
+  ? "0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526" // Mainnet
+  : "0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628"; // Testnet
+export const ZERO_G_STORAGE_MINE = USE_MAINNET
+  ? "0xCd01c5Cd953971CE4C2c9bFb95610236a7F414fe" // Mainnet
+  : "0x3A0d1d67497Ad770d6f72e7f4B8F0BAbaa2A649C"; // Testnet
+export const ZERO_G_STORAGE_REWARD = USE_MAINNET
+  ? "0x457aC76B58ffcDc118AABD6DbC63ff9072880870" // Mainnet
+  : "0xd3D4D91125D76112AE256327410Dd0414Ee08Cb4"; // Testnet
+// Note: MARKET contract not used by SDK
 
 // 0G DA Contract Address
 export const ZERO_G_DA_ENTRANCE = process.env.NEXT_PUBLIC_0G_DA_ENTRANCE;

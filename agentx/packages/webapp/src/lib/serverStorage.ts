@@ -59,8 +59,11 @@ export async function uploadAgentMetadataServer(metadata: AgentMetadata, retryCo
   
   process.on('unhandledRejection', uploadRejectionHandler);
   
-  // 0G Storage configuration - FORCE official testnet RPC (bypass cache issues)
-  const OG_RPC_URL = 'https://evmrpc-testnet.0g.ai';
+  // 0G Storage configuration - Support mainnet/testnet
+  const USE_MAINNET = process.env.NEXT_PUBLIC_USE_MAINNET === 'true';
+  const OG_RPC_URL = USE_MAINNET 
+    ? 'https://evmrpc.0g.ai' 
+    : 'https://evmrpc-testnet.0g.ai';
   
   try {
     console.log(`🔥 Starting server-side 0G Storage upload... (Attempt ${retryCount + 1}/${maxRetries + 1})`);
@@ -88,8 +91,10 @@ export async function uploadAgentMetadataServer(metadata: AgentMetadata, retryCo
     }
     
     const { ZgBlob, Indexer, ethers } = await getZgSDK();
-    // Using working indexer URL (fallback to turbo if main fails)
-    const OG_INDEXER_URL = process.env.NEXT_PUBLIC_0G_INDEXER_URL || 'https://indexer-storage-testnet-turbo.0g.ai';
+    // Using mainnet or testnet indexer based on environment
+    const OG_INDEXER_URL = USE_MAINNET
+      ? 'https://indexer-storage-turbo.0g.ai' // Mainnet indexer
+      : 'https://indexer-storage-testnet-turbo.0g.ai'; // Testnet indexer
     const OG_PRIVATE_KEY = process.env.PRIVATE_KEY || process.env.NEXT_PUBLIC_0G_PRIVATE_KEY || '';
     
     console.log('🔧 Using 0G Storage configuration:', {

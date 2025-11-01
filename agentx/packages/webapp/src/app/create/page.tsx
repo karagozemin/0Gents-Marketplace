@@ -19,6 +19,7 @@ import { CreateWizard } from "@/components/CreateWizard";
 export default function CreatePage() {
   const [useWizard, setUseWizard] = useState(true); // Toggle between wizard and classic
   const [image, setImage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
@@ -66,6 +67,33 @@ export default function CreatePage() {
   const updateProgress = (step: string) => {
     setCurrentStep(step);
     setProgressSteps(prev => [...prev, step]);
+  };
+
+  // Handle image file selection
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    setImageFile(file);
+
+    // Convert to base64 for preview and storage
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle wizard completion
@@ -211,8 +239,8 @@ export default function CreatePage() {
         abi: FACTORY_ABI,
         functionName: "createAgent",
         args: finalArgs,
-        value: parseEther("0.002"), // Factory creation fee
-        gas: BigInt(3000000), // Increased gas limit for 0G network
+        value: parseEther("0.01"), // Factory creation fee (contract requirement)
+        gas: BigInt(5000000), // Increased gas limit for mainnet deployment
       });
 
       updateProgress("✅ Step 3: Agent Contract creation submitted - waiting for confirmation...");
@@ -285,7 +313,7 @@ export default function CreatePage() {
           // Method 1: Parse transaction receipt for AgentContractCreated event
           console.log("🎯 Getting transaction receipt for hash:", createHash);
           
-          const txReceipt = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+          const txReceipt = await fetch(`https://evmrpc.0g.ai/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -303,12 +331,55 @@ export default function CreatePage() {
           if (txResult.result?.logs && txResult.result.logs.length > 0) {
             console.log("🔍 Found", txResult.result.logs.length, "logs in transaction");
             
-            // Try multiple possible event signatures
-            const possibleSignatures = [
-              "0x85f0dfa9fd3e33e38f73b68fc46905218786e8b028cf1b07fa0ed436b53b02278", // Original
-              "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // Alternative
-            ];
+            // AgentContractCreated event signature (correct without extra chars)
+            const agentCreatedSignature = "0x85f0dfa9fd3e33e38f73b68fc46905218786e8b028cf1b07fa0ed436b53b0227";
             
+            // IMPORTANT: The first log is from the newly deployed AgentNFT contract
+            // Its address field IS the new contract address!
+            if (txResult.result.logs.length >= 2) {
+              // Log 0: OwnershipTransferred from AgentNFT constructor
+              // Log 1: AgentContractCreated from Factory
+              const firstLog = txResult.result.logs[0];
+              const contractAddress = firstLog.address.toLowerCase();
+              
+              console.log("🎯 New Agent Contract Address (from log 0):", contractAddress);
+              
+              if (contractAddress && contractAddress.length === 42 && contractAddress.startsWith('0x')) {
+                setAgentContractAddress(contractAddress);
+                updateProgress("✅ Agent contract found: " + contractAddress);
+                updateProgress("🔄 Step 4: Minting NFT...");
+                
+                // Step 4: Mint NFT on the agent contract
+                console.log("🔄 Step 4: Minting NFT on agent contract...");
+                
+                try {
+                  console.log("🔥 About to call writeMint with:", {
+                    address: contractAddress,
+                    functionName: "mint",
+                    args: [storageResult?.uri || ""],
+                    abi: "AGENT_NFT_ABI"
+                  });
+                  
+                  writeMint({
+                    address: contractAddress as `0x${string}`,
+                    abi: AGENT_NFT_ABI,
+                    functionName: "mint",
+                    args: [storageResult?.uri || ""], // Use storage URI for tokenURI
+                  });
+                  
+                  updateProgress("✅ Step 4: NFT minting submitted...");
+                  console.log("✅ Step 4: NFT minting submitted");
+                  
+                } catch (mintError) {
+                  console.error("❌ NFT minting failed:", mintError);
+                  updateProgress("❌ NFT minting failed");
+                }
+                
+                return;
+              }
+            }
+            
+            // Fallback: Try to find AgentContractCreated event
             for (const log of txResult.result.logs) {
               console.log("🔍 Checking log:", {
                 address: log.address,
@@ -316,76 +387,43 @@ export default function CreatePage() {
                 data: log.data
               });
               
-              // Check all possible event signatures
-              for (const signature of possibleSignatures) {
-                if (log.topics && log.topics[0] === signature) {
-                  console.log("✅ Found AgentContractCreated event with signature:", signature);
+              if (log.topics && log.topics[0] === agentCreatedSignature && log.topics[1]) {
+                const contractAddress = "0x" + log.topics[1].slice(-40);
+                console.log("🎯 Extracted Agent Contract Address from event:", contractAddress);
+                
+                if (contractAddress.length === 42 && contractAddress.startsWith('0x')) {
+                  setAgentContractAddress(contractAddress);
+                  updateProgress("✅ Agent contract found: " + contractAddress);
+                  updateProgress("🔄 Step 4: Minting NFT...");
                   
-                  // First indexed parameter (agentContract) is in topics[1]
-                  if (log.topics[1]) {
-                    const contractAddress = "0x" + log.topics[1].slice(-40);
-                    console.log("🎯 Extracted Agent Contract Address:", contractAddress);
+                  try {
+                    writeMint({
+                      address: contractAddress as `0x${string}`,
+                      abi: AGENT_NFT_ABI,
+                      functionName: "mint",
+                      args: [storageResult?.uri || ""],
+                    });
                     
-                    if (contractAddress.length === 42 && contractAddress.startsWith('0x')) {
-                      setAgentContractAddress(contractAddress);
-                      updateProgress("✅ Agent contract found: " + contractAddress);
-                      updateProgress("🔄 Step 4: Minting NFT...");
-                      
-                      // Step 4: Mint NFT on the agent contract
-                      console.log("🔄 Step 4: Minting NFT on agent contract...");
-                      
-                      try {
-                        console.log("🔥 About to call writeMint with:", {
-                          address: contractAddress,
-                          functionName: "mint",
-                          args: [storageResult?.uri || ""],
-                          abi: "AGENT_NFT_ABI"
-                        });
-                        
-                        writeMint({
-                          address: contractAddress as `0x${string}`,
-                          abi: AGENT_NFT_ABI,
-                          functionName: "mint",
-                          args: [storageResult?.uri || ""], // Use storage URI for tokenURI
-                        });
-                        
-                        updateProgress("✅ Step 4: NFT minting submitted...");
-                        console.log("✅ Step 4: NFT minting submitted");
-                        
-                      } catch (mintError) {
-                        console.error("❌ NFT minting failed:", mintError);
-                        updateProgress("❌ NFT minting failed");
-                      }
-                      
-                      return;
-                    }
+                    updateProgress("✅ Step 4: NFT minting submitted...");
+                    console.log("✅ Step 4: NFT minting submitted");
+                  } catch (mintError) {
+                    console.error("❌ NFT minting failed:", mintError);
+                    updateProgress("❌ NFT minting failed");
                   }
-                }
-              }
-              
-              // Also try to extract contract address from any log that might contain it
-              if (log.topics && log.topics.length > 1) {
-                for (let i = 1; i < log.topics.length; i++) {
-                  const topic = log.topics[i];
-                  if (topic && topic.length === 66) { // 0x + 64 hex chars
-                    const possibleAddress = "0x" + topic.slice(-40);
-                    if (possibleAddress.length === 42 && possibleAddress !== "0x0000000000000000000000000000000000000000") {
-                      console.log("🔍 Found possible contract address in topic", i, ":", possibleAddress);
-                      // We could use this as a fallback
-                    }
-                  }
+                  
+                  return;
                 }
               }
             }
             
-            console.log("⚠️ AgentContractCreated event not found with any signature, trying fallback method");
+            console.log("⚠️ Could not extract contract address from logs, trying factory fallback");
           }
           
           // Fallback: Get latest agent from factory
           console.log("🔄 Fallback: Getting latest agent from factory");
           updateProgress("🔄 Using factory fallback method...");
           
-          const totalResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+          const totalResponse = await fetch(`https://evmrpc.0g.ai/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -408,7 +446,7 @@ export default function CreatePage() {
           
           if (totalAgents > 0) {
             // Get the latest agent (last one created)
-            const latestResponse = await fetch(`https://evmrpc-testnet.0g.ai/`, {
+            const latestResponse = await fetch(`https://evmrpc.0g.ai/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -535,54 +573,20 @@ export default function CreatePage() {
               }
             }
           
-          // Final fallback: Use transaction hash to derive a contract address and continue
-          console.log("⚠️ All methods failed, using final fallback to continue the flow...");
-          updateProgress("🔄 Using fallback method to continue with minting...");
+          // Final fallback: Show error - we couldn't extract contract address
+          console.error("❌ All methods failed to extract contract address");
+          updateProgress("❌ Could not extract agent contract address. Please check transaction on explorer.");
           
-          // Create a deterministic address from transaction hash
-          // This ensures we can continue the flow even if address extraction fails
-          const fallbackAddress = "0x" + createHash.slice(2, 42).toLowerCase();
-          console.log("🔄 Using fallback contract address:", fallbackAddress);
+          // Show the transaction hash so user can check manually
+          setCreatedAgent({
+            name: name,
+            description: desc,
+            contractAddress: `Check transaction: ${createHash}`,
+            storageUri: storageResult?.uri || "0g://storage/success",
+            txHash: createHash
+          });
           
-          setAgentContractAddress(fallbackAddress);
-          updateProgress("✅ Fallback address set, continuing with NFT minting...");
-          updateProgress("🔄 Step 4: Minting NFT...");
-          
-          // Continue with minting using fallback address
-          try {
-            console.log("🔥 About to call writeMint (fallback method) with:", {
-              address: fallbackAddress,
-              functionName: "mint",
-              args: [storageResult?.uri || ""],
-              abi: "AGENT_NFT_ABI"
-            });
-            
-            writeMint({
-              address: fallbackAddress as `0x${string}`,
-              abi: AGENT_NFT_ABI,
-              functionName: "mint",
-              args: [storageResult?.uri || ""], // Use storage URI for tokenURI
-            });
-            
-            updateProgress("✅ Step 4: NFT minting submitted with fallback method...");
-            console.log("✅ Step 4: NFT minting submitted with fallback method");
-            
-          } catch (mintError) {
-            console.error("❌ Fallback NFT minting also failed:", mintError);
-            updateProgress("❌ All methods failed, showing partial success");
-            
-            // If even fallback fails, show partial success
-            setCreatedAgent({
-              name: name,
-              description: desc,
-              contractAddress: "Contract created successfully",
-              storageUri: storageResult?.uri || "0g://storage/success",
-              txHash: createHash
-            });
-            
-            setIsCreating(false);
-          }
-          
+          setIsCreating(false);
           return;
           
         } catch (error) {
@@ -612,13 +616,20 @@ export default function CreatePage() {
   // Handle successful NFT minting - Step 5: Approve marketplace then list
   useEffect(() => {
     if (isMintSuccess && mintHash && agentContractAddress && !approveHash) {
-      updateProgress("✅ NFT minted successfully!");
+      console.log("✅ NFT MINT CONFIRMED! Transaction:", mintHash);
+      updateProgress(`✅ NFT minted successfully! Tx: ${mintHash}`);
       console.log("NFT minted successfully!");
       
       const handleApproval = async () => {
         try {
+          // Wait 3 seconds to ensure mint is fully indexed
+          console.log("⏳ Waiting 3s for mint to be indexed...");
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
           updateProgress("🔄 Step 5: Approving marketplace...");
           console.log("🔄 Step 5: Approving marketplace for NFT transfer...");
+          console.log("🔍 Agent Contract:", agentContractAddress);
+          console.log("🔍 Marketplace:", MARKETPLACE_ADDRESS);
           
           // First approve marketplace to transfer the NFT
           writeApprove({
@@ -647,11 +658,16 @@ export default function CreatePage() {
   // Handle successful approval - Step 6: List on marketplace
   useEffect(() => {
     if (isApproveSuccess && approveHash && agentContractAddress && !listHash) {
-      updateProgress("✅ Marketplace approved successfully!");
+      console.log("✅ APPROVE CONFIRMED! Transaction:", approveHash);
+      updateProgress(`✅ Marketplace approved successfully! Tx: ${approveHash}`);
       console.log("Marketplace approved successfully!");
       
       const handleListing = async () => {
         try {
+          // Wait 3 seconds to ensure approval is fully indexed
+          console.log("⏳ Waiting 3s for approval to be indexed...");
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
           updateProgress("🔄 Step 6: Listing on marketplace...");
           console.log("🔄 Step 6: Listing on marketplace contract...");
           console.log("🔍 Marketplace listing parameters:", {
@@ -691,7 +707,8 @@ export default function CreatePage() {
   // Handle successful listing - Step 7: Extract listing ID and save to Supabase
   useEffect(() => {
     if (isListSuccess && listHash && agentContractAddress) {
-      updateProgress("✅ Marketplace listing successful!");
+      console.log("✅ LIST CONFIRMED! Transaction:", listHash);
+      updateProgress(`✅ Marketplace listing successful! Tx: ${listHash}`);
       console.log("Marketplace listing successful!");
       
       const handleSaveToDatabase = async () => {
@@ -1111,18 +1128,85 @@ export default function CreatePage() {
                   />
                 </div>
 
-                {/* Image URL */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Image URL</label>
-                  <Input
-                    placeholder="https://example.com/image.png" 
-                    value={image} 
-                    onChange={(e) => setImage(e.target.value)}
-                    className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500"
-                  />
-                  <p className="text-xs text-gray-500">Optional: Provide an image URL for your agent</p>
-                </div>
+                {/* Image Upload/URL */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-300">Agent Image</label>
+                  
+                  {/* File Upload */}
+                  <div className="space-y-2">
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      <div className="border-2 border-dashed border-white/20 rounded-lg p-4 hover:border-purple-400/50 transition-colors bg-white/5">
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload className="w-8 h-8 text-purple-400" />
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-300">
+                              {imageFile ? imageFile.name : 'Click to upload image'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              PNG, JPG, GIF up to 5MB
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
 
+                  {/* Divider */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 border-t border-white/10"></div>
+                    <span className="text-xs text-gray-500">or</span>
+                    <div className="flex-1 border-t border-white/10"></div>
+                  </div>
+
+                  {/* URL Input */}
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="https://example.com/image.png" 
+                      value={imageFile ? '' : image}
+                      onChange={(e) => {
+                        setImage(e.target.value);
+                        setImageFile(null);
+                      }}
+                      disabled={!!imageFile}
+                      className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white placeholder:text-gray-500 disabled:opacity-50"
+                    />
+                    <p className="text-xs text-gray-500">Or paste an image URL</p>
+                  </div>
+
+                  {/* Preview */}
+                  {image && (
+                    <div className="relative rounded-lg overflow-hidden border border-white/10">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={image}
+                        alt="Preview"
+                        className="w-full h-32 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImage('');
+                          setImageFile(null);
+                        }}
+                        className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {/* Social Links */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-3">
@@ -1244,7 +1328,7 @@ export default function CreatePage() {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300">Creation Fee</span>
                     <Badge variant="outline" className="border-purple-400/50 text-purple-300">
-                      0.002 OG
+                      0.01 OG
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
@@ -1257,7 +1341,7 @@ export default function CreatePage() {
                     <div className="flex justify-between items-center font-semibold">
                       <span className="text-white">Total Estimated</span>
                       <Badge variant="outline" className="border-yellow-400/50 text-yellow-300">
-                        ~0.003 OG
+                        ~0.012 OG
                       </Badge>
                   </div>
                   </div>

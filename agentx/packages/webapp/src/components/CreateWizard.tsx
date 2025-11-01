@@ -7,7 +7,7 @@ import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { 
   ArrowRight, ArrowLeft, Check, Sparkles, Image as ImageIcon, 
-  DollarSign, Settings, Eye, Brain, Zap, Share2 
+  DollarSign, Settings, Eye, Brain, Zap, Share2, Upload 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -58,6 +58,7 @@ interface CreateWizardProps {
 
 export function CreateWizard({ onComplete, isCreating }: CreateWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [data, setData] = useState<WizardData>({
     name: "",
     description: "",
@@ -86,6 +87,33 @@ export function CreateWizard({ onComplete, isCreating }: CreateWizardProps) {
       ? data.capabilities.filter(c => c !== capId)
       : [...data.capabilities, capId];
     updateData({ capabilities: newCaps });
+  };
+
+  // Handle image file selection
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    setImageFile(file);
+
+    // Convert to base64 for preview and storage
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      updateData({ image: reader.result as string });
+    };
+    reader.readAsDataURL(file);
   };
 
   const canProceed = () => {
@@ -211,21 +239,79 @@ export function CreateWizard({ onComplete, isCreating }: CreateWizardProps) {
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                       <ImageIcon className="w-4 h-4" />
-                      Image URL
+                      Agent Image
                     </label>
+                    
+                    {/* File Upload */}
+                    <label htmlFor="wizard-image-upload" className="cursor-pointer block">
+                      <div className="border-2 border-dashed border-white/20 rounded-lg p-4 hover:border-purple-400/50 transition-colors bg-white/5">
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload className="w-8 h-8 text-purple-400" />
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-300">
+                              {imageFile ? imageFile.name : 'Click to upload image'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              PNG, JPG, GIF up to 5MB
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                    <input
+                      id="wizard-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 border-t border-white/10"></div>
+                      <span className="text-xs text-gray-500">or</span>
+                      <div className="flex-1 border-t border-white/10"></div>
+                    </div>
+
+                    {/* URL Input */}
                     <Input
                       placeholder="https://example.com/image.png"
-                      value={data.image}
-                      onChange={(e) => updateData({ image: e.target.value })}
-                      className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white"
+                      value={imageFile ? '' : data.image}
+                      onChange={(e) => {
+                        updateData({ image: e.target.value });
+                        setImageFile(null);
+                      }}
+                      disabled={!!imageFile}
+                      className="bg-white/5 border-white/10 focus:border-purple-400/50 text-white disabled:opacity-50"
                     />
+                    
+                    {/* Preview */}
                     {data.image && (
-                      <div className="mt-3 rounded-lg overflow-hidden border border-white/10">
+                      <div className="relative mt-3 rounded-lg overflow-hidden border border-white/10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={data.image} alt="Preview" className="w-full h-48 object-cover" />
+                        <img
+                          src={data.image}
+                          alt="Preview"
+                          className="w-full h-48 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop&crop=center';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateData({ image: '' });
+                            setImageFile(null);
+                          }}
+                          className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
                     )}
                   </div>

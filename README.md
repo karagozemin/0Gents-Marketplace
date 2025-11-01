@@ -3,10 +3,20 @@
 > **The world's first decentralized marketplace for AI-powered Intelligent NFTs, built on 0G Network's revolutionary infrastructure**
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge&logo=vercel)](https://0-gents-marketplace.vercel.app)
+[![Mainnet](https://img.shields.io/badge/🚀_LIVE_ON-0G_MAINNET-success?style=for-the-badge)](https://chainscan.0g.ai)
 [![Wave 2 Demo](https://img.shields.io/badge/Wave_2-Demo-red?style=for-the-badge&logo=youtube)](https://youtu.be/rReR3pXp8No)
 [![Wave 1 Demo](https://img.shields.io/badge/Wave_1-Demo-orange?style=for-the-badge&logo=youtube)](https://youtu.be/Q8J8AylG4uA)
 [![0G Network](https://img.shields.io/badge/Built_on-0G_Network-purple?style=for-the-badge&logo=ethereum)](https://0g.ai)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+## 🚀 **NOW LIVE ON 0G MAINNET!**
+
+🎉 **0Gents is production-ready and deployed on 0G Mainnet (Chain ID: 16661)**
+
+- ✅ **Factory Contract**: [`0x9834a0B8B3789646408Cf4C3DCC41Dd580F50785`](https://chainscan.0g.ai/address/0x9834a0B8B3789646408Cf4C3DCC41Dd580F50785)
+- ✅ **Marketplace Contract**: [`0x1320CB9AE8fB7D30f834AB5553C60dDeF0362dBB`](https://chainscan.0g.ai/address/0x1320CB9AE8fB7D30f834AB5553C60dDeF0362dBB)
+- 🌐 **Live App**: [0-gents-marketplace.vercel.app](https://0-gents-marketplace.vercel.app)
+- 📚 **Deployment Guide**: [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## 🎯 **What is 0Gents?**
 

@@ -23,10 +23,10 @@ const ogGalileo = defineChain({
   testnet: true,
 });
 
-// 0G Aristotle Mainnet - Ready for future deployment
+// 0G Aristotle Mainnet - Official Configuration
 const ogMainnet = defineChain({
-  id: 16600, // Mainnet chain ID (to be confirmed)
-  name: "0G-Aristotle-Mainnet",
+  id: 16661, // 0G Mainnet Official Chain ID
+  name: "0G-Mainnet",
   nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
   rpcUrls: {
     default: { http: ["https://evmrpc.0g.ai"] },
